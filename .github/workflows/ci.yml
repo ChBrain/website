@@ -14,12 +14,53 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
       - name: install
-        run: npm ci
+        run: npm install
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: prettier check
         run: npm run format:check
       - name: build + baseline gates
         run: npm test
+
+  meta-2:
+    name: META-2 source/test separation
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: check diff for mixed source/test paths
+        if: ${{ !contains(github.event.pull_request.body, 'META-2-EXEMPT') }}
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+          CHANGED=$(git diff --name-only "$BASE" "$HEAD")
+
+          HAS_SOURCE=0
+          HAS_TEST=0
+
+          for f in $CHANGED; do
+            case "$f" in
+              src/*) HAS_SOURCE=1 ;;
+              public/*) HAS_SOURCE=1 ;;
+              astro.config.mjs) HAS_SOURCE=1 ;;
+              tests/*) HAS_TEST=1 ;;
+              .github/workflows/*) HAS_TEST=1 ;;
+              .husky/*) HAS_TEST=1 ;;
+            esac
+          done
+
+          if [ "$HAS_SOURCE" -eq 1 ] && [ "$HAS_TEST" -eq 1 ]; then
+            echo "::error::META-2 violation: PR mixes source (src/, public/, astro.config.mjs) with test changes (tests/, .github/workflows/, .husky/)."
+            echo "::error::Split into separate PRs: tests first, source second."
+            echo "::error::Foundation PRs and documented exceptions can add an HTML comment to the PR body containing the literal string META-2-EXEMPT (with a one-line justification)."
+            exit 1
+          fi
+
+          echo "META-2 OK: no mixed source/test paths in this PR."
+      - name: noop when exempted
+        if: ${{ contains(github.event.pull_request.body, 'META-2-EXEMPT') }}
+        run: |
+          echo "META-2 check skipped: PR body contains META-2-EXEMPT marker."
