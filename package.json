@@ -1,0 +1,35 @@
+{
+  "name": "@chbrain/website",
+  "private": true,
+  "version": "0.1.0",
+  "description": "kaihacks website — the rendered surface for the architecture spec.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chbrain/website.git"
+  },
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "test": "npm run build && vitest run",
+    "test:watch": "vitest",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^21.1.7",
+    "@types/markdown-it": "^14.1.2",
+    "astro": "^5.0.0",
+    "axe-core": "^4.10.2",
+    "husky": "^9.1.6",
+    "jsdom": "^25.0.1",
+    "markdown-it": "^14.1.0",
+    "prettier": "^3.3.3",
+    "prettier-plugin-astro": "^0.14.1",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
+  }
+}

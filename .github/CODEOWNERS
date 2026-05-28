@@ -1,0 +1,7 @@
+# All paths default to @chbrain review.
+* @chbrain
+
+# Test infrastructure requires explicit review per META-2.
+/tests/ @chbrain
+/.github/workflows/ @chbrain
+/.husky/ @chbrain
