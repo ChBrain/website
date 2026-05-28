@@ -1,0 +1,36 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      astro:
+        patterns:
+          - "astro"
+          - "@astrojs/*"
+          - "prettier-plugin-astro"
+      vitest-stack:
+        patterns:
+          - "vitest"
+          - "@vitest/*"
+      test-utils:
+        patterns:
+          - "jsdom"
+          - "@types/jsdom"
+          - "axe-core"
+          - "markdown-it"
+          - "@types/markdown-it"
+      dev-tooling:
+        patterns:
+          - "prettier"
+          - "typescript"
+          - "@types/*"
+          - "husky"
