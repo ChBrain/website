@@ -1,8 +1,8 @@
 {
   "name": "@chbrain/website",
   "private": true,
-  "version": "0.1.0",
-  "description": "kaihacks website — the rendered surface for the architecture spec.",
+  "version": "0.0.1",
+  "description": "kaihacks website - the rendered surface for the architecture spec.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/chbrain/website.git"
@@ -19,11 +19,15 @@
     "format:check": "prettier --check .",
     "prepare": "husky"
   },
+  "dependencies": {
+    "@chbrain/khai-arch": "^0.0.1"
+  },
   "devDependencies": {
     "@types/jsdom": "^21.1.7",
     "@types/markdown-it": "^14.1.2",
     "astro": "^5.0.0",
     "axe-core": "^4.10.2",
+    "gray-matter": "^4.0.3",
     "husky": "^9.1.6",
     "jsdom": "^25.0.1",
     "markdown-it": "^14.1.0",

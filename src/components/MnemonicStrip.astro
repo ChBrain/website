@@ -1,0 +1,35 @@
+---
+interface Props {
+  mnemonic: string;
+}
+
+const { mnemonic } = Astro.props;
+const parts = mnemonic.startsWith("TO ")
+  ? { prefix: "TO", suffix: mnemonic.slice(3) }
+  : { prefix: "", suffix: mnemonic };
+---
+
+<div class="mnemonic-strip" aria-label={`Mnemonic: ${mnemonic}`}>
+  {parts.prefix && <span class="mnemonic-prefix">{parts.prefix}</span>}
+  <span class="mnemonic-suffix">{parts.suffix}</span>
+</div>
+
+<style>
+  .mnemonic-strip {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    font-family: var(--font-mono);
+    letter-spacing: 0.15em;
+    color: var(--color-fg-muted);
+  }
+  .mnemonic-prefix {
+    font-size: var(--font-size-sm);
+    text-transform: uppercase;
+  }
+  .mnemonic-suffix {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-fg);
+  }
+</style>

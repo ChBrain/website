@@ -1,0 +1,72 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ClassPill from "../../components/ClassPill.astro";
+import { loadAllSpecs } from "../../lib/load-specs";
+import { parseSpec } from "../../lib/parse-spec";
+
+const rawSpecs = loadAllSpecs();
+const specs = rawSpecs.map((r) => ({ id: r.id, parsed: parseSpec(r.text) }));
+
+const classOrder = { system: 0, element: 1, meta: 2 } as const;
+specs.sort(
+  (a, b) => classOrder[a.parsed.frontmatter.class] - classOrder[b.parsed.frontmatter.class],
+);
+---
+
+<BaseLayout
+  title="Architecture - kaihacks"
+  description="The kaihacks architecture spec: type definitions, mnemonics, and chapter rules."
+>
+  <h1>Architecture</h1>
+  <p>
+    The kaihacks system is built around eight files. Seven typed specs and one companion. Each typed
+    spec follows the same shape: a mnemonic that names its function, four to six chapters that
+    compose it, a lede, and a coda.
+  </p>
+
+  <ul class="spec-list">
+    {
+      specs.map((s) => (
+        <li class="spec-list-item">
+          <a href={`/architecture/${s.id}/`} class="spec-link">
+            <span class="spec-link-title">{s.id.charAt(0).toUpperCase() + s.id.slice(1)}</span>
+            <ClassPill class={s.parsed.frontmatter.class} />
+          </a>
+          <span class="spec-list-subtitle">{s.parsed.frontmatter.subtitle}</span>
+        </li>
+      ))
+    }
+  </ul>
+
+  <style>
+    .spec-list {
+      list-style: none;
+      padding: 0;
+      margin: var(--space-6) 0;
+    }
+    .spec-list-item {
+      padding: var(--space-4) 0;
+      border-bottom: var(--border-thin);
+    }
+    .spec-link {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      text-decoration: none;
+      color: var(--color-fg);
+    }
+    .spec-link:hover {
+      color: var(--color-accent);
+    }
+    .spec-link-title {
+      font-size: var(--font-size-lg);
+      font-weight: var(--font-weight-bold);
+    }
+    .spec-list-subtitle {
+      display: block;
+      margin-top: var(--space-2);
+      color: var(--color-fg-muted);
+      font-style: italic;
+    }
+  </style>
+</BaseLayout>

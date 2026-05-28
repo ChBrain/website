@@ -1,0 +1,35 @@
+---
+interface Props {
+  class: "system" | "element" | "meta";
+}
+
+const { class: klass } = Astro.props;
+const label = klass.charAt(0).toUpperCase() + klass.slice(1);
+---
+
+<span class={`class-pill class-pill--${klass}`}>{label}</span>
+
+<style>
+  .class-pill {
+    display: inline-block;
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-ui);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    text-transform: lowercase;
+    letter-spacing: 0.05em;
+  }
+  .class-pill--system {
+    background: var(--color-class-system-bg);
+    color: var(--color-class-system);
+  }
+  .class-pill--element {
+    background: var(--color-class-element-bg);
+    color: var(--color-class-element);
+  }
+  .class-pill--meta {
+    background: var(--color-class-meta-bg);
+    color: var(--color-class-meta);
+  }
+</style>
