@@ -24,6 +24,7 @@ this website's source code is [MIT](LICENSE).
 ## Baseline gates
 
 Every PR runs:
+
 - `build` — Astro builds without error
 - `em-dash` — no U+2014 anywhere in built HTML
 - `a11y` — axe-core finds no serious or critical violations

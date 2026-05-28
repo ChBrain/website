@@ -40,7 +40,9 @@ describe("link integrity — internal links resolve", () => {
   for (const page of pages) {
     it(`${page.path} has all internal links resolving`, () => {
       const dom = new JSDOM(page.html);
-      const anchors = Array.from(dom.window.document.querySelectorAll("a[href]")) as HTMLAnchorElement[];
+      const anchors = Array.from(
+        dom.window.document.querySelectorAll("a[href]"),
+      ) as HTMLAnchorElement[];
       const failures: string[] = [];
 
       for (const a of anchors) {

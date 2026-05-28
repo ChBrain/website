@@ -9,7 +9,9 @@ describe("a11y — axe-core, no serious or critical violations", () => {
   for (const page of pages) {
     it(`${page.path} is axe-clean (serious + critical)`, async () => {
       const virtualConsole = new VirtualConsole();
-      virtualConsole.on("error", () => { /* suppress jsdom CSS warnings */ });
+      virtualConsole.on("error", () => {
+        /* suppress jsdom CSS warnings */
+      });
 
       const dom = new JSDOM(page.html, {
         url: "https://architecture.kaihacks.ai/",
