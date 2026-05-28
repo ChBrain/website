@@ -1,0 +1,29 @@
+#!/usr/bin/env sh
+
+# META-2 enforcement: reject commits that mix source changes with test changes.
+# Source = src/**, public/**, astro.config.mjs.
+# Tests = tests/**, .github/workflows/**, .husky/**.
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMRD)
+
+HAS_SOURCE=0
+HAS_TEST=0
+
+for f in $STAGED; do
+  case "$f" in
+    src/*) HAS_SOURCE=1 ;;
+    public/*) HAS_SOURCE=1 ;;
+    astro.config.mjs) HAS_SOURCE=1 ;;
+    tests/*) HAS_TEST=1 ;;
+    .github/workflows/*) HAS_TEST=1 ;;
+    .husky/*) HAS_TEST=1 ;;
+  esac
+done
+
+if [ "$HAS_SOURCE" -eq 1 ] && [ "$HAS_TEST" -eq 1 ]; then
+  echo "META-2 violation: this commit mixes source (src/, public/, astro.config.mjs) with test changes (tests/, .github/workflows/, .husky/)."
+  echo "Split into separate commits: tests first, source second."
+  exit 1
+fi
+
+exit 0

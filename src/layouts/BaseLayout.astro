@@ -1,0 +1,57 @@
+---
+import "../styles/tokens.css";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "kaihacks. An experimental writing system." } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <main>
+      <slot />
+    </main>
+    <style is:global>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html {
+        font-family: var(--font-prose);
+        color: var(--color-fg);
+        background: var(--color-bg);
+        line-height: var(--line-height-base);
+      }
+      body {
+        margin: 0;
+        padding: var(--space-6) var(--space-4);
+      }
+      main {
+        max-width: var(--width-prose);
+        margin: 0 auto;
+      }
+      h1 {
+        font-size: var(--font-size-3xl);
+        line-height: var(--line-height-tight);
+        margin: 0 0 var(--space-4);
+      }
+      p {
+        font-size: var(--font-size-base);
+        margin: 0 0 var(--space-4);
+        color: var(--color-fg);
+      }
+    </style>
+  </body>
+</html>

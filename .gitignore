@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.astro/
+.DS_Store
+*.log
+.vitest-cache/
+coverage/
+.idea/
+.vscode/
+.env
+.env.local
