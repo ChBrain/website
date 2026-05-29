@@ -32,7 +32,6 @@ jobs:
         with:
           fetch-depth: 0
       - name: check diff for mixed source/test paths
-        if: ${{ !contains(github.event.pull_request.body, 'META-2-EXEMPT') }}
         run: |
           BASE="${{ github.event.pull_request.base.sha }}"
           HEAD="${{ github.event.pull_request.head.sha }}"
@@ -59,13 +58,11 @@ jobs:
             echo "  Test paths:   tests/, .github/workflows/, .husky/"
             echo ""
             echo "  Fix: split into separate PRs (tests first, source second)."
-            echo "  OR:  add the literal string META-2-EXEMPT to the PR body"
-            echo "       (visible text or HTML comment) with a one-line justification."
+            echo "       If you genuinely need to bundle (rare), admin can use"
+            echo "       'Merge without waiting for requirements' on a failed"
+            echo "       check - this leaves an explicit audit trail."
+            echo "       The body-marker bypass has been removed."
             exit 1
           fi
 
           echo "META-2 OK: no mixed source/test paths in this PR."
-      - name: noop when exempted
-        if: ${{ contains(github.event.pull_request.body, 'META-2-EXEMPT') }}
-        run: |
-          echo "META-2 check skipped: PR body contains META-2-EXEMPT marker."
