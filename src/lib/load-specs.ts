@@ -1,15 +1,10 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const _require = createRequire(import.meta.url);
 const KHAI_ARCH_DIR = join(
-  __dirname,
-  "..",
-  "..",
-  "node_modules",
-  "@chbrain",
-  "khai-arch",
+  dirname(_require.resolve("@chbrain/khai-arch/package.json")),
   "architecture",
 );
 
