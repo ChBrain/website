@@ -1,9 +1,11 @@
 name: deploy-production
 
 # Runs on tag push (v*). Builds the site, verifies that the tag matches
-# package.json version, runs tests, and rsyncs the architecture subfolder
-# of dist/ to architecture.kaihacks.ai/. The production URL is
-# https://architecture.kaihacks.ai/ (clean URL, no /architecture/ prefix).
+# package.json version, runs tests, and rsyncs two surfaces from dist/:
+#   - dist/architecture/ -> architecture.kaihacks.ai/   (subdomain root)
+#   - dist/main/         -> kaihacks.ai/main/           (apex /main/ subpath)
+# Production URLs are https://architecture.kaihacks.ai/ (clean, no
+# /architecture/ prefix on the subdomain) and https://kaihacks.ai/main/.
 
 on:
   push:
@@ -45,7 +47,7 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/kaihacksai
           chmod 600 ~/.ssh/kaihacksai
           ssh-keyscan 92.205.150.56 >> ~/.ssh/known_hosts || true
-      - name: Deploy via rsync
+      - name: Deploy architecture surface via rsync
         run: |
           # Rsync dist/architecture/ (not dist/) so dist/architecture/index.html
           # lands as architecture.kaihacks.ai/index.html (the listing IS the
@@ -55,3 +57,15 @@ jobs:
             -e "ssh -i ~/.ssh/kaihacksai" \
             ./dist/architecture/ \
             c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/architecture.kaihacks.ai/
+      - name: Deploy main surface via rsync
+        run: |
+          # Rsync dist/main/ to kaihacks.ai/main/ on the apex vhost. Lands as
+          # /main/index.html (the company front door) and
+          # /main/cvi/index.html (the CVI colophon). Path assumes the apex
+          # public_html folder mirrors the staging layout
+          # (public_html/<vhost>/). Confirm the apex public_html folder
+          # exists before the first prod deploy on this branch.
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/kaihacksai" \
+            ./dist/main/ \
+            c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/kaihacks.ai/main/
