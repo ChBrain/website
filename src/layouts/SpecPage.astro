@@ -3,7 +3,7 @@ import BaseLayout from "./BaseLayout.astro";
 import ClassPill from "../components/ClassPill.astro";
 import MnemonicStrip from "../components/MnemonicStrip.astro";
 import ChapterGrid from "../components/ChapterGrid.astro";
-import { autoLink } from "../lib/auto-link";
+import { autoLink, rewriteMdLinks } from "../lib/auto-link";
 import MarkdownIt from "markdown-it";
 import type { ParsedSpec } from "../lib/parse-spec";
 
@@ -15,8 +15,16 @@ const { spec } = Astro.props;
 const { frontmatter, lede, chapters, coda } = spec;
 const md = new MarkdownIt({ html: false, breaks: false, linkify: false });
 
-const ledeHtml = autoLink(md.renderInline(lede), frontmatter.id, frontmatter.chapters);
-const codaHtml = autoLink(md.renderInline(coda), frontmatter.id, frontmatter.chapters);
+const ledeHtml = autoLink(
+  rewriteMdLinks(md.renderInline(lede)),
+  frontmatter.id,
+  frontmatter.chapters,
+);
+const codaHtml = autoLink(
+  rewriteMdLinks(md.renderInline(coda)),
+  frontmatter.id,
+  frontmatter.chapters,
+);
 const title = frontmatter.id.charAt(0).toUpperCase() + frontmatter.id.slice(1);
 ---
 

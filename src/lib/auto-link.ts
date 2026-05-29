@@ -26,3 +26,18 @@ export function autoLink(bodyHtml: string, ownTypeId: string, ownChapterNames: s
 
   return result;
 }
+
+/**
+ * Rewrite bare .md hrefs to their architecture page routes.
+ *
+ * Source markdown like `[Stack](stack.md)` renders to `<a href="stack.md">`,
+ * which the browser resolves relative to the current page (yielding a 404).
+ * Rewrite to /architecture/<name>/ so the link points at the actual page in
+ * dist/.
+ *
+ * Matches: href="<lowercase-slug>.md"
+ * Does not match: href containing /, ./, ../, or http(s)://
+ */
+export function rewriteMdLinks(html: string): string {
+  return html.replace(/href="([a-z][a-z0-9-]*)\.md"/g, 'href="/architecture/$1/"');
+}
