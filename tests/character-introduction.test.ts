@@ -54,6 +54,7 @@ const ALLOWED_RENDERER_WORDS = new Set([
   "specification",
   "kai",
   "hacks",
+  "one",
   "application",
   "cultures",
   "focused",
