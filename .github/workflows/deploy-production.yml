@@ -6,6 +6,9 @@ name: deploy-production
 #   - dist/main/         -> kaihacks.ai/main/           (apex /main/ subpath)
 # Production URLs are https://architecture.kaihacks.ai/ (clean, no
 # /architecture/ prefix on the subdomain) and https://kaihacks.ai/main/.
+#
+# See docs/deploy-targets.md for the full host layout (apex vs subdomain
+# document roots on the shared cPanel host).
 
 on:
   push:
@@ -53,6 +56,7 @@ jobs:
           # lands as architecture.kaihacks.ai/index.html (the listing IS the
           # subdomain landing), and dist/architecture/<slug>/index.html lands
           # as architecture.kaihacks.ai/<slug>/index.html (clean per-spec URL).
+          # Subdomain doc root: /public_html/architecture.kaihacks.ai/
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/kaihacksai" \
             ./dist/architecture/ \
@@ -61,11 +65,11 @@ jobs:
         run: |
           # Rsync dist/main/ to kaihacks.ai/main/ on the apex vhost. Lands as
           # /main/index.html (the company front door) and
-          # /main/cvi/index.html (the CVI colophon). Path assumes the apex
-          # public_html folder mirrors the staging layout
-          # (public_html/<vhost>/). Confirm the apex public_html folder
-          # exists before the first prod deploy on this branch.
+          # /main/cvi/index.html (the CVI colophon).
+          # The apex domain kaihacks.ai maps to /public_html/ directly
+          # (the home directory IS the apex web root), so kaihacks.ai/main/
+          # is /public_html/main/ on the host — NOT /public_html/kaihacks.ai/main/.
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/kaihacksai" \
             ./dist/main/ \
-            c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/kaihacks.ai/main/
+            c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/main/
