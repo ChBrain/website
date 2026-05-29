@@ -58,6 +58,16 @@ const ALLOWED_RENDERER_WORDS = new Set([
   "application",
   "cultures",
   "focused",
+  // shared SpecPage prev/next slider nav (src/layouts/SpecPage.astro):
+  // each typed spec links to its neighbors in canonical order. The visible
+  // label is the neighbor's name in Newsreader display, so e.g. Position's
+  // page renders the words "Process" (prev) and "Piece" (next).
+  "plot",
+  "process",
+  "position",
+  "piece",
+  "place",
+  "persona",
 ]);
 
 describe("character-introduction - built page words exist in source", () => {
