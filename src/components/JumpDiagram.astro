@@ -1,0 +1,597 @@
+---
+// The 3-jump architecture diagram — Plot (the one), the five
+// elements (a horizontal slider, ring of 5), the two source files
+// (the substrate). Replaces the per-type listing on the architecture
+// home; clicking through the slider is the navigation between
+// elements, so the per-element pages are unnecessary.
+//
+// The slider needs ~30 lines of vanilla JS (state + keyboard + dot
+// clicks + arrow buttons + active-rail IntersectionObserver). No
+// framework, no client-side router — Astro stays static.
+
+const five = [
+  {
+    id: "process",
+    order: "01",
+    name: "Process",
+    tag: "the vector each Persona must openly drive.",
+  },
+  {
+    id: "position",
+    order: "02",
+    name: "Position",
+    tag: "the official stance — what is publicly held.",
+  },
+  {
+    id: "piece",
+    order: "03",
+    name: "Piece",
+    tag: "what Personas carry across the threshold.",
+  },
+  {
+    id: "place",
+    order: "04",
+    name: "Place",
+    tag: "the baseline ground — the ambient pressure.",
+  },
+  {
+    id: "persona",
+    order: "05",
+    name: "Persona",
+    tag: "the actor — and what they carry alone.",
+  },
+];
+---
+
+<section class="jump3" aria-labelledby="jump3-heading">
+  <h2 id="jump3-heading" class="jump3-sr">The architecture, at three jumps</h2>
+
+  <div class="jump3-stage">
+    <nav class="jump3-rail" aria-label="Jump to tier">
+      <a href="#tier-one" class="jump3-jump" data-tier="tier-one">①</a>
+      <a href="#tier-two" class="jump3-jump" data-tier="tier-two">②</a>
+      <a href="#tier-three" class="jump3-jump" data-tier="tier-three">③</a>
+    </nav>
+
+    <div class="jump3-spine">
+      <div class="jump3-tier" id="tier-one">
+        <a href="./plot/" class="jump3-plot">
+          <div class="jump3-plot-name">
+            <span>Plot</span><span class="jump3-plot-dot">.</span>
+          </div>
+          <div class="jump3-plot-meta">
+            <div class="jump3-plot-role">type 00 · the system</div>
+            <div class="jump3-plot-tag">the casting of forces — before a word is spoken.</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="jump3-conn">casts ↓</div>
+
+      <div class="jump3-tier" id="tier-two">
+        <div
+          class="jump3-slider"
+          tabindex="0"
+          role="region"
+          aria-roledescription="carousel"
+          aria-label="The five elements"
+        >
+          <button
+            class="jump3-arrow jump3-arrow--prev"
+            data-dir="-1"
+            type="button"
+            aria-label="Previous element">‹</button
+          >
+          <div class="jump3-track">
+            {
+              five.map((el, i) => (
+                <article class="jump3-item" data-idx={i} aria-label={el.name}>
+                  <div class="jump3-item-ord">
+                    <span>{`type ${el.order} · element`}</span>
+                    <span class="jump3-item-draft">draft</span>
+                  </div>
+                  <div class="jump3-item-name">
+                    <span>{el.name}</span>
+                    <span class="jump3-item-dot">.</span>
+                  </div>
+                  <div class="jump3-item-tag">{el.tag}</div>
+                </article>
+              ))
+            }
+          </div>
+          <button
+            class="jump3-arrow jump3-arrow--next"
+            data-dir="1"
+            type="button"
+            aria-label="Next element">›</button
+          >
+        </div>
+        <div class="jump3-dots" role="tablist" aria-label="Jump to element">
+          {
+            five.map((el, i) => (
+              <button class="jump3-dot" data-idx={i} type="button" aria-label={`Show ${el.name}`} />
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="jump3-conn">rests on ↓</div>
+
+      <div class="jump3-tier" id="tier-three">
+        <div class="jump3-files">
+          <div class="jump3-file">
+            <div class="jump3-fn">
+              <span>architecture</span><span class="jump3-fn-ext">.md</span>
+            </div>
+            <div class="jump3-fn-desc">Who builds, and what. The structural source.</div>
+            <span class="jump3-fn-badge">source · KAI</span>
+          </div>
+          <div class="jump3-file">
+            <div class="jump3-fn">
+              <span>instructions</span><span class="jump3-fn-ext">.md</span>
+            </div>
+            <div class="jump3-fn-desc">How it operates. The operating source.</div>
+            <span class="jump3-fn-badge">source · KAI</span>
+          </div>
+        </div>
+        <div class="jump3-substrate">— the substrate everything above is built from —</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .jump3 {
+    padding: 0.5rem 0 0.75rem;
+  }
+  .jump3-sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .jump3-stage {
+    display: grid;
+    grid-template-columns: 54px 1fr;
+    column-gap: 22px;
+  }
+
+  /* ── left rail ─────────────────────────────────────────────────────────── */
+  .jump3-rail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    padding: 26px 0;
+    gap: 64px;
+  }
+  .jump3-rail::before {
+    content: "";
+    position: absolute;
+    top: 26px;
+    bottom: 26px;
+    width: 1px;
+    background: var(--color-rule);
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .jump3-jump {
+    position: relative;
+    z-index: 1;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--color-ink);
+    background: var(--color-paper);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+  .jump3-jump--on {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+
+  /* ── spine ───────────────────────────────────────────────────────────── */
+  .jump3-spine {
+    display: flex;
+    flex-direction: column;
+  }
+  .jump3-tier {
+    position: relative;
+  }
+
+  /* ── tier 1: Plot ─────────────────────────────────────────────────────── */
+  .jump3-plot {
+    border: 1.5px solid var(--color-brick);
+    background: var(--color-paper-warm);
+    border-radius: 3px;
+    padding: 22px 26px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    text-decoration: none;
+    color: inherit;
+  }
+  .jump3-plot:hover {
+    background: var(--color-paper-deep);
+  }
+  .jump3-plot-name {
+    font-family: var(--font-display);
+    font-size: 58px;
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+    color: var(--color-brick);
+    font-weight: 380;
+  }
+  .jump3-plot-dot {
+    color: var(--color-ink-soft);
+  }
+  .jump3-plot-meta {
+    text-align: right;
+  }
+  .jump3-plot-role {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-brick);
+  }
+  .jump3-plot-tag {
+    font-family: var(--font-prose);
+    font-style: italic;
+    font-size: 15px;
+    color: var(--color-ink-soft);
+    margin-top: 8px;
+    max-width: 300px;
+  }
+
+  /* ── connectors ─────────────────────────────────────────────────────── */
+  .jump3-conn {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-ink-mute);
+    text-align: center;
+    padding: 9px 0;
+  }
+
+  /* ── tier 2: slider ───────────────────────────────────────────────────── */
+  .jump3-slider {
+    display: grid;
+    grid-template-columns: 46px 1fr 46px;
+    align-items: stretch;
+    border: 1px dashed var(--color-rule);
+    border-radius: 3px;
+    background: var(--color-paper);
+    outline-offset: 4px;
+  }
+  .jump3-slider:focus-visible {
+    outline: 2px solid var(--color-brick);
+  }
+  .jump3-arrow {
+    background: var(--color-ink);
+    color: var(--color-paper);
+    border: none;
+    width: 34px;
+    height: 34px;
+    margin: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    border-radius: 2px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+  }
+  .jump3-track {
+    display: grid;
+    grid-template-columns: 64px 1fr 64px;
+    align-items: center;
+    padding: 18px 0;
+    position: relative;
+    min-height: 224px;
+  }
+
+  /* items: 3 visible states + hidden */
+  .jump3-item {
+    transition: opacity 0.18s ease;
+  }
+  .jump3-item.is-current {
+    grid-column: 2;
+    margin: 0 -8px;
+    z-index: 2;
+    border: 1px solid var(--color-ink);
+    border-radius: 3px;
+    background: var(--color-paper-warm);
+    box-shadow: 0 14px 30px -20px rgba(22, 19, 15, 0.5);
+    padding: 22px 26px;
+    min-height: 228px;
+    display: flex;
+    flex-direction: column;
+  }
+  .jump3-item.is-prev,
+  .jump3-item.is-next {
+    position: absolute;
+    top: 18px;
+    bottom: 18px;
+    height: 188px;
+    width: 64px;
+    border: 1px solid var(--color-rule-soft);
+    background: var(--color-paper-warm);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    opacity: 0.34;
+  }
+  .jump3-item.is-prev {
+    left: 0;
+    border-radius: 3px 0 0 3px;
+    padding: 0 0 0 14px;
+  }
+  .jump3-item.is-next {
+    right: 0;
+    border-radius: 0 3px 3px 0;
+    align-items: flex-end;
+    padding: 0 14px 0 0;
+    text-align: right;
+  }
+  .jump3-item.is-prev .jump3-item-name,
+  .jump3-item.is-next .jump3-item-name {
+    font-family: var(--font-display);
+    font-size: 24px;
+    color: var(--color-ink);
+    line-height: 1;
+    margin: 0;
+  }
+  .jump3-item.is-prev .jump3-item-name {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+  .jump3-item.is-prev .jump3-item-ord,
+  .jump3-item.is-prev .jump3-item-tag,
+  .jump3-item.is-next .jump3-item-ord,
+  .jump3-item.is-next .jump3-item-tag {
+    display: none;
+  }
+  .jump3-item.is-hidden {
+    display: none;
+  }
+
+  /* current card internals */
+  .jump3-item-ord {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-ink-soft);
+    display: flex;
+    justify-content: space-between;
+  }
+  .jump3-item-draft {
+    color: var(--color-brick);
+  }
+  .jump3-item-name {
+    font-family: var(--font-display);
+    font-size: 54px;
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+    color: var(--color-ink);
+    margin-top: 10px;
+    font-weight: 380;
+  }
+  .jump3-item-dot {
+    color: var(--color-ink-soft);
+  }
+  .jump3-item-tag {
+    font-family: var(--font-prose);
+    font-style: italic;
+    font-size: 18px;
+    color: var(--color-ink-soft);
+    margin-top: 12px;
+    line-height: 1.32;
+    max-width: 360px;
+  }
+
+  /* dots */
+  .jump3-dots {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    padding: 6px 0 16px;
+  }
+  .jump3-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    border: 1px solid var(--color-rule);
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+  }
+  .jump3-dot.is-current {
+    background: var(--color-ink);
+    border-color: var(--color-ink);
+  }
+
+  /* ── tier 3: files ────────────────────────────────────────────────────── */
+  .jump3-files {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    border-top: 1px solid var(--color-ink);
+    padding-top: 20px;
+  }
+  .jump3-file {
+    border: 1px solid var(--color-rule);
+    border-radius: 3px;
+    background: var(--color-paper);
+    padding: 16px 18px 18px;
+  }
+  .jump3-fn {
+    font-family: var(--font-mono);
+    font-size: 19px;
+    font-weight: 500;
+    color: var(--color-ink);
+    letter-spacing: 0.01em;
+  }
+  .jump3-fn-ext {
+    color: var(--color-ink-mute);
+  }
+  .jump3-fn-desc {
+    font-family: var(--font-prose);
+    font-size: 13.5px;
+    color: var(--color-ink-soft);
+    margin-top: 8px;
+    line-height: 1.42;
+  }
+  .jump3-fn-badge {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-ink-mute);
+    margin-top: 12px;
+    display: block;
+  }
+  .jump3-substrate {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-ink-mute);
+    text-align: center;
+    margin-top: 12px;
+  }
+
+  /* ── mobile ─────────────────────────────────────────────────────────── */
+  @media (max-width: 640px) {
+    .jump3-stage {
+      grid-template-columns: 36px 1fr;
+      column-gap: 12px;
+    }
+    .jump3-rail {
+      gap: 40px;
+    }
+    .jump3-plot {
+      padding: 18px 20px;
+      flex-direction: column;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .jump3-plot-name {
+      font-size: 44px;
+    }
+    .jump3-plot-meta {
+      text-align: left;
+    }
+    .jump3-slider {
+      grid-template-columns: 36px 1fr 36px;
+    }
+    .jump3-track {
+      grid-template-columns: 0 1fr 0;
+      padding: 14px 0;
+      min-height: 200px;
+    }
+    .jump3-item.is-prev,
+    .jump3-item.is-next {
+      display: none;
+    }
+    .jump3-item.is-current {
+      margin: 0;
+      padding: 18px 20px;
+      min-height: 200px;
+    }
+    .jump3-item-name {
+      font-size: 42px;
+    }
+    .jump3-item-tag {
+      font-size: 15px;
+    }
+    .jump3-files {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+  (function () {
+    const slider = document.querySelector(".jump3-slider");
+    if (!slider) return;
+    const items = Array.from(slider.querySelectorAll(".jump3-item"));
+    const arrows = Array.from(slider.querySelectorAll(".jump3-arrow"));
+    const parent = slider.parentElement;
+    const dotsContainer = parent ? parent.querySelector(".jump3-dots") : null;
+    const dots = dotsContainer ? Array.from(dotsContainer.querySelectorAll(".jump3-dot")) : [];
+    const N = items.length;
+    let cur = 0;
+
+    function render() {
+      items.forEach((item, i) => {
+        item.classList.remove("is-current", "is-prev", "is-next", "is-hidden");
+        if (i === cur) item.classList.add("is-current");
+        else if (i === (cur - 1 + N) % N) item.classList.add("is-prev");
+        else if (i === (cur + 1) % N) item.classList.add("is-next");
+        else item.classList.add("is-hidden");
+      });
+      dots.forEach((dot, i) => {
+        dot.classList.toggle("is-current", i === cur);
+      });
+    }
+
+    arrows.forEach((arrow) => {
+      arrow.addEventListener("click", () => {
+        const dir = parseInt(arrow.getAttribute("data-dir") || "0", 10);
+        cur = (cur + dir + N) % N;
+        render();
+      });
+    });
+    dots.forEach((dot) => {
+      dot.addEventListener("click", () => {
+        cur = parseInt(dot.getAttribute("data-idx") || "0", 10);
+        render();
+      });
+    });
+    slider.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") {
+        cur = (cur - 1 + N) % N;
+        render();
+        e.preventDefault();
+      } else if (e.key === "ArrowRight") {
+        cur = (cur + 1) % N;
+        render();
+        e.preventDefault();
+      }
+    });
+
+    // Active-rail tracker: highlight the jump button for the tier
+    // currently most-visible in the viewport.
+    const tiers = document.querySelectorAll(".jump3-tier");
+    const jumps = document.querySelectorAll(".jump3-jump");
+    if (tiers.length && jumps.length && "IntersectionObserver" in window) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const tierId = entry.target.id;
+              jumps.forEach((j) => {
+                j.classList.toggle("jump3-jump--on", j.getAttribute("href") === "#" + tierId);
+              });
+            }
+          });
+        },
+        { threshold: 0.5 },
+      );
+      tiers.forEach((t) => observer.observe(t));
+    }
+
+    render();
+  })();
+</script>
