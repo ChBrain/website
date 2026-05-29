@@ -1,0 +1,1214 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import KhaiMark from "../../../components/KhaiMark.astro";
+import { BRAND } from "../../../lib/brand";
+
+const tocLinks = [
+  { n: "01", t: "The mark", href: "#mark" },
+  { n: "02", t: "The set", href: "#set" },
+  { n: "03", t: "Space & size", href: "#space" },
+  { n: "04", t: "Colour", href: "#color" },
+  { n: "05", t: "Typography", href: "#type" },
+  { n: "06", t: "Icon & favicon", href: "#icon" },
+  { n: "07", t: "Applications", href: "#apply" },
+  { n: "08", t: "In one breath", href: "#voice" },
+];
+
+// The four authorised variants of the lockup. Only the dot moves
+// (and, for the reverse, the letter / ghost flip to a dark-ground
+// pair). Letters, layout, and proportions never change.
+const variants = [
+  {
+    markProps: {},
+    dark: false,
+    title: "Primary · brick",
+    tag: "khai-mark.svg",
+    when: "The default, on light calm grounds.",
+  },
+  {
+    markProps: { dot: BRAND.sea },
+    dark: false,
+    title: "Sea dot",
+    tag: "khai-mark-sea.svg",
+    when: "Structural / product / infrastructure surfaces.",
+  },
+  {
+    markProps: { dot: BRAND.amber },
+    dark: false,
+    title: "Amber dot",
+    tag: "khai-mark-amber.svg",
+    when: "Warm emphasis; safest accent on dark grounds.",
+  },
+  {
+    markProps: { letter: BRAND.paper, ghost: "rgba(243,237,226,0.34)" },
+    dark: true,
+    title: "Reverse",
+    tag: "khai-mark-reverse.svg",
+    when: "On ink, imagery, any dark ground. Dot stays brick (or amber).",
+  },
+];
+
+const surfaces = [
+  { nm: "paper", hex: BRAND.paper, role: "The page. Warm ground, default surface" },
+  { nm: "paperWarm", hex: BRAND.paperWarm, role: "Raised cards, panels" },
+  { nm: "paperDeep", hex: BRAND.paperDeep, role: "Recessed / banded sections" },
+  { nm: "ice", hex: BRAND.ice, role: "Cooler white — a morning surface" },
+];
+const inks = [
+  { nm: "ink", hex: BRAND.ink, role: "Primary text, hard rules" },
+  { nm: "inkSoft", hex: BRAND.inkSoft, role: "Secondary text, italic asides" },
+  { nm: "inkMute", hex: BRAND.inkMute, role: "Mono labels, metadata, captions" },
+];
+const rulesPalette = [
+  { nm: "rule", hex: BRAND.rule, role: "Standard divider · the ghost tone" },
+  { nm: "ruleSoft", hex: BRAND.ruleSoft, role: "Faint divider, list rows" },
+];
+const accents = [
+  {
+    nm: "brick",
+    hex: BRAND.brick,
+    role: "The accent — once per surface",
+    lens: "Red",
+    lensBg: "rgba(141,58,44,.12)",
+    lensCol: BRAND.brick,
+  },
+  {
+    nm: "sea",
+    hex: BRAND.sea,
+    role: "Structure, headers, infrastructure",
+    lens: "Blue",
+    lensBg: "rgba(58,74,82,.14)",
+    lensCol: BRAND.sea,
+  },
+  {
+    nm: "fjord",
+    hex: BRAND.fjord,
+    role: "Lighter blue — a variation on sea",
+    lens: "Blue",
+    lensBg: "rgba(77,107,118,.14)",
+    lensCol: BRAND.fjord,
+  },
+  { nm: "amber", hex: BRAND.amber, role: "Warmer emphasis, “draft” markers" },
+  { nm: "tide", hex: BRAND.tide, role: "Quiet neutral grey" },
+  { nm: "marsh", hex: BRAND.marsh, role: "External / writing" },
+];
+
+const dos = [
+  "Let the dot carry the accent; keep letters ink (or paper, reversed).",
+  "Use the reverse on dark grounds; swap the dot to amber for warmth or contrast.",
+  "Give the mark clear space; place it on calm, single-tone grounds.",
+  "Reduce to the monogram tile (or the bare atom) below 28 px.",
+  "Keep brick rare — one accent moment per surface.",
+];
+const donts = [
+  "Don’t recolour the letters or use hues outside the palette.",
+  "Don’t restore the top i’s stem on the lockup — the dot stands alone.",
+  "Don’t set brick on a dark ground (low contrast) — use amber or the reverse.",
+  "Don’t render the flag — no stripes, no tricolour motif.",
+  "Don’t crowd, stretch, rotate, or add effects to the mark.",
+];
+---
+
+<BaseLayout
+  title="KAI HACKS AI · Corporate Visual Identity"
+  description="The canonical visual reference for the kaihacks.ai brand: mark, palette, type, and the rules that hold them together."
+>
+  <div class="arch-page cvi">
+    <header class="cvi-mast">
+      <div class="cvi-mast-grid">
+        <div class="cvi-mark"><KhaiMark size={132} /></div>
+        <div class="cvi-copy">
+          <div class="cvi-mono">
+            <a href="../" class="cvi-back">kaihacks.ai</a> · colophon
+          </div>
+          <h1 class="cvi-h1">Corporate<br />Visual <em>Identity</em></h1>
+          <p class="cvi-lede">
+            The canonical reference for the brand: the <em>khai</em> mark and its system, the colour palette,
+            the type families, and the rules that hold them together. One source — everything visual answers
+            to this page.
+          </p>
+        </div>
+      </div>
+      <div class="cvi-meta">
+        <div>
+          <span class="cvi-k">Document</span><span class="cvi-v">Visual identity · v0.1.0</span>
+        </div>
+        <div>
+          <span class="cvi-k">Mark</span><span class="cvi-v">khai — lockup & monogram</span>
+        </div>
+        <div>
+          <span class="cvi-k">Type</span><span class="cvi-v"
+            >Newsreader · Source Serif 4 · IBM Plex Mono</span
+          >
+        </div>
+        <div>
+          <span class="cvi-k">Ground</span><span class="cvi-v"
+            >Warm paper · ink · the rare brick</span
+          >
+        </div>
+      </div>
+    </header>
+
+    <nav class="cvi-toc" aria-label="Contents">
+      {
+        tocLinks.map((l) => (
+          <a href={l.href}>
+            <span class="cvi-tn">{l.n}</span>
+            <span class="cvi-tt">{l.t}</span>
+          </a>
+        ))
+      }
+    </nav>
+
+    <section id="mark" class="cvi-section">
+      <div class="cvi-seclabel">
+        <span class="cvi-n">01</span>
+        <div class="cvi-seclabel-body">
+          <div class="cvi-sectop"><h2 class="cvi-h2">The mark</h2></div>
+          <p>
+            One mark, read three ways. <strong>kh</strong> over <strong>ai</strong> — the silent
+            <em>h</em> recedes behind the <em>k</em>, and a single brick dot crowns it so the leg
+            reads as the <strong>i</strong>: <em>Kai</em>, <em>KH·AI</em>, the hidden <em>h</em>.
+          </p>
+        </div>
+      </div>
+      <div class="cvi-twocol">
+        <div class="cvi-card">
+          <div class="cvi-stage"><KhaiMark size={78} /></div>
+          <div class="cvi-cardbody">
+            <span class="cvi-tag">khai · lockup · brick</span>
+            <h3 class="cvi-h3">Primary lockup</h3>
+            <p class="cvi-when">
+              The default. Use it wherever there is room for the full stack on a light, calm ground
+              — headers, decks, stationery, the home of any surface. Brick is the rare red; let it
+              be the only saturated thing in view.
+            </p>
+          </div>
+        </div>
+        <div>
+          <p class="cvi-anatomy">
+            <strong>Anatomy.</strong> The top row is <em>k</em> with the silent <em>h</em> set behind
+            it in the light ghost tone; the brick dot sits exactly where the <em>i</em>’s tittle
+            would — so the row reads <em>“ki.”</em> The rule splits it; <em>ai</em> sits below.
+            <em>k</em>, the rule and <em>ai</em> together already trace an <em>h</em>.
+          </p>
+          <p class="cvi-anatomy">
+            <strong>The reductions.</strong> Crop the lockup to its top row and you have the
+            <em>monogram</em> — <em>kh</em> plus the dot — the brand’s compact face and the form inside
+            the app icon. Crop further to the silent <em>h</em> and dot and you have the atom, for the
+            smallest monochrome marks.
+          </p>
+          <p>
+            The dot is the only moving part of the system — recolour it to shift the accent, never
+            the letters.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section id="set" class="cvi-section">
+      <div class="cvi-seclabel">
+        <span class="cvi-n">02</span>
+        <div class="cvi-seclabel-body">
+          <div class="cvi-sectop"><h2 class="cvi-h2">The set — which to use when</h2></div>
+          <p>
+            Four authorised colourways of the same lockup. The letters never change; only the dot
+            moves, and the ground decides which to reach for.
+          </p>
+        </div>
+      </div>
+      <div class="cvi-grid4">
+        {
+          variants.map((v) => (
+            <div class="cvi-card">
+              <div class={`cvi-stage ${v.dark ? "cvi-stage--dark" : ""}`}>
+                <KhaiMark size={70} {...v.markProps} />
+              </div>
+              <div class="cvi-cardbody">
+                <span class="cvi-tag">{v.tag}</span>
+                <h3 class="cvi-h3">{v.title}</h3>
+                <p class="cvi-when">{v.when}</p>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <section id="space" class="cvi-section">
+      <div class="cvi-seclabel">
+        <span class="cvi-n">03</span>
+        <div class="cvi-seclabel-body">
+          <div class="cvi-sectop"><h2 class="cvi-h2">Clear space & minimum size</h2></div>
+          <p>The mark needs quiet around it and a floor below which it stops being legible.</p>
+        </div>
+      </div>
+      <div class="cvi-twocol">
+        <div class="cvi-card">
+          <div class="cvi-stage">
+            <div class="cvi-clearfield"><KhaiMark size={56} /></div>
+          </div>
+          <div class="cvi-cardbody">
+            <h3 class="cvi-h3">Clear space</h3>
+            <p class="cvi-when">
+              Keep clear space equal to the height of the <em>k</em> on every side. Nothing — type, edges,
+              other marks — enters that field.
+            </p>
+          </div>
+        </div>
+        <div class="cvi-card">
+          <div class="cvi-stage">
+            <div class="cvi-minrow">
+              <KhaiMark size={40} />
+              <KhaiMark size={24} />
+            </div>
+          </div>
+          <div class="cvi-cardbody">
+            <h3 class="cvi-h3">Minimum size</h3>
+            <p class="cvi-when">
+              Full lockup no smaller than 28 px / 8 mm tall. Below that, switch to the monogram (in
+              the icon tile) or the bare <em>h</em>+dot atom — down to 16 px.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="color" class="cvi-section">
+      <div class="cvi-seclabel">
+        <span class="cvi-n">04</span>
+        <div class="cvi-seclabel-body">
+          <div class="cvi-sectop"><h2 class="cvi-h2">Colour</h2></div>
+          <p>
+            One palette, three lenses. Warm paper is the ground, ink is the voice, and the accents
+            appear one at a time. <strong>No hex beyond this set.</strong>
+          </p>
+        </div>
+      </div>
+
+      <div class="cvi-grouplabel">Surfaces — the ground</div>
+      <div class="cvi-grid4">
+        {
+          surfaces.map((s) => (
+            <div class="cvi-swatch">
+              <div class="cvi-chip" style={`background:${s.hex}`} />
+              <div class="cvi-swatch-info">
+                <div class="cvi-swatch-nm">{s.nm}</div>
+                <div class="cvi-swatch-hex">{s.hex}</div>
+                <div class="cvi-swatch-role">{s.role}</div>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="cvi-grouplabel">Ink — text</div>
+      <div class="cvi-grid3">
+        {
+          inks.map((s) => (
+            <div class="cvi-swatch">
+              <div class="cvi-chip" style={`background:${s.hex}`} />
+              <div class="cvi-swatch-info">
+                <div class="cvi-swatch-nm">{s.nm}</div>
+                <div class="cvi-swatch-hex">{s.hex}</div>
+                <div class="cvi-swatch-role">{s.role}</div>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="cvi-grouplabel">Rules — hairlines</div>
+      <div class="cvi-grid2">
+        {
+          rulesPalette.map((s) => (
+            <div class="cvi-swatch">
+              <div class="cvi-chip" style={`background:${s.hex}`} />
+              <div class="cvi-swatch-info">
+                <div class="cvi-swatch-nm">{s.nm}</div>
+                <div class="cvi-swatch-hex">{s.hex}</div>
+                <div class="cvi-swatch-role">{s.role}</div>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="cvi-grouplabel">Accents — the regional hues</div>
+      <div class="cvi-grid3">
+        {
+          accents.map((s) => (
+            <div class="cvi-swatch">
+              <div class="cvi-chip" style={`background:${s.hex}`} />
+              <div class="cvi-swatch-info">
+                <div class="cvi-swatch-nm">{s.nm}</div>
+                <div class="cvi-swatch-hex">{s.hex}</div>
+                <div class="cvi-swatch-role">{s.role}</div>
+                {s.lens && (
+                  <span class="cvi-swatch-lens" style={`background:${s.lensBg};color:${s.lensCol}`}>
+                    {s.lens}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="cvi-twocol cvi-color-usage">
+        <div>
+          <h3 class="cvi-h3 cvi-h3-spaced">Usage rules</h3>
+          <ul class="cvi-dlist">
+            <li>
+              <span class="cvi-dm cvi-dm--brick">→</span>
+              <span
+                ><strong>Red is rare.</strong> Brick appears once per surface — an accent, never a field.</span
+              >
+            </li>
+            <li>
+              <span class="cvi-dm cvi-dm--sea">→</span>
+              <span
+                ><strong>White is the ground.</strong> Paper is warm by default; reach for
+                <em>ice</em> only when a surface should feel like morning.</span
+              >
+            </li>
+            <li>
+              <span class="cvi-dm cvi-dm--fjord">→</span>
+              <span
+                ><strong>Blue holds structure.</strong> Sea carries headers, infrastructure, the substrate
+                beneath the content.</span
+              >
+            </li>
+            <li>
+              <span class="cvi-dm cvi-dm--mute">→</span>
+              <span
+                ><strong>Never tricolour.</strong> The colours appear; the flag never does. No stripes,
+                no motif.</span
+              >
+            </li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="cvi-h3 cvi-h3-spaced">Tokens</h3>
+          <pre
+            class="cvi-pre">{`:root {
+  /* surfaces */
+  --paper:#f3ede2; --paper-warm:#fbf7ee;
+  --paper-deep:#ede5d4; --ice:#e2e7e8;
+  /* ink */
+  --ink:#16130f; --ink-soft:#5b5246; --ink-mute:#8a8275;
+  /* rules */
+  --rule:#c9bea7; --rule-soft:#e6dfd0;
+  /* accents */
+  --brick:#8d3a2c; --sea:#3a4a52; --fjord:#4d6b76;
+  --amber:#c98e36; --tide:#8a8d86; --marsh:#6e7a4c;
+}`}</pre>
+        </div>
+      </div>
+    </section>
+
+    <section id="type" class="cvi-section">
+      <div class="cvi-seclabel">
+        <span class="cvi-n">05</span>
+        <div class="cvi-seclabel-body">
+          <div class="cvi-sectop"><h2 class="cvi-h2">Typography</h2></div>
+          <p>
+            Three families, three jobs. A literary display face, a workhorse text serif, and a mono
+            for the machine voice — labels, metadata, code.
+          </p>
+        </div>
+      </div>
+
+      <div class="cvi-grid3">
+        <div class="cvi-spec">
+          <div class="cvi-glyph cvi-glyph--display">Kk</div>
+          <span class="cvi-fam">Newsreader</span>
+          <span class="cvi-use"
+            >Display & headlines. Set light (400–500), tight tracking. The literary voice of the
+            brand.</span
+          >
+          <div class="cvi-specline cvi-specline--display">The name is the specification.</div>
+        </div>
+        <div class="cvi-spec">
+          <div class="cvi-glyph cvi-glyph--prose">Aa</div>
+          <span class="cvi-fam">Source Serif 4</span>
+          <span class="cvi-use"
+            >Body & italic asides. Comfortable at length; the running text of every surface.</span
+          >
+          <div class="cvi-specline cvi-specline--prose">
+            Read forward, it is how you build one — <em>read backward, how you explain it.</em>
+          </div>
+        </div>
+        <div class="cvi-spec">
+          <div class="cvi-glyph cvi-glyph--mono">Ii</div>
+          <span class="cvi-fam">IBM Plex Mono</span>
+          <span class="cvi-use"
+            >Labels, small-caps, metadata, code. Always uppercase with wide tracking when used as a
+            label.</span
+          >
+          <div class="cvi-specline cvi-specline--mono">architecture.kaihacks.ai</div>
+        </div>
+      </div>
+
+      <div class="cvi-grouplabel cvi-grouplabel--spaced">Type scale</div>
+      <div class="cvi-scale">
+        <div class="cvi-scale-row">
+          <span class="cvi-scale-lab">Display · Newsreader 50</span>
+          <span class="cvi-scale-samp cvi-scale-samp--display-lg">KAI HACKS AI</span>
+        </div>
+        <div class="cvi-scale-row">
+          <span class="cvi-scale-lab">Heading · Newsreader 31</span>
+          <span class="cvi-scale-samp cvi-scale-samp--heading">The mark, read three ways</span>
+        </div>
+        <div class="cvi-scale-row">
+          <span class="cvi-scale-lab">Lede · Source Serif 18</span>
+          <span class="cvi-scale-samp cvi-scale-samp--lede"
+            >One palette, three lenses — warm paper is the ground.</span
+          >
+        </div>
+        <div class="cvi-scale-row">
+          <span class="cvi-scale-lab">Body · Source Serif 15.5</span>
+          <span class="cvi-scale-samp cvi-scale-samp--body"
+            >Brick is the rare red; let it be the only saturated thing in view.</span
+          >
+        </div>
+        <div class="cvi-scale-row">
+          <span class="cvi-scale-lab">Label · Plex Mono 11</span>
+          <span class="cvi-scale-samp cvi-scale-samp--label">KAI HACKS AI · brand</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="icon" class="cvi-section">
+      <div class="cvi-seclabel">
+        <span class="cvi-n">06</span>
+        <div class="cvi-seclabel-body">
+          <div class="cvi-sectop"><h2 class="cvi-h2">Icon & favicon</h2></div>
+          <p>
+            Where the lockup can’t breathe — tabs, app glances, avatars — the brand reduces to the
+            monogram, set in a soft-cornered paper tile.
+          </p>
+        </div>
+      </div>
+      <div class="cvi-twocol">
+        <div class="cvi-card">
+          <div class="cvi-stage cvi-stage--deep">
+            <img
+              src="/favicon.svg"
+              width="168"
+              height="168"
+              alt="khai app icon"
+              class="cvi-icon-large"
+            />
+          </div>
+          <div class="cvi-cardbody">
+            <span class="cvi-tag">favicon.svg · app icon</span>
+            <h3 class="cvi-h3">The icon tile</h3>
+            <p class="cvi-when">
+              The <em>kh</em> monogram — bold ink <em>k</em>, ghost <em>h</em>, brick dot — on warm
+              paper, in a rounded tile. This is the brand’s most-used touchpoint: browser tabs,
+              home-screen icon, social avatar. Ships as SVG with raster fallbacks (ico · 180 · 192 ·
+              512).
+            </p>
+          </div>
+        </div>
+        <div class="cvi-card">
+          <div class="cvi-stage">
+            <div class="cvi-iconrow">
+              <div class="cvi-ic">
+                <img src="/favicon.svg" width="76" height="76" alt="64" class="cvi-ic--64" />
+                <span class="cvi-px">64</span>
+              </div>
+              <div class="cvi-ic">
+                <img src="/favicon.svg" width="40" height="40" alt="32" class="cvi-ic--32" />
+                <span class="cvi-px">32</span>
+              </div>
+              <div class="cvi-ic">
+                <img src="/favicon.svg" width="20" height="20" alt="16" class="cvi-ic--16" />
+                <span class="cvi-px">16</span>
+              </div>
+            </div>
+          </div>
+          <div class="cvi-cardbody">
+            <span class="cvi-tag">install</span>
+            <h3 class="cvi-h3">Holds down to 16 px</h3>
+            <pre
+              class="cvi-pre">{`<!-- scalable, crisp at any size -->
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<!-- fallbacks -->
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">`}</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="apply" class="cvi-section">
+      <div class="cvi-seclabel">
+        <span class="cvi-n">07</span>
+        <div class="cvi-seclabel-body">
+          <div class="cvi-sectop"><h2 class="cvi-h2">Applications & misuse</h2></div>
+          <p>
+            The shortlist that keeps every surface on-brand. When in doubt, do less and let the
+            paper breathe.
+          </p>
+        </div>
+      </div>
+      <div class="cvi-do-dont">
+        <ul class="cvi-dlist cvi-dlist--ok">
+          <li class="cvi-dhead">Do</li>
+          {
+            dos.map((d) => (
+              <li>
+                <span class="cvi-dm">✓</span>
+                <span>{d}</span>
+              </li>
+            ))
+          }
+        </ul>
+        <ul class="cvi-dlist cvi-dlist--no">
+          <li class="cvi-dhead">Don’t</li>
+          {
+            donts.map((d) => (
+              <li>
+                <span class="cvi-dm">✕</span>
+                <span>{d}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+
+    <section id="voice" class="cvi-section cvi-section--last">
+      <div class="cvi-seclabel">
+        <span class="cvi-n">08</span>
+        <div class="cvi-seclabel-body">
+          <div class="cvi-sectop"><h2 class="cvi-h2">In one breath</h2></div>
+        </div>
+      </div>
+      <p class="cvi-voice">
+        Warm paper, near-black ink, hairline rules — and a single brick dot that does all the
+        talking. Editorial, calm, exact. The system never shouts; it simply holds.
+      </p>
+    </section>
+
+    <footer class="cvi-footer">
+      <p class="cvi-mono cvi-foot-line">KAI HACKS AI · Corporate Visual Identity · v0.1.0</p>
+      <p class="cvi-mono cvi-foot-line">
+        Newsreader · Source Serif 4 · IBM Plex Mono &nbsp;·&nbsp; ink #16130f · ghost #c9bea7 ·
+        brick #8d3a2c · sea #3a4a52 · amber #c98e36
+      </p>
+    </footer>
+  </div>
+
+  <style>
+    /* ── base ───────────────────────────────────────────────────────────── */
+    .cvi {
+      font-family: "Source Serif 4", Georgia, serif;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    .cvi ::selection {
+      background: var(--color-brick);
+      color: var(--color-paper);
+    }
+    .cvi p {
+      margin: 0;
+      text-wrap: pretty;
+      color: var(--color-ink-soft);
+    }
+    .cvi strong {
+      font-weight: 600;
+      color: var(--color-ink);
+    }
+    .cvi em {
+      font-style: italic;
+    }
+    .cvi a {
+      color: var(--color-brick);
+      text-decoration: none;
+    }
+    .cvi-mono {
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 11px;
+      color: var(--color-ink-mute);
+    }
+    .cvi-h2 {
+      font-family: var(--font-display);
+      font-weight: 420;
+      font-size: 31px;
+      letter-spacing: -0.01em;
+      margin: 0 0 8px;
+      color: var(--color-ink);
+    }
+    .cvi-h3 {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin: 0 0 7px;
+      color: var(--color-ink);
+    }
+    .cvi-h3-spaced {
+      margin-bottom: 14px;
+    }
+    .cvi-lede {
+      font-size: 18px;
+      color: var(--color-ink);
+      line-height: 1.55;
+    }
+
+    /* ── masthead ───────────────────────────────────────────────────────── */
+    .cvi-mast {
+      padding: 96px 0 60px;
+      border-bottom: 1px solid var(--color-rule);
+    }
+    .cvi-mast-grid {
+      display: flex;
+      align-items: flex-end;
+      gap: 54px;
+      flex-wrap: wrap;
+    }
+    .cvi-mark {
+      flex: 0 0 auto;
+    }
+    .cvi-copy {
+      flex: 1 1 360px;
+      min-width: 300px;
+    }
+    .cvi-back {
+      color: var(--color-ink-mute);
+      border-bottom: 1px solid var(--color-rule);
+    }
+    .cvi-h1 {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 50px;
+      line-height: 1.04;
+      letter-spacing: -0.018em;
+      margin: 16px 0;
+      color: var(--color-ink);
+    }
+    .cvi-h1 em {
+      font-style: italic;
+      color: var(--color-ink-soft);
+    }
+    .cvi-meta {
+      display: flex;
+      gap: 34px;
+      flex-wrap: wrap;
+      margin-top: 26px;
+      padding-top: 22px;
+      border-top: 1px solid var(--color-rule-soft);
+    }
+    .cvi-meta div span {
+      display: block;
+    }
+    .cvi-k {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--color-ink-mute);
+      margin-bottom: 5px;
+    }
+    .cvi-v {
+      font-size: 15px;
+      color: var(--color-ink);
+    }
+
+    /* ── toc ────────────────────────────────────────────────────────────── */
+    .cvi-toc {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      border-bottom: 1px solid var(--color-rule);
+    }
+    @media (max-width: 760px) {
+      .cvi-toc {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+    .cvi-toc a {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 24px 0;
+      color: var(--color-ink);
+      border-right: 1px solid var(--color-rule-soft);
+    }
+    .cvi-toc a:last-child {
+      border-right: none;
+    }
+    .cvi-tn {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--color-brick);
+    }
+    .cvi-tt {
+      font-family: var(--font-display);
+      font-size: 19px;
+    }
+    @media (max-width: 760px) {
+      .cvi-toc a {
+        border-right: none;
+        border-bottom: 1px solid var(--color-rule-soft);
+        padding: 18px 0;
+      }
+    }
+
+    /* ── sections ───────────────────────────────────────────────────────── */
+    .cvi-section {
+      padding: 70px 0;
+      border-bottom: 1px solid var(--color-rule);
+    }
+    .cvi-section--last {
+      border-bottom: none;
+    }
+    .cvi-seclabel {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 34px;
+    }
+    .cvi-n {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--color-brick);
+    }
+    .cvi-seclabel-body {
+      flex: 1;
+    }
+    .cvi-seclabel p {
+      font-size: 15px;
+    }
+    .cvi-sectop {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    /* ── grids ──────────────────────────────────────────────────────────── */
+    .cvi-grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+    }
+    .cvi-grid3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+    .cvi-grid4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+    @media (max-width: 760px) {
+      .cvi-grid3,
+      .cvi-grid4 {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    @media (max-width: 560px) {
+      .cvi-grid2,
+      .cvi-grid3,
+      .cvi-grid4 {
+        grid-template-columns: 1fr;
+      }
+    }
+    .cvi-twocol {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 50px;
+      align-items: center;
+    }
+    @media (max-width: 760px) {
+      .cvi-twocol {
+        grid-template-columns: 1fr;
+        gap: 30px;
+      }
+    }
+    .cvi-color-usage {
+      margin-top: 40px;
+    }
+
+    /* ── card / stage ───────────────────────────────────────────────────── */
+    .cvi-card {
+      background: var(--color-paper-warm);
+      border: 1px solid var(--color-rule-soft);
+      border-radius: 3px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .cvi-stage {
+      min-height: 212px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 1px solid var(--color-rule-soft);
+      padding: 24px;
+    }
+    .cvi-stage--dark {
+      background: var(--color-ink);
+    }
+    .cvi-stage--deep {
+      background: var(--color-paper-deep);
+    }
+    .cvi-cardbody {
+      padding: 18px 20px 22px;
+    }
+    .cvi-when {
+      font-size: 14.5px;
+      line-height: 1.46;
+      color: var(--color-ink-soft);
+    }
+    .cvi-tag {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-ink-mute);
+      border: 1px solid var(--color-rule);
+      border-radius: 2px;
+      padding: 2px 7px;
+      margin-bottom: 11px;
+    }
+    .cvi-anatomy {
+      margin-bottom: 16px;
+    }
+
+    /* ── colour swatches ────────────────────────────────────────────────── */
+    .cvi-swatch {
+      border: 1px solid var(--color-rule-soft);
+      border-radius: 3px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .cvi-chip {
+      height: 108px;
+    }
+    .cvi-swatch-info {
+      padding: 13px 14px 15px;
+      background: var(--color-paper-warm);
+      border-top: 1px solid var(--color-rule-soft);
+    }
+    .cvi-swatch-nm {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--color-ink);
+    }
+    .cvi-swatch-hex {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--color-ink-mute);
+      margin-top: 3px;
+    }
+    .cvi-swatch-role {
+      font-size: 13px;
+      color: var(--color-ink-soft);
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+    .cvi-swatch-lens {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 2px;
+      margin-top: 9px;
+    }
+    .cvi-grouplabel {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--color-ink-mute);
+      margin: 34px 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .cvi-grouplabel::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--color-rule-soft);
+    }
+    .cvi-grouplabel:first-of-type {
+      margin-top: 0;
+    }
+    .cvi-grouplabel--spaced {
+      margin-top: 42px;
+    }
+
+    /* ── clear space / min size visuals ─────────────────────────────────── */
+    .cvi-clearfield {
+      position: relative;
+      padding: 34px;
+      outline: 1px dashed var(--color-rule);
+    }
+    .cvi-minrow {
+      display: flex;
+      align-items: flex-end;
+      gap: 26px;
+    }
+
+    /* ── type specimens ─────────────────────────────────────────────────── */
+    .cvi-spec {
+      border: 1px solid var(--color-rule-soft);
+      border-radius: 3px;
+      background: var(--color-paper-warm);
+      padding: 26px 26px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .cvi-glyph {
+      font-size: 96px;
+      line-height: 0.92;
+      color: var(--color-ink);
+      margin-bottom: 14px;
+    }
+    .cvi-glyph--display {
+      font-family: var(--font-display);
+      font-weight: 400;
+    }
+    .cvi-glyph--prose {
+      font-family: var(--font-prose);
+      font-weight: 400;
+    }
+    .cvi-glyph--mono {
+      font-family: var(--font-mono);
+      font-weight: 500;
+    }
+    .cvi-fam {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--color-ink);
+    }
+    .cvi-use {
+      font-size: 14px;
+      color: var(--color-ink-soft);
+      line-height: 1.45;
+      margin-top: 4px;
+    }
+    .cvi-specline {
+      margin-top: 16px;
+      padding-top: 15px;
+      border-top: 1px solid var(--color-rule-soft);
+      color: var(--color-ink);
+    }
+    .cvi-specline--display {
+      font-family: var(--font-display);
+      font-size: 21px;
+      font-weight: 400;
+    }
+    .cvi-specline--prose {
+      font-family: var(--font-prose);
+      font-size: 16px;
+    }
+    .cvi-specline--mono {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .cvi-scale {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 8px;
+    }
+    .cvi-scale-row {
+      display: flex;
+      align-items: baseline;
+      gap: 22px;
+      padding: 15px 0;
+      border-bottom: 1px solid var(--color-rule-soft);
+    }
+    .cvi-scale-row:last-child {
+      border-bottom: none;
+    }
+    .cvi-scale-lab {
+      flex: 0 0 150px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--color-ink-mute);
+      letter-spacing: 0.04em;
+    }
+    .cvi-scale-samp {
+      flex: 1;
+      color: var(--color-ink);
+      min-width: 0;
+    }
+    .cvi-scale-samp--display-lg {
+      font-family: var(--font-display);
+      font-size: 44px;
+      font-weight: 400;
+      letter-spacing: -0.018em;
+      line-height: 1;
+    }
+    .cvi-scale-samp--heading {
+      font-family: var(--font-display);
+      font-size: 31px;
+      font-weight: 420;
+      letter-spacing: -0.01em;
+    }
+    .cvi-scale-samp--lede {
+      font-family: var(--font-prose);
+      font-size: 18px;
+    }
+    .cvi-scale-samp--body {
+      font-family: var(--font-prose);
+      font-size: 15.5px;
+      color: var(--color-ink-soft);
+    }
+    .cvi-scale-samp--label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--color-ink-mute);
+    }
+
+    /* ── icon tiles ─────────────────────────────────────────────────────── */
+    .cvi-icon-large {
+      display: block;
+      border-radius: 26px;
+    }
+    .cvi-iconrow {
+      display: flex;
+      align-items: flex-end;
+      gap: 30px;
+      flex-wrap: wrap;
+    }
+    .cvi-ic {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .cvi-px {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--color-ink-mute);
+    }
+    .cvi-iconrow img {
+      display: block;
+    }
+    .cvi-ic--64 {
+      border-radius: 12px;
+    }
+    .cvi-ic--32 {
+      border-radius: 7px;
+    }
+    .cvi-ic--16 {
+      border-radius: 4px;
+    }
+
+    /* ── do / don't ─────────────────────────────────────────────────────── */
+    .cvi-do-dont {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 26px;
+    }
+    @media (max-width: 600px) {
+      .cvi-do-dont {
+        grid-template-columns: 1fr;
+      }
+    }
+    .cvi-dlist {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .cvi-dhead {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--color-rule);
+    }
+    .cvi-dlist li {
+      display: flex;
+      gap: 12px;
+      padding: 13px 0;
+      border-bottom: 1px solid var(--color-rule-soft);
+      font-size: 15px;
+      color: var(--color-ink-soft);
+      line-height: 1.45;
+    }
+    .cvi-dm {
+      flex: 0 0 16px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+    .cvi-dlist--ok .cvi-dhead,
+    .cvi-dlist--ok .cvi-dm {
+      color: var(--color-sea);
+    }
+    .cvi-dlist--no .cvi-dhead,
+    .cvi-dlist--no .cvi-dm {
+      color: var(--color-brick);
+    }
+    .cvi-dm--brick {
+      color: var(--color-brick);
+    }
+    .cvi-dm--sea {
+      color: var(--color-sea);
+    }
+    .cvi-dm--fjord {
+      color: var(--color-fjord);
+    }
+    .cvi-dm--mute {
+      color: var(--color-ink-mute);
+    }
+
+    /* ── code blocks ────────────────────────────────────────────────────── */
+    .cvi-pre {
+      background: var(--color-ink);
+      color: var(--color-paper);
+      border-radius: 4px;
+      padding: 18px 20px;
+      overflow: auto;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    /* ── voice ──────────────────────────────────────────────────────────── */
+    .cvi-voice {
+      max-width: 760px;
+      font-size: 23px;
+      font-family: var(--font-display);
+      font-weight: 400;
+      line-height: 1.4;
+      color: var(--color-ink);
+    }
+
+    /* ── footer ─────────────────────────────────────────────────────────── */
+    .cvi-footer {
+      padding: 50px 0 100px;
+    }
+    .cvi-foot-line {
+      line-height: 1.9;
+      color: var(--color-ink-mute);
+    }
+  </style>
+</BaseLayout>
