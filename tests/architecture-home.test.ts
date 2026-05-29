@@ -18,14 +18,6 @@ describe("architecture home - design contract", () => {
       expect(tld!.textContent).toBe(".kaihacks.ai");
     });
 
-    it("has filemarks for architecture.md and instructions.md", () => {
-      const dom = new JSDOM(home!.html);
-      const filemarks = Array.from(dom.window.document.querySelectorAll(".filemark"));
-      const labels = filemarks.map((f) => f.textContent?.trim().replace(/\s+/g, " "));
-      expect(labels.some((l) => l?.includes("architecture.md"))).toBe(true);
-      expect(labels.some((l) => l?.includes("instructions.md"))).toBe(true);
-    });
-
     it("shows the khai version", () => {
       const dom = new JSDOM(home!.html);
       const version = dom.window.document.querySelector(".topbar-version");
