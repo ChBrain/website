@@ -1,29 +1,53 @@
 /* kaihacks design tokens — CSS custom properties.
- * Values are starting points; structure (names, roles) is the contract.
- * Renderer (web-2) consumes these by name; tuning values does not break the renderer. */
+ * Values are the brand palette; structure (names, roles) is the contract.
+ * Renderer consumes these by name; tuning values does not break the renderer.
+ *
+ * Brand palette names (German coastal/landscape register):
+ *   paper      — cream background
+ *   ink        — deep dark text
+ *   ink-soft   — muted text
+ *   rule       — light border
+ *   backstein  — brick red (primary accent)
+ *   wattgrau   — mudflat gray
+ *   nordsee    — North Sea blue-gray
+ *   bernstein  — amber
+ *   marsch     — marsh green
+ */
 
 :root {
-  /* Color — neutral */
-  --color-bg: #ffffff;
-  --color-bg-subtle: #f7f7f5;
-  --color-fg: #1a1a1a;
-  --color-fg-muted: #6a6a6a;
-  --color-border: #e2e2de;
-  --color-accent: #1a4d8f;
-  --color-accent-hover: #2563a8;
+  /* Brand palette — raw values */
+  --color-paper: #f3ede2;
+  --color-ink: #16130f;
+  --color-ink-soft: #5b5246;
+  --color-rule: #c9bea7;
+  --color-backstein: #8d3a2c;
+  --color-wattgrau: #8a8d86;
+  --color-nordsee: #3a4a52;
+  --color-bernstein: #c98e36;
+  --color-marsch: #6e7a4c;
 
-  /* Color — class pills (system / element / meta) */
-  --color-class-system: #7a3a5e;
-  --color-class-system-bg: #f4e8ee;
-  --color-class-element: #2a6e3f;
-  --color-class-element-bg: #e6f1e9;
-  --color-class-meta: #6b5d2e;
-  --color-class-meta-bg: #f3eedd;
+  /* Semantic — neutral */
+  --color-bg: var(--color-paper);
+  --color-bg-subtle: #fbf7ee;
+  --color-fg: var(--color-ink);
+  --color-fg-muted: var(--color-ink-soft);
+  --color-border: var(--color-rule);
+  --color-accent: var(--color-backstein);
+  --color-accent-hover: #a5443a;
+
+  /* Semantic — class pills (system / element / meta) */
+  --color-class-system: var(--color-backstein);
+  --color-class-system-bg: #f4e6dc;
+  --color-class-element: var(--color-marsch);
+  --color-class-element-bg: #eaeee0;
+  --color-class-meta: var(--color-bernstein);
+  --color-class-meta-bg: #f5e8cf;
 
   /* Typography — families */
-  --font-prose: "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --font-prose: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-display: "Newsreader", "Source Serif 4", Georgia, serif;
   --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-  --font-mono: "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   /* Typography — scale (rem) */
   --font-size-xs: 0.75rem;
@@ -43,6 +67,12 @@
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-bold: 700;
+
+  /* Typography — tracking (letter-spacing) */
+  --letter-spacing-tight: -0.005em;
+  --letter-spacing-normal: 0;
+  --letter-spacing-loose: 0.18em;
+  --letter-spacing-mono: 0.22em;
 
   /* Spacing scale (rem) */
   --space-1: 0.25rem;
@@ -71,16 +101,18 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #121212;
-    --color-bg-subtle: #1c1c1c;
-    --color-fg: #ececea;
-    --color-fg-muted: #9a9a96;
-    --color-border: #2d2d2d;
-    --color-accent: #6ba3df;
-    --color-accent-hover: #92bce8;
+    /* Brand palette inverts: ink becomes background, paper becomes text.
+     * Accent shifts to a slightly lighter brick to maintain contrast on dark. */
+    --color-bg: var(--color-ink);
+    --color-bg-subtle: #1c1814;
+    --color-fg: var(--color-paper);
+    --color-fg-muted: #a59c8e;
+    --color-border: #3a342c;
+    --color-accent: #b8533e;
+    --color-accent-hover: #c96650;
 
-    --color-class-system-bg: #2a1a23;
-    --color-class-element-bg: #1a2820;
-    --color-class-meta-bg: #2a2618;
+    --color-class-system-bg: #3a1e16;
+    --color-class-element-bg: #1f2418;
+    --color-class-meta-bg: #2f2616;
   }
 }
