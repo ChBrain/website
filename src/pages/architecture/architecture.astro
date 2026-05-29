@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Topbar from "../../components/Topbar.astro";
+import Footer from "../../components/Footer.astro";
 import { loadArchitecture } from "../../lib/load-specs";
 import MarkdownIt from "markdown-it";
 
@@ -16,6 +17,8 @@ const html = architecture ? md.render(architecture.text) : "<p>No architecture d
   <Topbar basePath="../" />
 
   <article class="doc" set:html={html} />
+
+  <Footer />
 
   <style>
     .doc :global(h1) {
