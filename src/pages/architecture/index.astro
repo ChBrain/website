@@ -99,7 +99,7 @@ const elements = types.filter((t) => t.role === "element");
       <h1 class="masthead-title" aria-label="KAI HACKS AI">
         <span>KAI</span>
         <span class="masthead-title-accent">HACKS</span>
-        <span>AI<span class="masthead-title-period" aria-hidden="true">.</span></span>
+        <span>AI</span>
       </h1>
       <p class="masthead-subline">
         Three tokens. One specification. The name is the architecture: it states who builds, how it
@@ -345,7 +345,10 @@ const elements = types.filter((t) => t.role === "element");
     }
 
     /* Scroll-snap: 5 stops on desktop = 4 top-level sections + the .infra
-     * block nested inside §3 (which we want as its own snap target). */
+     * block nested inside §3 (which we want as its own snap target).
+     * Each snap target is a flex column with justify-content: center so
+     * content sits in the vertical middle of the viewport (between the
+     * sticky topbar and sticky footer). */
     .arch-home > section,
     .arch-home .infra {
       scroll-snap-align: start;
@@ -355,6 +358,9 @@ const elements = types.filter((t) => t.role === "element");
       .arch-home > section,
       .arch-home .infra {
         min-height: calc(100vh - 8rem);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
       }
     }
     @media (max-width: 640px) {
@@ -402,9 +408,6 @@ const elements = types.filter((t) => t.role === "element");
     }
     .masthead-title-accent {
       color: var(--color-brick);
-    }
-    .masthead-title-period {
-      color: var(--color-ink-soft);
     }
     .masthead-subline {
       margin: 1.375rem 0 0;
