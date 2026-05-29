@@ -1,0 +1,21 @@
+---
+import SpecPage from "../../layouts/SpecPage.astro";
+import { loadAllSpecs } from "../../lib/load-specs";
+import { parseSpec, type ParsedSpec } from "../../lib/parse-spec";
+
+interface Props {
+  spec: ParsedSpec;
+}
+
+export async function getStaticPaths() {
+  const rawSpecs = loadAllSpecs();
+  return rawSpecs.map((raw) => ({
+    params: { slug: raw.id },
+    props: { spec: parseSpec(raw.text) },
+  }));
+}
+
+const { spec } = Astro.props as Props;
+---
+
+<SpecPage spec={spec} />

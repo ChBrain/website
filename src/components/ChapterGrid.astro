@@ -1,0 +1,40 @@
+---
+import type { Chapter } from "../lib/parse-spec";
+import ChapterCard from "./ChapterCard.astro";
+import { autoLink, rewriteMdLinks } from "../lib/auto-link";
+import MarkdownIt from "markdown-it";
+
+interface Props {
+  chapters: Chapter[];
+  ownTypeId: string;
+  ownChapterNames: string[];
+}
+
+const { chapters, ownTypeId, ownChapterNames } = Astro.props;
+const md = new MarkdownIt({ html: false, breaks: false, linkify: false });
+
+const rendered = chapters.map((c) => {
+  const bodyHtml = md.renderInline(c.body);
+  const rewritten = rewriteMdLinks(bodyHtml);
+  const linked = autoLink(rewritten, ownTypeId, ownChapterNames);
+  return { ...c, bodyHtml: linked };
+});
+---
+
+<div class="chapter-grid">
+  {rendered.map((c) => <ChapterCard letter={c.letter} name={c.name} bodyHtml={c.bodyHtml} />)}
+</div>
+
+<style>
+  .chapter-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+    margin: var(--space-6) 0;
+  }
+  @media (max-width: 700px) {
+    .chapter-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

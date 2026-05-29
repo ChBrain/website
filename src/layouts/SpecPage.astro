@@ -1,0 +1,91 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import ClassPill from "../components/ClassPill.astro";
+import MnemonicStrip from "../components/MnemonicStrip.astro";
+import ChapterGrid from "../components/ChapterGrid.astro";
+import { autoLink, rewriteMdLinks } from "../lib/auto-link";
+import MarkdownIt from "markdown-it";
+import type { ParsedSpec } from "../lib/parse-spec";
+
+interface Props {
+  spec: ParsedSpec;
+}
+
+const { spec } = Astro.props;
+const { frontmatter, lede, chapters, coda } = spec;
+const md = new MarkdownIt({ html: false, breaks: false, linkify: false });
+
+const ledeHtml = autoLink(
+  rewriteMdLinks(md.renderInline(lede)),
+  frontmatter.id,
+  frontmatter.chapters,
+);
+const codaHtml = autoLink(
+  rewriteMdLinks(md.renderInline(coda)),
+  frontmatter.id,
+  frontmatter.chapters,
+);
+const title = frontmatter.id.charAt(0).toUpperCase() + frontmatter.id.slice(1);
+---
+
+<BaseLayout title={`${title} - kaihacks architecture`} description={frontmatter.subtitle}>
+  <header class="spec-header">
+    <div class="spec-meta">
+      <ClassPill class={frontmatter.class} />
+      <MnemonicStrip mnemonic={frontmatter.mnemonic} />
+    </div>
+    <h1 class="spec-title">{title}</h1>
+    <p class="spec-subtitle">{frontmatter.subtitle}</p>
+  </header>
+
+  <section class="spec-lede" set:html={ledeHtml} />
+
+  <ChapterGrid
+    chapters={chapters}
+    ownTypeId={frontmatter.id}
+    ownChapterNames={frontmatter.chapters}
+  />
+
+  <section class="spec-coda" set:html={codaHtml} />
+
+  <style>
+    .spec-header {
+      margin-bottom: var(--space-6);
+    }
+    .spec-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      margin-bottom: var(--space-4);
+    }
+    .spec-title {
+      margin: 0 0 var(--space-2);
+      font-size: var(--font-size-3xl);
+      line-height: var(--line-height-tight);
+    }
+    .spec-subtitle {
+      margin: 0;
+      font-size: var(--font-size-lg);
+      color: var(--color-fg-muted);
+      font-style: italic;
+    }
+    .spec-lede {
+      font-size: var(--font-size-lg);
+      line-height: var(--line-height-loose);
+      margin-bottom: var(--space-6);
+    }
+    .spec-lede :global(a),
+    .spec-coda :global(a) {
+      color: var(--color-accent);
+      text-decoration: underline;
+    }
+    .spec-coda {
+      margin-top: var(--space-6);
+      padding-top: var(--space-5);
+      border-top: var(--border-thin);
+      font-size: var(--font-size-base);
+      line-height: var(--line-height-loose);
+    }
+  </style>
+</BaseLayout>
