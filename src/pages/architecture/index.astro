@@ -32,12 +32,54 @@ const movements = [
 ];
 
 const types = [
-  { id: "plot",     order: "00", name: "Plot",     tagline: "the casting of forces",                       role: "system",  href: "./plot/" },
-  { id: "process",  order: "01", name: "Process",  tagline: "the vector each Persona must openly drive",   role: "element", href: "./process/" },
-  { id: "position", order: "02", name: "Position", tagline: "the official stance · what is publicly held", role: "element", href: "./position/" },
-  { id: "piece",    order: "03", name: "Piece",    tagline: "what Personas carry across the threshold",    role: "element", href: "./piece/" },
-  { id: "place",    order: "04", name: "Place",    tagline: "the baseline ground · the ambient pressure",  role: "element", href: "./place/" },
-  { id: "persona",  order: "05", name: "Persona",  tagline: "the actor · and what they carry alone",       role: "element", href: "./persona/" },
+  {
+    id: "plot",
+    order: "00",
+    name: "Plot",
+    tagline: "the casting of forces",
+    role: "system",
+    href: "./plot/",
+  },
+  {
+    id: "process",
+    order: "01",
+    name: "Process",
+    tagline: "the vector each Persona must openly drive",
+    role: "element",
+    href: "./process/",
+  },
+  {
+    id: "position",
+    order: "02",
+    name: "Position",
+    tagline: "the official stance · what is publicly held",
+    role: "element",
+    href: "./position/",
+  },
+  {
+    id: "piece",
+    order: "03",
+    name: "Piece",
+    tagline: "what Personas carry across the threshold",
+    role: "element",
+    href: "./piece/",
+  },
+  {
+    id: "place",
+    order: "04",
+    name: "Place",
+    tagline: "the baseline ground · the ambient pressure",
+    role: "element",
+    href: "./place/",
+  },
+  {
+    id: "persona",
+    order: "05",
+    name: "Persona",
+    tagline: "the actor · and what they carry alone",
+    role: "element",
+    href: "./persona/",
+  },
 ];
 
 const elements = types.filter((t) => t.role === "element");
@@ -72,10 +114,12 @@ const khaiVersion = "v0.0.2";
         <span>AI<span class="masthead-title-period" aria-hidden="true">.</span></span>
       </h1>
       <p class="masthead-subline">
-        Three tokens. One specification. The name is the architecture: it states who builds, how it operates, and how it runs, and it reads itself in both directions.
+        Three tokens. One specification. The name is the architecture: it states who builds, how it
+        operates, and how it runs, and it reads itself in both directions.
       </p>
       <div class="draft-marker">
-        <span class="draft-dot" aria-hidden="true"></span>draft · authored by Kai · your voice replaces this line
+        <span class="draft-dot" aria-hidden="true"></span>draft · authored by Kai · your voice
+        replaces this line
       </div>
     </section>
 
@@ -87,28 +131,35 @@ const khaiVersion = "v0.0.2";
       </h2>
 
       <div class="movements">
-        {movements.map((m) => (
-          <article class="movement">
-            <div class="movement-meta">
-              <div class="movement-label">{m.n} · {m.layer}</div>
-              <div class={`movement-token ${m.accent ? "movement-token--accent" : ""}`}>{m.token}</div>
-              <div class="movement-sense">{m.sense}</div>
-            </div>
-            <div class="movement-body">
-              <div class="movement-words">
-                {m.words.map((w) => (
-                  <div class="movement-word">
-                    <span class="movement-word-initial">{w.charAt(0)}</span>{w.slice(1)}
-                  </div>
-                ))}
+        {
+          movements.map((m) => (
+            <article class="movement">
+              <div class="movement-meta">
+                <div class="movement-label">
+                  {m.n} · {m.layer}
+                </div>
+                <div class={`movement-token ${m.accent ? "movement-token--accent" : ""}`}>
+                  {m.token}
+                </div>
+                <div class="movement-sense">{m.sense}</div>
               </div>
-              <div class="movement-lives">
-                <span class="movement-lives-rule" aria-hidden="true"></span>
-                lives as · {m.livesAs}
+              <div class="movement-body">
+                <div class="movement-words">
+                  {m.words.map((w) => (
+                    <div class="movement-word">
+                      <span class="movement-word-initial">{w.charAt(0)}</span>
+                      {w.slice(1)}
+                    </div>
+                  ))}
+                </div>
+                <div class="movement-lives">
+                  <span class="movement-lives-rule" aria-hidden="true" />
+                  lives as · {m.livesAs}
+                </div>
               </div>
-            </div>
-          </article>
-        ))}
+            </article>
+          ))
+        }
       </div>
 
       <div class="directions">
@@ -140,20 +191,27 @@ const khaiVersion = "v0.0.2";
         <span class="draft-dot" aria-hidden="true"></span>draft · authored by Kai
       </div>
       <p class="types-intro">
-        The specification enumerates six classes. <span class="brick">Plot</span> is the system: it casts the others. The remaining five are its cargo, the elements a plot loads before a word is spoken.
+        The specification enumerates six classes. <span class="brick">Plot</span> is the system: it casts
+        the others. The remaining five are its cargo, the elements a plot loads before a word is spoken.
       </p>
 
       <ol class="types-list">
-        {types.map((t) => (
-          <li>
-            <a href={t.href} class={`type-row type-row--${t.role}`}>
-              <span class="type-row-order">{t.order}</span>
-              <span class={`type-row-name ${t.role === "system" ? "type-row-name--system" : ""}`}>{t.name}</span>
-              <span class="type-row-tagline">{t.tagline}</span>
-              <span class={`type-row-badge type-row-badge--${t.role}`}>{t.role === "system" ? "system" : "draft"}</span>
-            </a>
-          </li>
-        ))}
+        {
+          types.map((t) => (
+            <li>
+              <a href={t.href} class={`type-row type-row--${t.role}`}>
+                <span class="type-row-order">{t.order}</span>
+                <span class={`type-row-name ${t.role === "system" ? "type-row-name--system" : ""}`}>
+                  {t.name}
+                </span>
+                <span class="type-row-tagline">{t.tagline}</span>
+                <span class={`type-row-badge type-row-badge--${t.role}`}>
+                  {t.role === "system" ? "system" : "draft"}
+                </span>
+              </a>
+            </li>
+          ))
+        }
       </ol>
 
       <div class="types-readmore">
@@ -172,7 +230,10 @@ const khaiVersion = "v0.0.2";
       </h2>
 
       <p class="model-intro">
-        The vocabulary composes by containment. A <em>Play</em> holds plots; each <span class="brick">Plot</span> loads at most one of each element. The whole runs on infrastructure, primed by the two specification files.
+        The vocabulary composes by containment. A <em>Play</em> holds plots; each <span
+          class="brick">Plot</span
+        > loads at most one of each element. The whole runs on infrastructure, primed by the two specification
+        files.
       </p>
 
       <div class="tree">
@@ -192,15 +253,17 @@ const khaiVersion = "v0.0.2";
             </span>
           </div>
           <div class="tree-children tree-children--rulesoft">
-            {elements.map((t) => (
-              <div class="tree-row tree-row--element">
-                <span class="tree-card">0..1</span>
-                <span class="tree-name-block">
-                  <span class="tree-name">{t.name}</span>
-                  <span class="tree-gloss">{t.tagline}</span>
-                </span>
-              </div>
-            ))}
+            {
+              elements.map((t) => (
+                <div class="tree-row tree-row--element">
+                  <span class="tree-card">0..1</span>
+                  <span class="tree-name-block">
+                    <span class="tree-name">{t.name}</span>
+                    <span class="tree-gloss">{t.tagline}</span>
+                  </span>
+                </div>
+              ))
+            }
           </div>
         </div>
       </div>
@@ -257,7 +320,8 @@ const khaiVersion = "v0.0.2";
         <span>KAI · HACKS · AI</span>
       </div>
       <div class="footfed-tagline">
-        one application · <span class="footfed-tagline-soft">cultures.kaihacks.ai</span>, focused on cultures
+        one application · <span class="footfed-tagline-soft">cultures.kaihacks.ai</span>, focused on
+        cultures
       </div>
     </footer>
   </div>
@@ -284,7 +348,9 @@ const khaiVersion = "v0.0.2";
       font-family: var(--font-prose);
     }
     @media (min-width: 641px) {
-      .arch-home { padding: 0 3.5rem; }
+      .arch-home {
+        padding: 0 3.5rem;
+      }
     }
 
     /* top bar */
@@ -312,15 +378,25 @@ const khaiVersion = "v0.0.2";
       color: var(--color-ink-soft);
       text-transform: uppercase;
     }
-    @media (min-width: 641px) { .topbar-domain { font-size: 11px; } }
-    .topbar-domain-tld { color: var(--color-brick); }
+    @media (min-width: 641px) {
+      .topbar-domain {
+        font-size: 11px;
+      }
+    }
+    .topbar-domain-tld {
+      color: var(--color-brick);
+    }
     .topbar-meta {
       display: flex;
       gap: 0.75rem;
       align-items: center;
       flex-wrap: wrap;
     }
-    @media (min-width: 641px) { .topbar-meta { gap: 1.125rem; } }
+    @media (min-width: 641px) {
+      .topbar-meta {
+        gap: 1.125rem;
+      }
+    }
     .filemark {
       display: inline-flex;
       align-items: center;
@@ -332,7 +408,9 @@ const khaiVersion = "v0.0.2";
       text-transform: uppercase;
       text-decoration: none;
     }
-    .filemark:hover { color: var(--color-ink); }
+    .filemark:hover {
+      color: var(--color-ink);
+    }
     .filemark-dot {
       width: 6px;
       height: 6px;
@@ -354,8 +432,14 @@ const khaiVersion = "v0.0.2";
     }
 
     /* masthead */
-    .masthead { padding: 1.875rem 0 1.5rem; }
-    @media (min-width: 641px) { .masthead { padding: 4rem 0 2.5rem; } }
+    .masthead {
+      padding: 1.875rem 0 1.5rem;
+    }
+    @media (min-width: 641px) {
+      .masthead {
+        padding: 4rem 0 2.5rem;
+      }
+    }
     .section-label {
       font-family: var(--font-mono);
       font-size: 11px;
@@ -375,9 +459,17 @@ const khaiVersion = "v0.0.2";
       align-items: baseline;
       column-gap: 0.26em;
     }
-    @media (min-width: 641px) { .masthead-title { font-size: 132px; } }
-    .masthead-title-accent { color: var(--color-brick); }
-    .masthead-title-period { color: var(--color-ink-soft); }
+    @media (min-width: 641px) {
+      .masthead-title {
+        font-size: 132px;
+      }
+    }
+    .masthead-title-accent {
+      color: var(--color-brick);
+    }
+    .masthead-title-period {
+      color: var(--color-ink-soft);
+    }
     .masthead-subline {
       margin: 1.375rem 0 0;
       max-width: 680px;
@@ -389,7 +481,10 @@ const khaiVersion = "v0.0.2";
       text-wrap: pretty;
     }
     @media (min-width: 641px) {
-      .masthead-subline { margin-top: 1.75rem; font-size: 23px; }
+      .masthead-subline {
+        margin-top: 1.75rem;
+        font-size: 23px;
+      }
     }
     .draft-marker {
       margin-top: 0.875rem;
@@ -410,7 +505,9 @@ const khaiVersion = "v0.0.2";
     }
 
     /* sections shared */
-    .section { padding: 0.5rem 0 0.75rem; }
+    .section {
+      padding: 0.5rem 0 0.75rem;
+    }
     .section-heading {
       display: flex;
       justify-content: space-between;
@@ -423,7 +520,11 @@ const khaiVersion = "v0.0.2";
       font-weight: normal;
     }
     @media (min-width: 641px) {
-      .section-heading { flex-direction: row; align-items: baseline; gap: 0; }
+      .section-heading {
+        flex-direction: row;
+        align-items: baseline;
+        gap: 0;
+      }
     }
     .section-no {
       font-family: var(--font-mono);
@@ -440,7 +541,11 @@ const khaiVersion = "v0.0.2";
       letter-spacing: -0.01em;
       color: var(--color-ink);
     }
-    @media (min-width: 641px) { .section-title { font-size: 26px; } }
+    @media (min-width: 641px) {
+      .section-title {
+        font-size: 26px;
+      }
+    }
     .section-note {
       font-family: var(--font-mono);
       font-size: 11px;
@@ -451,7 +556,9 @@ const khaiVersion = "v0.0.2";
     }
 
     /* §1 movements */
-    .movements { margin-top: 1.375rem; }
+    .movements {
+      margin-top: 1.375rem;
+    }
     .movement {
       display: grid;
       grid-template-columns: 1fr;
@@ -474,7 +581,11 @@ const khaiVersion = "v0.0.2";
       gap: 14px;
       flex-wrap: wrap;
     }
-    @media (min-width: 641px) { .movement-meta { display: block; } }
+    @media (min-width: 641px) {
+      .movement-meta {
+        display: block;
+      }
+    }
     .movement-label {
       font-family: var(--font-mono);
       font-size: 11px;
@@ -482,7 +593,11 @@ const khaiVersion = "v0.0.2";
       color: var(--color-ink-soft);
       text-transform: uppercase;
     }
-    @media (max-width: 640px) { .movement-label { width: 100%; } }
+    @media (max-width: 640px) {
+      .movement-label {
+        width: 100%;
+      }
+    }
     .movement-token {
       font-family: var(--font-display);
       font-size: 38px;
@@ -491,15 +606,26 @@ const khaiVersion = "v0.0.2";
       letter-spacing: -0.01em;
       color: var(--color-ink);
     }
-    @media (min-width: 641px) { .movement-token { font-size: 46px; margin-top: 8px; } }
-    .movement-token--accent { color: var(--color-brick); }
+    @media (min-width: 641px) {
+      .movement-token {
+        font-size: 46px;
+        margin-top: 8px;
+      }
+    }
+    .movement-token--accent {
+      color: var(--color-brick);
+    }
     .movement-sense {
       font-family: var(--font-prose);
       font-style: italic;
       font-size: 14px;
       color: var(--color-ink-soft);
     }
-    @media (min-width: 641px) { .movement-sense { margin-top: 6px; } }
+    @media (min-width: 641px) {
+      .movement-sense {
+        margin-top: 6px;
+      }
+    }
     .movement-word {
       font-family: var(--font-display);
       font-weight: 350;
@@ -508,8 +634,15 @@ const khaiVersion = "v0.0.2";
       letter-spacing: -0.01em;
       color: var(--color-ink);
     }
-    @media (min-width: 641px) { .movement-word { font-size: 30px; } }
-    .movement-word-initial { color: var(--color-brick); font-weight: 500; }
+    @media (min-width: 641px) {
+      .movement-word {
+        font-size: 30px;
+      }
+    }
+    .movement-word-initial {
+      color: var(--color-brick);
+      font-weight: 500;
+    }
     .movement-lives {
       margin-top: 14px;
       font-family: var(--font-mono);
@@ -537,9 +670,19 @@ const khaiVersion = "v0.0.2";
       gap: 16px;
       flex-wrap: wrap;
     }
-    @media (min-width: 641px) { .directions { gap: 36px; } }
-    .direction { flex: 1 1 100%; }
-    @media (min-width: 641px) { .direction { flex: 1 1 320px; } }
+    @media (min-width: 641px) {
+      .directions {
+        gap: 36px;
+      }
+    }
+    .direction {
+      flex: 1 1 100%;
+    }
+    @media (min-width: 641px) {
+      .direction {
+        flex: 1 1 320px;
+      }
+    }
     .direction-arrow {
       font-family: var(--font-mono);
       font-size: 11px;
@@ -563,7 +706,9 @@ const khaiVersion = "v0.0.2";
     }
 
     /* §2 types descent */
-    .types { padding: 0.75rem 0 0.5rem; }
+    .types {
+      padding: 0.75rem 0 0.5rem;
+    }
     .types-intro {
       margin: 8px 0 0;
       max-width: 680px;
@@ -573,8 +718,14 @@ const khaiVersion = "v0.0.2";
       color: var(--color-ink);
       text-wrap: pretty;
     }
-    .brick { color: var(--color-brick); }
-    .types-list { list-style: none; margin: 1.625rem 0 0; padding: 0; }
+    .brick {
+      color: var(--color-brick);
+    }
+    .types-list {
+      list-style: none;
+      margin: 1.625rem 0 0;
+      padding: 0;
+    }
     .type-row {
       display: grid;
       grid-template-columns: 52px 200px 1fr auto;
@@ -587,9 +738,14 @@ const khaiVersion = "v0.0.2";
       transition: background 0.12s ease;
     }
     @media (max-width: 640px) {
-      .type-row { display: block; padding: 13px 4px; }
+      .type-row {
+        display: block;
+        padding: 13px 4px;
+      }
     }
-    .type-row:hover { background: #f8f2e3; }
+    .type-row:hover {
+      background: #f8f2e3;
+    }
     .type-row-order {
       font-family: var(--font-mono);
       font-size: 11px;
@@ -604,8 +760,14 @@ const khaiVersion = "v0.0.2";
       letter-spacing: -0.01em;
       color: var(--color-ink);
     }
-    @media (max-width: 640px) { .type-row-name { font-size: 22px; } }
-    .type-row-name--system { color: var(--color-brick); }
+    @media (max-width: 640px) {
+      .type-row-name {
+        font-size: 22px;
+      }
+    }
+    .type-row-name--system {
+      color: var(--color-brick);
+    }
     .type-row-tagline {
       font-family: var(--font-prose);
       font-style: italic;
@@ -613,7 +775,11 @@ const khaiVersion = "v0.0.2";
       color: var(--color-ink-soft);
     }
     @media (max-width: 640px) {
-      .type-row-tagline { display: block; margin-top: 4px; padding-left: 26px; }
+      .type-row-tagline {
+        display: block;
+        margin-top: 4px;
+        padding-left: 26px;
+      }
     }
     .type-row-badge {
       font-family: var(--font-mono);
@@ -621,9 +787,17 @@ const khaiVersion = "v0.0.2";
       letter-spacing: 0.2em;
       text-transform: uppercase;
     }
-    .type-row-badge--system { color: var(--color-brick); }
-    .type-row-badge--element { color: var(--color-ink-soft); }
-    @media (max-width: 640px) { .type-row-badge { margin-left: auto; } }
+    .type-row-badge--system {
+      color: var(--color-brick);
+    }
+    .type-row-badge--element {
+      color: var(--color-ink-soft);
+    }
+    @media (max-width: 640px) {
+      .type-row-badge {
+        margin-left: auto;
+      }
+    }
 
     .types-readmore {
       margin-top: 1.625rem;
@@ -643,7 +817,11 @@ const khaiVersion = "v0.0.2";
       border-bottom: 2px solid var(--color-brick);
       padding-bottom: 4px;
     }
-    @media (min-width: 641px) { .types-readmore-link { font-size: 26px; } }
+    @media (min-width: 641px) {
+      .types-readmore-link {
+        font-size: 26px;
+      }
+    }
     .types-readmore-arrow {
       font-family: var(--font-mono);
       font-size: 12px;
@@ -652,7 +830,9 @@ const khaiVersion = "v0.0.2";
     }
 
     /* §3 model */
-    .model { padding: 2.5rem 0 0.5rem; }
+    .model {
+      padding: 2.5rem 0 0.5rem;
+    }
     .model-intro {
       margin: 1.125rem 0 0;
       max-width: 680px;
@@ -662,7 +842,9 @@ const khaiVersion = "v0.0.2";
       color: var(--color-ink);
       text-wrap: pretty;
     }
-    .tree { margin-top: 1.75rem; }
+    .tree {
+      margin-top: 1.75rem;
+    }
     .tree-row {
       display: grid;
       grid-template-columns: 46px 1fr;
@@ -671,7 +853,10 @@ const khaiVersion = "v0.0.2";
       padding: 9px 0;
     }
     @media (min-width: 641px) {
-      .tree-row { grid-template-columns: 58px 1fr; column-gap: 18px; }
+      .tree-row {
+        grid-template-columns: 58px 1fr;
+        column-gap: 18px;
+      }
     }
     .tree-card {
       font-family: var(--font-mono);
@@ -687,7 +872,9 @@ const khaiVersion = "v0.0.2";
       color: var(--color-ink);
       background: var(--color-paper-warm);
     }
-    .tree-card--n { border-color: var(--color-brick); }
+    .tree-card--n {
+      border-color: var(--color-brick);
+    }
     .tree-name-block {
       display: flex;
       align-items: baseline;
@@ -702,23 +889,51 @@ const khaiVersion = "v0.0.2";
       color: var(--color-ink);
       font-size: 20px;
     }
-    @media (min-width: 641px) { .tree-name { font-size: 22px; } }
-    .tree-name--container { font-size: 26px; }
-    @media (min-width: 641px) { .tree-name--container { font-size: 30px; } }
-    .tree-name--system { color: var(--color-brick); font-size: 24px; }
-    @media (min-width: 641px) { .tree-name--system { font-size: 28px; } }
+    @media (min-width: 641px) {
+      .tree-name {
+        font-size: 22px;
+      }
+    }
+    .tree-name--container {
+      font-size: 26px;
+    }
+    @media (min-width: 641px) {
+      .tree-name--container {
+        font-size: 30px;
+      }
+    }
+    .tree-name--system {
+      color: var(--color-brick);
+      font-size: 24px;
+    }
+    @media (min-width: 641px) {
+      .tree-name--system {
+        font-size: 28px;
+      }
+    }
     .tree-gloss {
       font-family: var(--font-prose);
       font-style: italic;
       font-size: 14px;
       color: var(--color-ink-soft);
     }
-    .tree-children { margin-left: 8px; padding-left: 16px; margin-top: 4px; }
-    @media (min-width: 641px) {
-      .tree-children { margin-left: 14px; padding-left: 26px; }
+    .tree-children {
+      margin-left: 8px;
+      padding-left: 16px;
+      margin-top: 4px;
     }
-    .tree-children--rule { border-left: 1px solid var(--color-rule); }
-    .tree-children--rulesoft { border-left: 1px solid var(--color-rule-soft); }
+    @media (min-width: 641px) {
+      .tree-children {
+        margin-left: 14px;
+        padding-left: 26px;
+      }
+    }
+    .tree-children--rule {
+      border-left: 1px solid var(--color-rule);
+    }
+    .tree-children--rulesoft {
+      border-left: 1px solid var(--color-rule-soft);
+    }
 
     /* infra block */
     .infra {
@@ -737,9 +952,14 @@ const khaiVersion = "v0.0.2";
       padding: 18px 0;
     }
     @media (min-width: 641px) {
-      .relation { grid-template-columns: 120px 1fr; row-gap: 0; }
+      .relation {
+        grid-template-columns: 120px 1fr;
+        row-gap: 0;
+      }
     }
-    .relation--divided { border-top: 1px solid var(--color-rule); }
+    .relation--divided {
+      border-top: 1px solid var(--color-rule);
+    }
     .relation-label {
       font-family: var(--font-mono);
       font-size: 11px;
@@ -767,7 +987,12 @@ const khaiVersion = "v0.0.2";
       color: var(--color-ink-soft);
       text-transform: uppercase;
     }
-    .infra-tags { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .infra-tags {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
     .infra-tag {
       font-family: var(--font-mono);
       font-size: 11px;
@@ -850,6 +1075,8 @@ const khaiVersion = "v0.0.2";
       color: var(--color-ink-soft);
       text-transform: uppercase;
     }
-    .footfed-tagline-soft { color: var(--color-ink-soft); }
+    .footfed-tagline-soft {
+      color: var(--color-ink-soft);
+    }
   </style>
 </BaseLayout>
