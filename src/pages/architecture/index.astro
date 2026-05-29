@@ -46,7 +46,7 @@ const types = [
     id: "process",
     order: "01",
     name: "Process",
-    tagline: "the vector each Persona must openly drive",
+    tagline: "the moving of conditions",
     role: "element",
     href: "./process/",
   },
@@ -54,7 +54,7 @@ const types = [
     id: "position",
     order: "02",
     name: "Position",
-    tagline: "the official stance · what is publicly held",
+    tagline: "the shaping of forms",
     role: "element",
     href: "./position/",
   },
@@ -62,7 +62,7 @@ const types = [
     id: "piece",
     order: "03",
     name: "Piece",
-    tagline: "what Personas carry across the threshold",
+    tagline: "the bearing of history",
     role: "element",
     href: "./piece/",
   },
@@ -70,7 +70,7 @@ const types = [
     id: "place",
     order: "04",
     name: "Place",
-    tagline: "the baseline ground · the ambient pressure",
+    tagline: "the shaping of pressure",
     role: "element",
     href: "./place/",
   },
@@ -78,7 +78,7 @@ const types = [
     id: "persona",
     order: "05",
     name: "Persona",
-    tagline: "the actor · and what they carry alone",
+    tagline: "the waking of awareness",
     role: "element",
     href: "./persona/",
   },
@@ -217,7 +217,7 @@ const elements = types.filter((t) => t.role === "element");
       <p class="model-intro">
         The vocabulary composes by containment. A <em>Play</em> holds plots; each <span
           class="brick">Plot</span
-        > loads at most one of each element. The whole runs on infrastructure, primed by the two specification
+        > loads any number of each element. The whole runs on infrastructure, primed by the two specification
         files.
       </p>
 
@@ -241,7 +241,7 @@ const elements = types.filter((t) => t.role === "element");
             {
               elements.map((t) => (
                 <div class="tree-row tree-row--element">
-                  <span class="tree-card">0..1</span>
+                  <span class="tree-card">0..n</span>
                   <span class="tree-name-block">
                     <span class="tree-name">{t.name}</span>
                     <span class="tree-gloss">{t.tagline}</span>
