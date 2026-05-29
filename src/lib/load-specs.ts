@@ -20,7 +20,7 @@ export interface RawSpec {
 export function loadAllSpecs(): RawSpec[] {
   const entries = readdirSync(KHAI_ARCH_DIR)
     .filter((name) => name.endsWith(".md"))
-    .filter((name) => name !== "stack.md");
+    .filter((name) => name !== "architecture.md");
 
   return entries.map((name) => {
     const id = name.replace(/\.md$/, "");
@@ -33,12 +33,12 @@ export function loadAllSpecs(): RawSpec[] {
   });
 }
 
-export function loadStack(): RawSpec | null {
-  const path = join(KHAI_ARCH_DIR, "stack.md");
+export function loadArchitecture(): RawSpec | null {
+  const path = join(KHAI_ARCH_DIR, "architecture.md");
   try {
     if (!statSync(path).isFile()) return null;
     return {
-      id: "stack",
+      id: "architecture",
       path,
       text: readFileSync(path, "utf-8"),
     };

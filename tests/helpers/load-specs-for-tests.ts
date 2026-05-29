@@ -10,7 +10,7 @@ export interface RawSpecForTest {
 
 export function loadAllSpecsForTests(): RawSpecForTest[] {
   return readdirSync(KHAI_ARCH_DIR)
-    .filter((name) => name.endsWith(".md") && name !== "stack.md")
+    .filter((name) => name.endsWith(".md") && name !== "architecture.md")
     .map((name) => ({
       id: name.replace(/\.md$/, ""),
       text: readFileSync(join(KHAI_ARCH_DIR, name), "utf-8"),
