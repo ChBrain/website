@@ -1,5 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import Topbar from "../../components/Topbar.astro";
+import Footer from "../../components/Footer.astro";
 import { loadArchitecture } from "../../lib/load-specs";
 import MarkdownIt from "markdown-it";
 
@@ -12,7 +14,11 @@ const html = architecture ? md.render(architecture.text) : "<p>No architecture d
   title="Architecture - kaihacks"
   description="The kaihacks architecture: KAI HACKS AI canon, model, type definitions."
 >
+  <Topbar basePath="../" />
+
   <article class="doc" set:html={html} />
+
+  <Footer />
 
   <style>
     .doc :global(h1) {

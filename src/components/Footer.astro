@@ -1,0 +1,47 @@
+---
+// Shared footer for every page on the architecture surface.
+// Same rationale as Topbar: navigation chrome appears on every page or
+// it doesn't appear at all.
+---
+
+<footer class="footfed">
+  <div class="footfed-row">
+    <span>architecture.kaihacks.ai · the specification</span>
+    <span>KAI · HACKS · AI</span>
+  </div>
+  <div class="footfed-tagline">
+    one application · <span class="footfed-tagline-soft">cultures.kaihacks.ai</span>, focused on
+    cultures
+  </div>
+</footer>
+
+<style>
+  .footfed {
+    padding: 1.5rem 0 2.25rem;
+    margin-top: 2rem;
+    border-top: 1px solid var(--color-ink);
+  }
+  .footfed-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--color-ink-soft);
+    text-transform: uppercase;
+  }
+  .footfed-tagline {
+    margin-top: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--color-ink-soft);
+    text-transform: uppercase;
+  }
+  .footfed-tagline-soft {
+    color: var(--color-ink-soft);
+  }
+</style>

@@ -1,5 +1,7 @@
 ---
 import BaseLayout from "./BaseLayout.astro";
+import Topbar from "../components/Topbar.astro";
+import Footer from "../components/Footer.astro";
 import ClassPill from "../components/ClassPill.astro";
 import MnemonicStrip from "../components/MnemonicStrip.astro";
 import ChapterGrid from "../components/ChapterGrid.astro";
@@ -29,6 +31,8 @@ const title = frontmatter.id.charAt(0).toUpperCase() + frontmatter.id.slice(1);
 ---
 
 <BaseLayout title={`${title} - kaihacks architecture`} description={frontmatter.subtitle}>
+  <Topbar basePath="../" />
+
   <header class="spec-header">
     <div class="spec-meta">
       <ClassPill class={frontmatter.class} />
@@ -47,6 +51,8 @@ const title = frontmatter.id.charAt(0).toUpperCase() + frontmatter.id.slice(1);
   />
 
   <section class="spec-coda" set:html={codaHtml} />
+
+  <Footer />
 
   <style>
     .spec-header {
