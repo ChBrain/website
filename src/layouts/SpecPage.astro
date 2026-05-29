@@ -13,6 +13,11 @@ interface Props {
   spec: ParsedSpec;
 }
 
+// Canonical order of the 6 typed specs. Instructions is excluded - it's
+// the meta-type infrastructure, not a P-driver. Specs outside this list
+// (instructions) get no prev/next nav (currentIdx == -1).
+const TYPE_ORDER = ["plot", "process", "position", "piece", "place", "persona"];
+
 const { spec } = Astro.props;
 const { frontmatter, lede, chapters, coda } = spec;
 const md = new MarkdownIt({ html: false, breaks: false, linkify: false });
@@ -28,31 +33,66 @@ const codaHtml = autoLink(
   frontmatter.chapters,
 );
 const title = frontmatter.id.charAt(0).toUpperCase() + frontmatter.id.slice(1);
+
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const currentIdx = TYPE_ORDER.indexOf(frontmatter.id);
+const prevId = currentIdx > 0 ? TYPE_ORDER[currentIdx - 1] : null;
+const nextId =
+  currentIdx >= 0 && currentIdx < TYPE_ORDER.length - 1 ? TYPE_ORDER[currentIdx + 1] : null;
 ---
 
 <BaseLayout title={`${title} - kaihacks architecture`} description={frontmatter.subtitle}>
-  <Topbar basePath="../" />
+  <div class="arch-page">
+    <Topbar basePath="../" />
 
-  <header class="spec-header">
-    <div class="spec-meta">
-      <ClassPill class={frontmatter.class} />
-      <MnemonicStrip mnemonic={frontmatter.mnemonic} />
-    </div>
-    <h1 class="spec-title">{title}</h1>
-    <p class="spec-subtitle">{frontmatter.subtitle}</p>
-  </header>
+    <header class="spec-header">
+      <div class="spec-meta">
+        <ClassPill class={frontmatter.class} />
+        <MnemonicStrip mnemonic={frontmatter.mnemonic} />
+      </div>
+      <h1 class="spec-title">{title}</h1>
+      <p class="spec-subtitle">{frontmatter.subtitle}</p>
+    </header>
 
-  <section class="spec-lede" set:html={ledeHtml} />
+    <section class="spec-lede" set:html={ledeHtml} />
 
-  <ChapterGrid
-    chapters={chapters}
-    ownTypeId={frontmatter.id}
-    ownChapterNames={frontmatter.chapters}
-  />
+    <ChapterGrid
+      chapters={chapters}
+      ownTypeId={frontmatter.id}
+      ownChapterNames={frontmatter.chapters}
+    />
 
-  <section class="spec-coda" set:html={codaHtml} />
+    <section class="spec-coda" set:html={codaHtml} />
 
-  <Footer />
+    {
+      (prevId || nextId) && (
+        <nav class="spec-nav" aria-label="Spec navigation">
+          {prevId ? (
+            <a href={`../${prevId}/`} class="spec-nav-link spec-nav-prev">
+              <span class="spec-nav-arrow" aria-hidden="true">
+                ←
+              </span>
+              <span class="spec-nav-label">{cap(prevId)}</span>
+            </a>
+          ) : (
+            <span />
+          )}
+          {nextId ? (
+            <a href={`../${nextId}/`} class="spec-nav-link spec-nav-next">
+              <span class="spec-nav-label">{cap(nextId)}</span>
+              <span class="spec-nav-arrow" aria-hidden="true">
+                →
+              </span>
+            </a>
+          ) : (
+            <span />
+          )}
+        </nav>
+      )
+    }
+
+    <Footer />
+  </div>
 
   <style>
     .spec-header {
@@ -92,6 +132,52 @@ const title = frontmatter.id.charAt(0).toUpperCase() + frontmatter.id.slice(1);
       border-top: var(--border-thin);
       font-size: var(--font-size-base);
       line-height: var(--line-height-loose);
+    }
+
+    /* Prev / next slider through the typed specs. Edges (Plot, Persona)
+     * leave one side empty so the surviving link stays on its side via
+     * flex space-between. */
+    .spec-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: var(--space-4);
+      margin-top: var(--space-7);
+      padding-top: var(--space-5);
+      border-top: 1px solid var(--color-ink);
+    }
+    .spec-nav-link {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 14px;
+      text-decoration: none;
+      color: var(--color-ink);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+    .spec-nav-arrow {
+      color: var(--color-brick);
+      font-family: var(--font-mono);
+      font-size: 14px;
+    }
+    .spec-nav-label {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      line-height: 1;
+      text-transform: none;
+      color: var(--color-ink);
+    }
+    @media (min-width: 641px) {
+      .spec-nav-label {
+        font-size: 26px;
+      }
+    }
+    .spec-nav-link:hover .spec-nav-label {
+      color: var(--color-brick);
     }
   </style>
 </BaseLayout>
