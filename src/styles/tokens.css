@@ -1,14 +1,12 @@
 /* kaihacks design tokens — CSS custom properties.
  * Brand palette names are English (paper, ink, brick, sea, ...).
  * North-Frisian roots are private priming only and never surface in rendered text.
- * German names from PR #20 (backstein, marsch, nordsee, bernstein, wattgrau)
- * are preserved as aliases so anything that consumes them still works.
  */
 
 :root {
   color-scheme: light;
 
-  /* Brand palette — raw values (English names; primary surface) */
+  /* Brand palette — raw values */
   --color-paper: #f3ede2;
   --color-paper-warm: #fbf7ee;
   --color-paper-deep: #ede5d4;
@@ -24,13 +22,6 @@
   --color-amber: #c98e36;
   --color-tide: #8a8d86;
   --color-marsh: #6e7a4c;
-
-  /* German aliases (PR #20 API surface — kept for back-compat) */
-  --color-backstein: var(--color-brick);
-  --color-wattgrau: var(--color-tide);
-  --color-nordsee: var(--color-sea);
-  --color-bernstein: var(--color-amber);
-  --color-marsch: var(--color-marsh);
 
   /* Semantic — neutral */
   --color-bg: var(--color-paper);
