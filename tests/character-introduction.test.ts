@@ -44,6 +44,19 @@ const ALLOWED_RENDERER_WORDS = new Set([
   "icon",
   "svg",
   "img",
+  // shared Topbar component (src/components/Topbar.astro):
+  // "architecture.kaihacks.ai · architecture.md · instructions.md · khai · vX.Y.Z"
+  "instructions",
+  "khai",
+  // shared Footer component (src/components/Footer.astro):
+  // "architecture.kaihacks.ai · the specification / KAI · HACKS · AI /
+  //  one application · cultures.kaihacks.ai, focused on cultures"
+  "specification",
+  "kai",
+  "hacks",
+  "application",
+  "cultures",
+  "focused",
 ]);
 
 describe("character-introduction - built page words exist in source", () => {
