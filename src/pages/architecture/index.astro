@@ -1,5 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import Topbar from "../../components/Topbar.astro";
 
 const movements = [
   {
@@ -83,7 +84,6 @@ const types = [
 ];
 
 const elements = types.filter((t) => t.role === "element");
-const khaiVersion = "v0.0.2";
 ---
 
 <BaseLayout
@@ -91,20 +91,7 @@ const khaiVersion = "v0.0.2";
   description="KAI HACKS AI. The kaihacks specification reads itself: who builds, how it operates, how it runs."
 >
   <div class="arch-home">
-    <header class="topbar">
-      <div class="topbar-domain">
-        architecture<span class="topbar-domain-tld">.kaihacks.ai</span>
-      </div>
-      <div class="topbar-meta">
-        <a href="./architecture/" class="filemark">
-          <span class="filemark-dot" aria-hidden="true"></span>architecture.md
-        </a>
-        <a href="./instructions/" class="filemark">
-          <span class="filemark-dot" aria-hidden="true"></span>instructions.md
-        </a>
-        <span class="topbar-version">khai · {khaiVersion}</span>
-      </div>
-    </header>
+    <Topbar basePath="./" />
 
     <section class="masthead">
       <div class="section-label">§0 · the specification</div>
@@ -350,83 +337,7 @@ const khaiVersion = "v0.0.2";
       }
     }
 
-    /* top bar */
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      flex-direction: column;
-      gap: 0.75rem;
-      padding: 0.25rem 0 0.875rem;
-      border-bottom: 1px solid var(--color-ink);
-    }
-    @media (min-width: 641px) {
-      .topbar {
-        flex-direction: row;
-        align-items: baseline;
-        gap: 0;
-        padding: 1.375rem 0 1rem;
-      }
-    }
-    .topbar-domain {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      letter-spacing: 0.24em;
-      color: var(--color-ink-soft);
-      text-transform: uppercase;
-    }
-    @media (min-width: 641px) {
-      .topbar-domain {
-        font-size: 11px;
-      }
-    }
-    .topbar-domain-tld {
-      color: var(--color-brick);
-    }
-    .topbar-meta {
-      display: flex;
-      gap: 0.75rem;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    @media (min-width: 641px) {
-      .topbar-meta {
-        gap: 1.125rem;
-      }
-    }
-    .filemark {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      font-family: var(--font-mono);
-      font-size: 10px;
-      letter-spacing: 0.16em;
-      color: var(--color-ink-soft);
-      text-transform: uppercase;
-      text-decoration: none;
-    }
-    .filemark:hover {
-      color: var(--color-ink);
-    }
-    .filemark-dot {
-      width: 6px;
-      height: 6px;
-      background: var(--color-sea);
-      display: inline-block;
-    }
-    .topbar-version {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      letter-spacing: 0.16em;
-      color: var(--color-ink-soft);
-      text-transform: uppercase;
-    }
-    @media (min-width: 641px) {
-      .topbar-version {
-        padding-left: 1rem;
-        border-left: 1px solid var(--color-rule);
-      }
-    }
+    /* topbar styles live in src/components/Topbar.astro */
 
     /* masthead */
     .masthead {
