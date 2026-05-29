@@ -29,8 +29,11 @@ describe("design tokens - palette contract", () => {
 
   for (const [token, value] of Object.entries(expectedValues)) {
     it(`${token} = ${value}`, () => {
-      const re = new RegExp(`${token.replace(/-/g, "\\-")}\\s*:\\s*${value};`, "i");
-      expect(tokens).toMatch(re);
+      // Plain substring match; tokens.css is prettier-formatted so the
+      // shape is deterministic: `  --color-foo: #abcdef;`.
+      // Avoids `new RegExp(...)` built from interpolated values, which
+      // CodeQL flags as a regex-injection pattern even with constants.
+      expect(tokens).toContain(`${token}: ${value};`);
     });
   }
 });
