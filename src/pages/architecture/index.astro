@@ -1,72 +1,1082 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import ClassPill from "../../components/ClassPill.astro";
-import { loadAllSpecs } from "../../lib/load-specs";
-import { parseSpec } from "../../lib/parse-spec";
 
-const rawSpecs = loadAllSpecs();
-const specs = rawSpecs.map((r) => ({ id: r.id, parsed: parseSpec(r.text) }));
+const movements = [
+  {
+    n: "I",
+    token: "KAI",
+    accent: false,
+    layer: "the noun",
+    sense: "who + what",
+    words: ["Kais", "Architecture", "Instructions"],
+    livesAs: "authored · architecture.md · instructions.md",
+  },
+  {
+    n: "II",
+    token: "HACKS",
+    accent: true,
+    layer: "the verbs",
+    sense: "how it operates",
+    words: ["Human", "Agent", "Collaboration", "Knowledge", "System"],
+    livesAs: "the five chapters · the method",
+  },
+  {
+    n: "III",
+    token: "AI",
+    accent: false,
+    layer: "the verb",
+    sense: "how it is instantiated",
+    words: ["Agent", "Implemented"],
+    livesAs: "the runtime · cultures.kaihacks.ai",
+  },
+];
 
-const classOrder = { system: 0, element: 1, meta: 2 } as const;
-specs.sort(
-  (a, b) => classOrder[a.parsed.frontmatter.class] - classOrder[b.parsed.frontmatter.class],
-);
+const types = [
+  {
+    id: "plot",
+    order: "00",
+    name: "Plot",
+    tagline: "the casting of forces",
+    role: "system",
+    href: "./plot/",
+  },
+  {
+    id: "process",
+    order: "01",
+    name: "Process",
+    tagline: "the vector each Persona must openly drive",
+    role: "element",
+    href: "./process/",
+  },
+  {
+    id: "position",
+    order: "02",
+    name: "Position",
+    tagline: "the official stance · what is publicly held",
+    role: "element",
+    href: "./position/",
+  },
+  {
+    id: "piece",
+    order: "03",
+    name: "Piece",
+    tagline: "what Personas carry across the threshold",
+    role: "element",
+    href: "./piece/",
+  },
+  {
+    id: "place",
+    order: "04",
+    name: "Place",
+    tagline: "the baseline ground · the ambient pressure",
+    role: "element",
+    href: "./place/",
+  },
+  {
+    id: "persona",
+    order: "05",
+    name: "Persona",
+    tagline: "the actor · and what they carry alone",
+    role: "element",
+    href: "./persona/",
+  },
+];
+
+const elements = types.filter((t) => t.role === "element");
+const khaiVersion = "v0.0.2";
 ---
 
 <BaseLayout
-  title="Architecture - kaihacks"
-  description="The kaihacks architecture spec: type definitions, mnemonics, and chapter rules."
+  title="Architecture · kaihacks"
+  description="KAI HACKS AI. The kaihacks specification reads itself: who builds, how it operates, how it runs."
 >
-  <h1>Architecture</h1>
-  <p>
-    The kaihacks system is built around eight files. Seven typed specs and one companion. Each typed
-    spec follows the same shape: a mnemonic that names its function, four to six chapters that
-    compose it, a lede, and a coda.
-  </p>
+  <div class="arch-home">
+    <header class="topbar">
+      <div class="topbar-domain">
+        architecture<span class="topbar-domain-tld">.kaihacks.ai</span>
+      </div>
+      <div class="topbar-meta">
+        <a href="./architecture/" class="filemark">
+          <span class="filemark-dot" aria-hidden="true"></span>architecture.md
+        </a>
+        <a href="./instructions/" class="filemark">
+          <span class="filemark-dot" aria-hidden="true"></span>instructions.md
+        </a>
+        <span class="topbar-version">khai · {khaiVersion}</span>
+      </div>
+    </header>
 
-  <ul class="spec-list">
-    {
-      specs.map((s) => (
-        <li class="spec-list-item">
-          <a href={`./${s.id}/`} class="spec-link">
-            <span class="spec-link-title">{s.id.charAt(0).toUpperCase() + s.id.slice(1)}</span>
-            <ClassPill class={s.parsed.frontmatter.class} />
-          </a>
-          <span class="spec-list-subtitle">{s.parsed.frontmatter.subtitle}</span>
-        </li>
-      ))
+    <section class="masthead">
+      <div class="section-label">§0 · the specification</div>
+      <h1 class="masthead-title" aria-label="KAI HACKS AI">
+        <span>KAI</span>
+        <span class="masthead-title-accent">HACKS</span>
+        <span>AI<span class="masthead-title-period" aria-hidden="true">.</span></span>
+      </h1>
+      <p class="masthead-subline">
+        Three tokens. One specification. The name is the architecture: it states who builds, how it
+        operates, and how it runs, and it reads itself in both directions.
+      </p>
+      <div class="draft-marker">
+        <span class="draft-dot" aria-hidden="true"></span>draft · authored by Kai · your voice
+        replaces this line
+      </div>
+    </section>
+
+    <section class="section reading">
+      <h2 class="section-heading">
+        <span class="section-no">§1</span>
+        <span class="section-title">The reading</span>
+        <span class="section-note">how the name decomposes</span>
+      </h2>
+
+      <div class="movements">
+        {
+          movements.map((m) => (
+            <article class="movement">
+              <div class="movement-meta">
+                <div class="movement-label">
+                  {m.n} · {m.layer}
+                </div>
+                <div class={`movement-token ${m.accent ? "movement-token--accent" : ""}`}>
+                  {m.token}
+                </div>
+                <div class="movement-sense">{m.sense}</div>
+              </div>
+              <div class="movement-body">
+                <div class="movement-words">
+                  {m.words.map((w) => (
+                    <div class="movement-word">
+                      <span class="movement-word-initial">{w.charAt(0)}</span>
+                      {w.slice(1)}
+                    </div>
+                  ))}
+                </div>
+                <div class="movement-lives">
+                  <span class="movement-lives-rule" aria-hidden="true" />
+                  lives as · {m.livesAs}
+                </div>
+              </div>
+            </article>
+          ))
+        }
+      </div>
+
+      <div class="directions">
+        <div class="direction">
+          <div class="direction-arrow">KAI → HACKS → AI</div>
+          <div class="direction-gloss">
+            <span class="direction-label">read forward ·</span>
+            <em>how you build one.</em>
+          </div>
+        </div>
+        <div class="direction">
+          <div class="direction-arrow">AI ← HACKS ← KAI</div>
+          <div class="direction-gloss">
+            <span class="direction-label">read backward ·</span>
+            <em>how you explain one.</em>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section types">
+      <h2 class="section-heading">
+        <span class="section-no">§2</span>
+        <span class="section-title">The types</span>
+        <span class="section-note">the class enumeration · architecture.md</span>
+      </h2>
+
+      <div class="draft-marker">
+        <span class="draft-dot" aria-hidden="true"></span>draft · authored by Kai
+      </div>
+      <p class="types-intro">
+        The specification enumerates six classes. <span class="brick">Plot</span> is the system: it casts
+        the others. The remaining five are its cargo, the elements a plot loads before a word is spoken.
+      </p>
+
+      <ol class="types-list">
+        {
+          types.map((t) => (
+            <li>
+              <a href={t.href} class={`type-row type-row--${t.role}`}>
+                <span class="type-row-order">{t.order}</span>
+                <span class={`type-row-name ${t.role === "system" ? "type-row-name--system" : ""}`}>
+                  {t.name}
+                </span>
+                <span class="type-row-tagline">{t.tagline}</span>
+                <span class={`type-row-badge type-row-badge--${t.role}`}>
+                  {t.role === "system" ? "system" : "draft"}
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+
+      <div class="types-readmore">
+        <a href="./plot/" class="types-readmore-link">
+          <span>Read the types</span>
+          <span class="types-readmore-arrow" aria-hidden="true">→</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="section model">
+      <h2 class="section-heading">
+        <span class="section-no">§3</span>
+        <span class="section-title">The model</span>
+        <span class="section-note">the grammar · cardinalities</span>
+      </h2>
+
+      <p class="model-intro">
+        The vocabulary composes by containment. A <em>Play</em> holds plots; each <span
+          class="brick">Plot</span
+        > loads at most one of each element. The whole runs on infrastructure, primed by the two specification
+        files.
+      </p>
+
+      <div class="tree">
+        <div class="tree-row tree-row--container">
+          <span class="tree-card">1</span>
+          <span class="tree-name-block">
+            <span class="tree-name tree-name--container">Play</span>
+            <span class="tree-gloss">the production · the whole table</span>
+          </span>
+        </div>
+        <div class="tree-children tree-children--rule">
+          <div class="tree-row tree-row--system">
+            <span class="tree-card tree-card--n">0..n</span>
+            <span class="tree-name-block">
+              <span class="tree-name tree-name--system">Plot</span>
+              <span class="tree-gloss">the system · it casts the others</span>
+            </span>
+          </div>
+          <div class="tree-children tree-children--rulesoft">
+            {
+              elements.map((t) => (
+                <div class="tree-row tree-row--element">
+                  <span class="tree-card">0..1</span>
+                  <span class="tree-name-block">
+                    <span class="tree-name">{t.name}</span>
+                    <span class="tree-gloss">{t.tagline}</span>
+                  </span>
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="infra">
+        <div class="relation">
+          <div class="relation-label">sits on</div>
+          <div class="relation-body">
+            <div class="infra-title">
+              <span class="infra-name">Infrastructure</span>
+              <span class="infra-note">the AI runtime · agent implemented</span>
+            </div>
+            <div class="infra-tags">
+              <span class="infra-tag">Claude.ai</span>
+              <span class="infra-tag">Perplexity</span>
+              <span class="infra-tag">Self-Hosted</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="relation relation--divided">
+          <div class="relation-label">based on</div>
+          <div class="relation-body">
+            <a href="./architecture/" class="spec-link">
+              <span class="spec-card">0..1</span>
+              <span class="spec-name">Architecture</span>
+              <span class="spec-file">architecture.md</span>
+              <span class="spec-howto" aria-hidden="true">↗ how to write</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="relation relation--divided">
+          <div class="relation-label">primed by</div>
+          <div class="relation-body">
+            <a href="./instructions/" class="spec-link">
+              <span class="spec-card">0..1</span>
+              <span class="spec-name">Instructions</span>
+              <span class="spec-file">instructions.md</span>
+              <span class="spec-howto" aria-hidden="true">↗ how to write</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="infra-foot">
+          ↗ Architecture · Instructions link to their authoring guides · destinations pending
+        </div>
+      </div>
+    </section>
+
+    <footer class="footfed">
+      <div class="footfed-row">
+        <span>architecture.kaihacks.ai · the specification</span>
+        <span>KAI · HACKS · AI</span>
+      </div>
+      <div class="footfed-tagline">
+        one application · <span class="footfed-tagline-soft">cultures.kaihacks.ai</span>, focused on
+        cultures
+      </div>
+    </footer>
+  </div>
+
+  <style is:global>
+    /* Full-bleed override of BaseLayout's prose-width main for this page only.
+     * Uses :has() so we don't need to touch BaseLayout. */
+    body:has(.arch-home) {
+      padding: 0;
     }
-  </ul>
+    body:has(.arch-home) main {
+      max-width: none;
+      margin: 0;
+    }
+  </style>
 
   <style>
-    .spec-list {
-      list-style: none;
-      padding: 0;
-      margin: var(--space-6) 0;
+    .arch-home {
+      max-width: var(--width-page);
+      margin: 0 auto;
+      padding: 0 1.25rem;
+      background: var(--color-paper);
+      color: var(--color-ink);
+      font-family: var(--font-prose);
     }
-    .spec-list-item {
-      padding: var(--space-4) 0;
-      border-bottom: var(--border-thin);
+    @media (min-width: 641px) {
+      .arch-home {
+        padding: 0 3.5rem;
+      }
     }
-    .spec-link {
+
+    /* top bar */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 0.25rem 0 0.875rem;
+      border-bottom: 1px solid var(--color-ink);
+    }
+    @media (min-width: 641px) {
+      .topbar {
+        flex-direction: row;
+        align-items: baseline;
+        gap: 0;
+        padding: 1.375rem 0 1rem;
+      }
+    }
+    .topbar-domain {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.24em;
+      color: var(--color-ink-soft);
+      text-transform: uppercase;
+    }
+    @media (min-width: 641px) {
+      .topbar-domain {
+        font-size: 11px;
+      }
+    }
+    .topbar-domain-tld {
+      color: var(--color-brick);
+    }
+    .topbar-meta {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    @media (min-width: 641px) {
+      .topbar-meta {
+        gap: 1.125rem;
+      }
+    }
+    .filemark {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      color: var(--color-ink-soft);
+      text-transform: uppercase;
+      text-decoration: none;
+    }
+    .filemark:hover {
+      color: var(--color-ink);
+    }
+    .filemark-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--color-sea);
+      display: inline-block;
+    }
+    .topbar-version {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      color: var(--color-ink-soft);
+      text-transform: uppercase;
+    }
+    @media (min-width: 641px) {
+      .topbar-version {
+        padding-left: 1rem;
+        border-left: 1px solid var(--color-rule);
+      }
+    }
+
+    /* masthead */
+    .masthead {
+      padding: 1.875rem 0 1.5rem;
+    }
+    @media (min-width: 641px) {
+      .masthead {
+        padding: 4rem 0 2.5rem;
+      }
+    }
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.26em;
+      color: var(--color-ink-soft);
+      text-transform: uppercase;
+    }
+    .masthead-title {
+      margin: 1.125rem 0 0;
+      font-family: var(--font-display);
+      font-weight: 350;
+      font-size: 54px;
+      line-height: 0.94;
+      letter-spacing: -0.03em;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      column-gap: 0.26em;
+    }
+    @media (min-width: 641px) {
+      .masthead-title {
+        font-size: 132px;
+      }
+    }
+    .masthead-title-accent {
+      color: var(--color-brick);
+    }
+    .masthead-title-period {
+      color: var(--color-ink-soft);
+    }
+    .masthead-subline {
+      margin: 1.375rem 0 0;
+      max-width: 680px;
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 17px;
+      line-height: 1.4;
+      color: var(--color-ink-soft);
+      text-wrap: pretty;
+    }
+    @media (min-width: 641px) {
+      .masthead-subline {
+        margin-top: 1.75rem;
+        font-size: 23px;
+      }
+    }
+    .draft-marker {
+      margin-top: 0.875rem;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--color-ink-soft);
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .draft-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: var(--color-amber);
+    }
+
+    /* sections shared */
+    .section {
+      padding: 0.5rem 0 0.75rem;
+    }
+    .section-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 4px;
+      border-bottom: 1px solid var(--color-rule);
+      padding-bottom: 10px;
+      margin: 0;
+      font-weight: normal;
+    }
+    @media (min-width: 641px) {
+      .section-heading {
+        flex-direction: row;
+        align-items: baseline;
+        gap: 0;
+      }
+    }
+    .section-no {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--color-brick);
+      text-transform: uppercase;
+      margin-right: 14px;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      color: var(--color-ink);
+    }
+    @media (min-width: 641px) {
+      .section-title {
+        font-size: 26px;
+      }
+    }
+    .section-note {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      color: var(--color-ink-soft);
+      text-transform: uppercase;
+      margin-left: auto;
+    }
+
+    /* §1 movements */
+    .movements {
+      margin-top: 1.375rem;
+    }
+    .movement {
+      display: grid;
+      grid-template-columns: 1fr;
+      column-gap: 40px;
+      row-gap: 10px;
+      padding: 1.25rem 0;
+      border-top: 1px solid var(--color-rule);
+      align-items: start;
+    }
+    @media (min-width: 641px) {
+      .movement {
+        grid-template-columns: 200px 1fr;
+        row-gap: 0;
+        padding: 1.625rem 0;
+      }
+    }
+    .movement-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    @media (min-width: 641px) {
+      .movement-meta {
+        display: block;
+      }
+    }
+    .movement-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--color-ink-soft);
+      text-transform: uppercase;
+    }
+    @media (max-width: 640px) {
+      .movement-label {
+        width: 100%;
+      }
+    }
+    .movement-token {
+      font-family: var(--font-display);
+      font-size: 38px;
+      line-height: 1;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      color: var(--color-ink);
+    }
+    @media (min-width: 641px) {
+      .movement-token {
+        font-size: 46px;
+        margin-top: 8px;
+      }
+    }
+    .movement-token--accent {
+      color: var(--color-brick);
+    }
+    .movement-sense {
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 14px;
+      color: var(--color-ink-soft);
+    }
+    @media (min-width: 641px) {
+      .movement-sense {
+        margin-top: 6px;
+      }
+    }
+    .movement-word {
+      font-family: var(--font-display);
+      font-weight: 350;
+      font-size: 24px;
+      line-height: 1.18;
+      letter-spacing: -0.01em;
+      color: var(--color-ink);
+    }
+    @media (min-width: 641px) {
+      .movement-word {
+        font-size: 30px;
+      }
+    }
+    .movement-word-initial {
+      color: var(--color-brick);
+      font-weight: 500;
+    }
+    .movement-lives {
+      margin-top: 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      color: var(--color-ink-soft);
+      text-transform: uppercase;
       display: flex;
       align-items: center;
-      gap: var(--space-3);
+      gap: 8px;
+    }
+    .movement-lives-rule {
+      display: inline-block;
+      width: 16px;
+      height: 1px;
+      background: var(--color-rule);
+    }
+
+    /* directions */
+    .directions {
+      margin-top: 1.125rem;
+      border-top: 1px solid var(--color-ink);
+      padding-top: 1.125rem;
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    @media (min-width: 641px) {
+      .directions {
+        gap: 36px;
+      }
+    }
+    .direction {
+      flex: 1 1 100%;
+    }
+    @media (min-width: 641px) {
+      .direction {
+        flex: 1 1 320px;
+      }
+    }
+    .direction-arrow {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--color-brick);
+      text-transform: uppercase;
+    }
+    .direction-gloss {
+      margin-top: 6px;
+      font-family: var(--font-prose);
+      font-size: 16px;
+      color: var(--color-ink);
+    }
+    .direction-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      color: var(--color-ink-soft);
+      text-transform: uppercase;
+      margin-right: 8px;
+    }
+
+    /* §2 types descent */
+    .types {
+      padding: 0.75rem 0 0.5rem;
+    }
+    .types-intro {
+      margin: 8px 0 0;
+      max-width: 680px;
+      font-family: var(--font-prose);
+      font-size: 16px;
+      line-height: 1.55;
+      color: var(--color-ink);
+      text-wrap: pretty;
+    }
+    .brick {
+      color: var(--color-brick);
+    }
+    .types-list {
+      list-style: none;
+      margin: 1.625rem 0 0;
+      padding: 0;
+    }
+    .type-row {
+      display: grid;
+      grid-template-columns: 52px 200px 1fr auto;
+      align-items: baseline;
+      column-gap: 20px;
+      padding: 14px 8px;
       text-decoration: none;
-      color: var(--color-fg);
+      color: var(--color-ink);
+      border-top: 1px solid var(--color-rule-soft);
+      transition: background 0.12s ease;
     }
-    .spec-link:hover {
-      color: var(--color-accent);
+    @media (max-width: 640px) {
+      .type-row {
+        display: block;
+        padding: 13px 4px;
+      }
     }
-    .spec-link-title {
-      font-size: var(--font-size-lg);
-      font-weight: var(--font-weight-bold);
+    .type-row:hover {
+      background: #f8f2e3;
     }
-    .spec-list-subtitle {
-      display: block;
-      margin-top: var(--space-2);
-      color: var(--color-fg-muted);
+    .type-row-order {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--color-ink-soft);
+    }
+    .type-row-name {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 400;
+      line-height: 1;
+      letter-spacing: -0.01em;
+      color: var(--color-ink);
+    }
+    @media (max-width: 640px) {
+      .type-row-name {
+        font-size: 22px;
+      }
+    }
+    .type-row-name--system {
+      color: var(--color-brick);
+    }
+    .type-row-tagline {
+      font-family: var(--font-prose);
       font-style: italic;
+      font-size: 14.5px;
+      color: var(--color-ink-soft);
+    }
+    @media (max-width: 640px) {
+      .type-row-tagline {
+        display: block;
+        margin-top: 4px;
+        padding-left: 26px;
+      }
+    }
+    .type-row-badge {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+    .type-row-badge--system {
+      color: var(--color-brick);
+    }
+    .type-row-badge--element {
+      color: var(--color-ink-soft);
+    }
+    @media (max-width: 640px) {
+      .type-row-badge {
+        margin-left: auto;
+      }
+    }
+
+    .types-readmore {
+      margin-top: 1.625rem;
+      border-top: 1px solid var(--color-ink);
+      padding-top: 1.125rem;
+    }
+    .types-readmore-link {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--color-ink);
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      border-bottom: 2px solid var(--color-brick);
+      padding-bottom: 4px;
+    }
+    @media (min-width: 641px) {
+      .types-readmore-link {
+        font-size: 26px;
+      }
+    }
+    .types-readmore-arrow {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      color: var(--color-brick);
+    }
+
+    /* §3 model */
+    .model {
+      padding: 2.5rem 0 0.5rem;
+    }
+    .model-intro {
+      margin: 1.125rem 0 0;
+      max-width: 680px;
+      font-family: var(--font-prose);
+      font-size: 16px;
+      line-height: 1.55;
+      color: var(--color-ink);
+      text-wrap: pretty;
+    }
+    .tree {
+      margin-top: 1.75rem;
+    }
+    .tree-row {
+      display: grid;
+      grid-template-columns: 46px 1fr;
+      column-gap: 12px;
+      align-items: baseline;
+      padding: 9px 0;
+    }
+    @media (min-width: 641px) {
+      .tree-row {
+        grid-template-columns: 58px 1fr;
+        column-gap: 18px;
+      }
+    }
+    .tree-card {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      color: var(--color-ink-soft);
+      border: 1px solid var(--color-rule);
+      padding: 3px 0;
+      text-align: center;
+      background: transparent;
+    }
+    .tree-row--container .tree-card {
+      color: var(--color-ink);
+      background: var(--color-paper-warm);
+    }
+    .tree-card--n {
+      border-color: var(--color-brick);
+    }
+    .tree-name-block {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .tree-name {
+      font-family: var(--font-display);
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      line-height: 1;
+      color: var(--color-ink);
+      font-size: 20px;
+    }
+    @media (min-width: 641px) {
+      .tree-name {
+        font-size: 22px;
+      }
+    }
+    .tree-name--container {
+      font-size: 26px;
+    }
+    @media (min-width: 641px) {
+      .tree-name--container {
+        font-size: 30px;
+      }
+    }
+    .tree-name--system {
+      color: var(--color-brick);
+      font-size: 24px;
+    }
+    @media (min-width: 641px) {
+      .tree-name--system {
+        font-size: 28px;
+      }
+    }
+    .tree-gloss {
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 14px;
+      color: var(--color-ink-soft);
+    }
+    .tree-children {
+      margin-left: 8px;
+      padding-left: 16px;
+      margin-top: 4px;
+    }
+    @media (min-width: 641px) {
+      .tree-children {
+        margin-left: 14px;
+        padding-left: 26px;
+      }
+    }
+    .tree-children--rule {
+      border-left: 1px solid var(--color-rule);
+    }
+    .tree-children--rulesoft {
+      border-left: 1px solid var(--color-rule-soft);
+    }
+
+    /* infra block */
+    .infra {
+      margin-top: 1.875rem;
+      border: 1px solid var(--color-rule);
+      border-left: 4px solid var(--color-sea);
+      background: #eef1f1;
+      padding: 6px 26px;
+    }
+    .relation {
+      display: grid;
+      grid-template-columns: 1fr;
+      column-gap: 24px;
+      row-gap: 8px;
+      align-items: baseline;
+      padding: 18px 0;
+    }
+    @media (min-width: 641px) {
+      .relation {
+        grid-template-columns: 120px 1fr;
+        row-gap: 0;
+      }
+    }
+    .relation--divided {
+      border-top: 1px solid var(--color-rule);
+    }
+    .relation-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--color-sea);
+      text-transform: uppercase;
+    }
+    .infra-title {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .infra-name {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 400;
+      color: var(--color-sea);
+      letter-spacing: -0.01em;
+    }
+    .infra-note {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      color: var(--color-ink-soft);
+      text-transform: uppercase;
+    }
+    .infra-tags {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+    .infra-tag {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: #eef2f3;
+      background: var(--color-sea);
+      padding: 5px 11px;
+    }
+    .spec-link {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+      text-decoration: none;
+      color: var(--color-ink);
+    }
+    .spec-card {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      color: var(--color-sea);
+      border: 1px solid var(--color-sea);
+      padding: 2px 6px;
+    }
+    .spec-name {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 400;
+      color: var(--color-sea);
+      letter-spacing: -0.005em;
+      border-bottom: 1px solid var(--color-sea);
+      padding-bottom: 2px;
+    }
+    .spec-file {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--color-ink-soft);
+      letter-spacing: 0.04em;
+    }
+    .spec-howto {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      color: var(--color-sea);
+      text-transform: uppercase;
+    }
+    .infra-foot {
+      border-top: 1px solid var(--color-rule);
+      padding: 12px 0 13px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      color: var(--color-ink-soft);
+      text-transform: uppercase;
+    }
+
+    /* footer */
+    .footfed {
+      padding: 1.5rem 0 2.25rem;
+      margin-top: 2rem;
+      border-top: 1px solid var(--color-ink);
+    }
+    .footfed-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      color: var(--color-ink-soft);
+      text-transform: uppercase;
+    }
+    .footfed-tagline {
+      margin-top: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      color: var(--color-ink-soft);
+      text-transform: uppercase;
+    }
+    .footfed-tagline-soft {
+      color: var(--color-ink-soft);
     }
   </style>
 </BaseLayout>
