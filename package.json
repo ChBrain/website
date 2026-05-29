@@ -20,7 +20,7 @@
     "test:watch": "vitest",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky"
+    "prepare": "husky && chmod +x .husky/pre-commit"
   },
   "dependencies": {
     "@chbrain/khai-arch": "^0.0.2"
