@@ -1,47 +1,83 @@
-/* kaihacks design tokens — CSS custom properties.
- * Values are the brand palette; structure (names, roles) is the contract.
- * Renderer consumes these by name; tuning values does not break the renderer.
+/* kaihacks design tokens.
  *
- * Brand palette names (German coastal/landscape register):
- *   paper      — cream background
- *   ink        — deep dark text
- *   ink-soft   — muted text
- *   rule       — light border
- *   backstein  — brick red (primary accent)
- *   wattgrau   — mudflat gray
- *   nordsee    — North Sea blue-gray
- *   bernstein  — amber
- *   marsch     — marsh green
+ * Two layers:
+ *   1. RAW PALETTE — the brand colors by name (paper, ink, brick, sea, ...).
+ *      Defined directly. Source of truth.
+ *   2. SEMANTIC TOKENS — what components consume (--color-bg, --color-fg,
+ *      --color-accent, ...). Always reference the raw palette via var().
+ *
+ * Brand discipline:
+ * - brick (red) is rare: once per page, never a field.
+ * - paper is the ground. ice is raw-only for now — add a semantic alias
+ *   (e.g. --color-bg-cold) if and when a component actually consumes it.
+ * - sea (deep blue) holds structure: headers, infrastructure.
+ * - Never compose the three accents as a stripe or single field — they
+ *   appear independently, never combined.
+ * - Light-only. A printed spec doesn't have a dark mode. If a dark
+ *   register is ever wanted, it must be designed, not derived.
+ *
+ * Typography pairs with the palette:
+ * - Newsreader      display / headlines (via --font-display)
+ * - Source Serif 4  body, italic asides (via --font-prose)
+ * - IBM Plex Mono   labels, metadata    (via --font-mono)
  */
 
 :root {
-  /* Brand palette — raw values */
-  --color-paper: #f3ede2;
-  --color-ink: #16130f;
-  --color-ink-soft: #5b5246;
-  --color-rule: #c9bea7;
-  --color-backstein: #8d3a2c;
-  --color-wattgrau: #8a8d86;
-  --color-nordsee: #3a4a52;
-  --color-bernstein: #c98e36;
-  --color-marsch: #6e7a4c;
+  color-scheme: light;
 
-  /* Semantic — neutral */
-  --color-bg: var(--color-paper);
-  --color-bg-subtle: #fbf7ee;
-  --color-fg: var(--color-ink);
-  --color-fg-muted: var(--color-ink-soft);
-  --color-border: var(--color-rule);
-  --color-accent: var(--color-backstein);
+  /* --- Raw palette ----------------------------------------------------- */
+
+  /* Surfaces */
+  --paper: #f3ede2;
+  --paper-warm: #fbf7ee;
+  --paper-deep: #ede5d4;
+  --ice: #e2e7e8;
+
+  /* Ink */
+  --ink: #16130f;
+  --ink-soft: #5b5246;
+  --ink-mute: #8a8275;
+
+  /* Rules */
+  --rule: #c9bea7;
+  --rule-soft: #e6dfd0;
+
+  /* Accent hues */
+  --brick: #8d3a2c;
+  --sea: #3a4a52;
+  --fjord: #4d6b76;
+  --amber: #c98e36;
+  --tide: #8a8d86;
+  --marsh: #6e7a4c;
+
+  /* --- Semantic tokens (consumed by components) ------------------------ */
+
+  /* Surfaces */
+  --color-bg: var(--paper);
+  --color-bg-subtle: var(--paper-warm);
+  --color-bg-deep: var(--paper-deep);
+
+  /* Ink */
+  --color-fg: var(--ink);
+  --color-fg-muted: var(--ink-soft);
+  --color-fg-mute: var(--ink-mute);
+
+  /* Rules */
+  --color-border: var(--rule);
+  --color-border-soft: var(--rule-soft);
+
+  /* Accent (brick — once per surface) */
+  --color-accent: var(--brick);
   --color-accent-hover: #a5443a;
 
-  /* Semantic — class pills (system / element / meta) */
-  --color-class-system: var(--color-backstein);
-  --color-class-system-bg: #f4e6dc;
-  --color-class-element: var(--color-marsch);
-  --color-class-element-bg: #eaeee0;
-  --color-class-meta: var(--color-bernstein);
-  --color-class-meta-bg: #f5e8cf;
+  /* Class pills — uniform background; differentiated by foreground only.
+   * Swatches on the same paper. The locked foreground hue does the talking. */
+  --color-class-system: var(--brick);
+  --color-class-system-bg: var(--paper-deep);
+  --color-class-element: var(--marsh);
+  --color-class-element-bg: var(--paper-deep);
+  --color-class-meta: var(--amber);
+  --color-class-meta-bg: var(--paper-deep);
 
   /* Typography — families */
   --font-prose: "Source Serif 4", Georgia, "Times New Roman", serif;
@@ -97,22 +133,4 @@
 
   /* Borders */
   --border-thin: 1px solid var(--color-border);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Brand palette inverts: ink becomes background, paper becomes text.
-     * Accent shifts to a slightly lighter brick to maintain contrast on dark. */
-    --color-bg: var(--color-ink);
-    --color-bg-subtle: #1c1814;
-    --color-fg: var(--color-paper);
-    --color-fg-muted: #a59c8e;
-    --color-border: #3a342c;
-    --color-accent: #b8533e;
-    --color-accent-hover: #c96650;
-
-    --color-class-system-bg: #3a1e16;
-    --color-class-element-bg: #1f2418;
-    --color-class-meta-bg: #2f2616;
-  }
 }
