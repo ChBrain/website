@@ -47,4 +47,19 @@
   .footfed-tagline-soft {
     color: var(--color-ink-soft);
   }
+
+  /* Mobile: drop sticky behavior + hide the second-row tagline.
+   * Rationale: sticky chrome on small viewports eats too much of
+   * the reading area. On mobile the footer lives inline at the
+   * end of the page; the topbar stays sticky as the always-on
+   * "where am I" anchor. */
+  @media (max-width: 640px) {
+    .footfed {
+      position: static;
+      padding: 0.75rem 0 1rem;
+    }
+    .footfed-tagline {
+      display: none;
+    }
+  }
 </style>
