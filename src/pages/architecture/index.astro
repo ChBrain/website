@@ -28,7 +28,7 @@ specs.sort(
     {
       specs.map((s) => (
         <li class="spec-list-item">
-          <a href={`/architecture/${s.id}/`} class="spec-link">
+          <a href={`./${s.id}/`} class="spec-link">
             <span class="spec-link-title">{s.id.charAt(0).toUpperCase() + s.id.slice(1)}</span>
             <ClassPill class={s.parsed.frontmatter.class} />
           </a>

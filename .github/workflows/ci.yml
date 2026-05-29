@@ -52,9 +52,14 @@ jobs:
           done
 
           if [ "$HAS_SOURCE" -eq 1 ] && [ "$HAS_TEST" -eq 1 ]; then
-            echo "::error::META-2 violation: PR mixes source (src/, public/, astro.config.mjs) with test changes (tests/, .github/workflows/, .husky/)."
-            echo "::error::Split into separate PRs: tests first, source second."
-            echo "::error::Foundation PRs and documented exceptions can add an HTML comment to the PR body containing the literal string META-2-EXEMPT (with a one-line justification)."
+            echo "::error::META-2 violation: PR mixes source with test changes"
+            echo ""
+            echo "  Source paths: src/, public/, astro.config.mjs"
+            echo "  Test paths:   tests/, .github/workflows/, .husky/"
+            echo ""
+            echo "  Fix: split into separate PRs (tests first, source second)."
+            echo "  OR:  add the literal string META-2-EXEMPT to the PR body"
+            echo "       (visible text or HTML comment) with a one-line justification."
             exit 1
           fi
 

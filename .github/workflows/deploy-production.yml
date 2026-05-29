@@ -1,0 +1,53 @@
+name: deploy-production
+
+# Runs on tag push (v*). Builds the site, verifies that the tag matches
+# package.json version, runs tests, and rsyncs the architecture subfolder
+# of dist/ to architecture.kaihacks.ai/. The production URL is
+# https://architecture.kaihacks.ai/ (clean URL, no /architecture/ prefix).
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+      - name: install
+        run: npm install
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: verify package.json version matches tag
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::package.json version ($PKG_VERSION) does not match tag ($TAG_VERSION)"
+            exit 1
+          fi
+          echo "Version check OK: $PKG_VERSION"
+      - name: build
+        run: npm run build
+      - name: test
+        run: npm test
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/kaihacksai
+          chmod 600 ~/.ssh/kaihacksai
+          ssh-keyscan 92.205.150.56 >> ~/.ssh/known_hosts || true
+      - name: Deploy via rsync
+        run: |
+          # Rsync dist/architecture/ (not dist/) so dist/architecture/index.html
+          # lands as architecture.kaihacks.ai/index.html (the listing IS the
+          # subdomain landing), and dist/architecture/<slug>/index.html lands
+          # as architecture.kaihacks.ai/<slug>/index.html (clean per-spec URL).
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/kaihacksai" \
+            ./dist/architecture/ \
+            c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/architecture.kaihacks.ai/
