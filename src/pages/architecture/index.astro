@@ -345,10 +345,7 @@ const elements = types.filter((t) => t.role === "element");
     }
 
     /* Scroll-snap: 5 stops on desktop = 4 top-level sections + the .infra
-     * block nested inside §3 (which we want as its own snap target).
-     * Each snap target is a flex column with justify-content: center so
-     * content sits in the vertical middle of the viewport (between the
-     * sticky topbar and sticky footer). */
+     * block nested inside §3 (which we want as its own snap target). */
     .arch-home > section,
     .arch-home .infra {
       scroll-snap-align: start;
@@ -358,6 +355,11 @@ const elements = types.filter((t) => t.role === "element");
       .arch-home > section,
       .arch-home .infra {
         min-height: calc(100vh - 8rem);
+      }
+      /* Only the masthead vertical-centers - it's the hero. The other
+       * sections (reading, types, model, infra) start at top, content
+       * flows downward as a normal reading column. */
+      .arch-home > .masthead {
         display: flex;
         flex-direction: column;
         justify-content: center;
