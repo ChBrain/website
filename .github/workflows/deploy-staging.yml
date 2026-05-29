@@ -1,8 +1,8 @@
 name: deploy-staging
 
-# Runs after CI green on push to main. Builds the site and rsyncs dist/ to
-# staging.kaihacks.ai/architecture/. The staging URL is
-# https://staging.kaihacks.ai/architecture/
+# Runs after CI green on push to main. Builds the site and rsyncs the
+# architecture subfolder of dist/ to staging.kaihacks.ai/architecture/.
+# The staging URL is https://staging.kaihacks.ai/architecture/
 
 on:
   workflow_run:
@@ -35,7 +35,13 @@ jobs:
           ssh-keyscan 92.205.150.56 >> ~/.ssh/known_hosts || true
       - name: Deploy via rsync
         run: |
+          # Rsync dist/architecture/ (not dist/) so dist/architecture/index.html
+          # lands as staging.kaihacks.ai/architecture/index.html (the listing),
+          # and dist/architecture/<slug>/index.html lands as
+          # staging.kaihacks.ai/architecture/<slug>/index.html. The kaihacks
+          # placeholder dist/index.html is intentionally NOT deployed; the
+          # staging.kaihacks.ai/ root is owned by chbrain/kaihacks.
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/kaihacksai" \
-            ./dist/ \
+            ./dist/architecture/ \
             c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/staging.kaihacks.ai/architecture/
