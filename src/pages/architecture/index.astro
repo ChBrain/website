@@ -146,10 +146,7 @@ const khaiVersion = "v0.0.2";
               <div class="movement-body">
                 <div class="movement-words">
                   {m.words.map((w) => (
-                    <div class="movement-word">
-                      <span class="movement-word-initial">{w.charAt(0)}</span>
-                      {w.slice(1)}
-                    </div>
+                    <div class="movement-word">{w}</div>
                   ))}
                 </div>
                 <div class="movement-lives">
@@ -639,7 +636,7 @@ const khaiVersion = "v0.0.2";
         font-size: 30px;
       }
     }
-    .movement-word-initial {
+    .movement-word::first-letter {
       color: var(--color-brick);
       font-weight: 500;
     }
