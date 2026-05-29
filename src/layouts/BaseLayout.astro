@@ -51,6 +51,34 @@ const { title, description = "kaihacks. An experimental writing system." } = Ast
         max-width: var(--width-prose);
         margin: 0 auto;
       }
+
+      /* Architecture surface pages (home, spec, canon) own their own
+       * width container via .arch-home or .arch-page wrappers. Neutralize
+       * BaseLayout's prose-width main for those pages so the wrapper
+       * controls the layout. */
+      body:has(.arch-home),
+      body:has(.arch-page) {
+        padding: 0;
+      }
+      body:has(.arch-home) main,
+      body:has(.arch-page) main {
+        max-width: none;
+        margin: 0;
+      }
+      .arch-page {
+        max-width: var(--width-page);
+        margin: 0 auto;
+        padding: 0 1.25rem;
+        background: var(--color-paper);
+        color: var(--color-ink);
+        font-family: var(--font-prose);
+      }
+      @media (min-width: 641px) {
+        .arch-page {
+          padding: 0 3.5rem;
+        }
+      }
+
       h1 {
         font-size: var(--font-size-3xl);
         line-height: var(--line-height-tight);

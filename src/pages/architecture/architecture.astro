@@ -14,11 +14,13 @@ const html = architecture ? md.render(architecture.text) : "<p>No architecture d
   title="Architecture - kaihacks"
   description="The kaihacks architecture: KAI HACKS AI canon, model, type definitions."
 >
-  <Topbar basePath="../" />
+  <div class="arch-page">
+    <Topbar basePath="../" />
 
-  <article class="doc" set:html={html} />
+    <article class="doc" set:html={html} />
 
-  <Footer />
+    <Footer />
+  </div>
 
   <style>
     .doc :global(h1) {
