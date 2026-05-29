@@ -26,4 +26,12 @@ if [ "$HAS_SOURCE" -eq 1 ] && [ "$HAS_TEST" -eq 1 ]; then
   exit 1
 fi
 
+# Prettier enforcement: mirrors CI's format:check.
+# What passes here passes CI; nothing slips through.
+if ! npm run --silent format:check; then
+  echo
+  echo "Prettier formatting failed. Run: npm run format"
+  exit 1
+fi
+
 exit 0
