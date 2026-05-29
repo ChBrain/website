@@ -20,7 +20,7 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@chbrain/khai-arch": "^0.0.1"
+    "@chbrain/khai-arch": "^0.0.2"
   },
   "devDependencies": {
     "@types/jsdom": "^28.0.3",
