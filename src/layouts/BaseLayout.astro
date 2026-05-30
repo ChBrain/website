@@ -7,6 +7,19 @@ interface Props {
 }
 
 const { title, description = "kaihacks. An experimental writing system." } = Astro.props;
+
+// Depth-aware path to the surface root. Each surface (architecture, main)
+// is rsynced to its own doc root, so absolute `/foo` would resolve to the
+// apex (kaihacks.ai/foo) and miss assets that live at /main/foo or
+// /architecture/foo. Compute the prefix needed to climb back to the
+// surface root from the current page.
+//
+//   /main/         → ["main"]         → 0 hops up → "./"
+//   /main/cvi/     → ["main", "cvi"]  → 1 hop up  → "../"
+//   /architecture/ → ["architecture"] → 0 hops up → "./"
+//   /architecture/plot/ → 1 hop up → "../"
+const segments = Astro.url.pathname.split("/").filter(Boolean);
+const toSurfaceRoot = "../".repeat(Math.max(0, segments.length - 1)) || "./";
 ---
 
 <!doctype html>
@@ -16,10 +29,10 @@ const { title, description = "kaihacks. An experimental writing system." } = Ast
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <title>{title}</title>
-    <link rel="icon" href="/favicon.ico" sizes="any" />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="icon" href={`${toSurfaceRoot}favicon.ico`} sizes="any" />
+    <link rel="icon" href={`${toSurfaceRoot}favicon.svg`} type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={`${toSurfaceRoot}apple-touch-icon.png`} />
+    <link rel="manifest" href={`${toSurfaceRoot}site.webmanifest`} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
