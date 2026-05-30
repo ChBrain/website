@@ -112,11 +112,7 @@ const total = spreads.length;
         ><span class="pb-strip-cur">00</span>/{String(total).padStart(2, "0")}</span
       >
       <span class="pb-strip-bars" aria-hidden="true">
-        {
-          spreads.map((_, i) => (
-            <span class={`pb-strip-bar ${i === 0 ? "is-current" : ""}`} data-idx={i} />
-          ))
-        }
+        {spreads.map((_, i) => <span class="pb-strip-bar" data-idx={i} />)}
       </span>
       <span class="pb-strip-label">Contents</span>
     </button>
@@ -154,6 +150,21 @@ const total = spreads.length;
       </div>
     </div>
 
+    {
+      /* Front cover. First snap-stop, before the spec spine. Theatre
+        framing: title page of a playbook. The CTA scrolls into Plot,
+        the first cast file. */
+    }
+    <header id="cover" class="pb-cover">
+      <span class="pb-cover-overline">the specification · a field manual</span>
+      <h1 class="pb-cover-title">
+        Playbook<em>.</em>
+      </h1>
+      <p class="pb-cover-sub">The elements of how a world is moved – one file at a time.</p>
+      <a href="#plot" class="pb-cover-cta">Open the playbook →</a>
+      <div class="pb-cover-hint">↓ scroll · or arrow keys</div>
+    </header>
+
     {/* The spreads. One snap-stop per spec; mobile scrolls naturally. */}
     <main class="pb-spreads">
       {
@@ -177,10 +188,8 @@ const total = spreads.length;
               <div class="pb-facets">
                 {s.chapters.map((ch) => (
                   <article class="pb-facet">
-                    <h3 class="pb-facet-name">
-                      <span class="pb-facet-initial">{ch.letter}</span>
-                      {ch.name.slice(1)}
-                    </h3>
+                    {/* prettier-ignore */}
+                    <h3 class="pb-facet-name"><span class="pb-facet-initial">{ch.letter}</span>{ch.name.slice(1)}</h3>
                     <p class="pb-facet-body">{ch.body}</p>
                   </article>
                 ))}
@@ -399,6 +408,91 @@ const total = spreads.length;
       color: var(--color-brick);
     }
 
+    /* ── cover (front matter, first snap-stop) ──────────────────────────── */
+    .pb-cover {
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      padding: 1.75rem 0 1.5rem;
+    }
+    @media (min-width: 641px) {
+      .pb-cover {
+        min-height: calc(100vh - 8rem);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2.25rem 0;
+      }
+    }
+    @media (max-width: 640px) {
+      .pb-cover {
+        scroll-snap-align: none;
+        scroll-snap-stop: normal;
+      }
+    }
+    .pb-cover-overline {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.26em;
+      color: var(--color-ink-soft);
+      text-transform: uppercase;
+    }
+    .pb-cover-title {
+      margin: 22px 0 0;
+      font-family: var(--font-display);
+      font-weight: 380;
+      font-size: 96px;
+      line-height: 0.94;
+      letter-spacing: -0.03em;
+      color: var(--color-ink);
+    }
+    @media (min-width: 641px) {
+      .pb-cover-title {
+        font-size: 168px;
+      }
+    }
+    .pb-cover-title em {
+      color: var(--color-brick);
+      font-style: normal;
+    }
+    .pb-cover-sub {
+      margin: 22px 0 0;
+      max-width: 680px;
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 18px;
+      line-height: 1.4;
+      color: var(--color-ink-soft);
+      text-wrap: pretty;
+    }
+    @media (min-width: 641px) {
+      .pb-cover-sub {
+        font-size: 24px;
+      }
+    }
+    .pb-cover-cta {
+      display: inline-block;
+      margin-top: 30px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-ink);
+      text-decoration: none;
+      border-bottom: 1px solid var(--color-brick);
+      padding-bottom: 4px;
+    }
+    .pb-cover-cta:hover {
+      color: var(--color-brick);
+    }
+    .pb-cover-hint {
+      margin-top: 22px;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--color-ink-mute);
+    }
+
     /* ── spreads ─────────────────────────────────────────────────────────── */
     .pb-spreads {
       display: flex;
@@ -537,7 +631,6 @@ const total = spreads.length;
     }
     .pb-spread-coda {
       margin: 0;
-      max-width: 740px;
       font-family: var(--font-prose);
       font-size: 15px;
       line-height: 1.55;
@@ -574,13 +667,22 @@ const total = spreads.length;
       const closeBtn = document.querySelector(".pb-overlay-close") as HTMLButtonElement | null;
       const bars = Array.from(document.querySelectorAll(".pb-strip-bar")) as HTMLElement[];
       const tocLinks = Array.from(document.querySelectorAll(".pb-toc-link")) as HTMLAnchorElement[];
+      const cover = document.querySelector(".pb-cover") as HTMLElement | null;
       const spreads = Array.from(document.querySelectorAll(".pb-spread")) as HTMLElement[];
       const curEl = document.querySelector(".pb-strip-cur") as HTMLElement | null;
 
+      // All navigable stops in document order: cover first, then the 8
+      // spec spreads. Index 0 = cover (no spec bar lit, counter "00");
+      // index 1..N = spreads (bar[idx-1] lit, counter "0idx").
+      const stops: HTMLElement[] = cover ? [cover, ...spreads] : [...spreads];
+      let curIdx = 0;
+
       function setCurrent(idx: number) {
-        bars.forEach((b, i) => b.classList.toggle("is-current", i === idx));
-        tocLinks.forEach((l, i) => l.classList.toggle("is-current", i === idx));
-        if (curEl) curEl.textContent = String(idx).padStart(2, "0");
+        curIdx = idx;
+        const barIdx = idx - 1;
+        bars.forEach((b, i) => b.classList.toggle("is-current", i === barIdx));
+        tocLinks.forEach((l, i) => l.classList.toggle("is-current", i === barIdx));
+        if (curEl) curEl.textContent = String(Math.max(0, idx)).padStart(2, "0");
       }
 
       function openOverlay() {
@@ -607,12 +709,32 @@ const total = spreads.length;
           setTimeout(closeOverlay, 0);
         });
       });
+
+      // Keyboard navigation: ←/→ and ↑/↓ step between stops. Skipped
+      // when the overlay is open (Esc closes that instead) and when
+      // focus is in a form field. The hash CTAs on cover + TOC handle
+      // direct jumps; this gives the book a one-keystroke turn.
       document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && overlay && !overlay.hidden) closeOverlay();
+        if (overlay && !overlay.hidden) {
+          if (e.key === "Escape") closeOverlay();
+          return;
+        }
+        const active = document.activeElement as HTMLElement | null;
+        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
+
+        if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+          const next = stops[Math.min(curIdx + 1, stops.length - 1)];
+          if (next) next.scrollIntoView({ behavior: "smooth", block: "start" });
+          e.preventDefault();
+        } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+          const prev = stops[Math.max(curIdx - 1, 0)];
+          if (prev) prev.scrollIntoView({ behavior: "smooth", block: "start" });
+          e.preventDefault();
+        }
       });
 
-      // IntersectionObserver: track the most-visible spread, update strip.
-      if ("IntersectionObserver" in window && spreads.length) {
+      // IntersectionObserver: track the most-visible stop, update strip.
+      if ("IntersectionObserver" in window && stops.length) {
         const obs = new IntersectionObserver(
           (entries) => {
             let best: IntersectionObserverEntry | null = null;
@@ -622,13 +744,13 @@ const total = spreads.length;
               }
             }
             if (best) {
-              const idx = spreads.indexOf(best.target as HTMLElement);
+              const idx = stops.indexOf(best.target as HTMLElement);
               if (idx >= 0) setCurrent(idx);
             }
           },
           { threshold: [0.5, 0.75] },
         );
-        spreads.forEach((s) => obs.observe(s));
+        stops.forEach((s) => obs.observe(s));
       }
     })();
   </script>
