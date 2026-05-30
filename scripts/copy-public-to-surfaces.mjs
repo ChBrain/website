@@ -8,7 +8,7 @@ import { cp, stat } from "node:fs/promises";
 import { join } from "node:path";
 
 const DIST = "dist";
-const SURFACES = ["main", "architecture"];
+const SURFACES = ["main", "architecture", "privacy"];
 // Only copy real shared assets — not the per-surface HTML/JS that Astro
 // already routed correctly.
 const SHARED = [

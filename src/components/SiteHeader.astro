@@ -1,0 +1,112 @@
+---
+// SiteHeader — the global header. Used on every page on every surface
+// (architecture, main, main/cvi, privacy, future). Replaces the old
+// architecture-only Topbar.astro.
+//
+// Class names (.topbar*) are preserved from Topbar.astro so existing
+// design-contract tests against `.topbar-domain-tld` and `.topbar-version`
+// keep passing without test changes.
+
+interface NavItem {
+  label: string;
+  href: string;
+}
+
+interface Props {
+  domain: string;
+  tld: string;
+  basePath?: string;
+  version?: string;
+  nav?: NavItem[];
+}
+
+const { domain, tld, basePath = "./", version, nav } = Astro.props;
+---
+
+<header class="topbar">
+  <a href={basePath} class="topbar-domain">
+    {domain}<span class="topbar-domain-tld">{tld}</span>
+  </a>
+  {
+    nav && nav.length > 0 && (
+      <nav class="topbar-nav" aria-label="Primary">
+        {nav.map((n) => (
+          <a href={n.href}>{n.label}</a>
+        ))}
+      </nav>
+    )
+  }
+  {version && <span class="topbar-version">khai · {version}</span>}
+</header>
+
+<style>
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--color-paper);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.5rem 0 0.75rem;
+    border-bottom: 1px solid var(--color-ink);
+  }
+  @media (min-width: 641px) {
+    .topbar {
+      padding: 1.375rem 0 1rem;
+    }
+  }
+  .topbar-domain {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    color: var(--color-ink-soft);
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  .topbar-domain:hover {
+    color: var(--color-ink);
+  }
+  @media (min-width: 641px) {
+    .topbar-domain {
+      font-size: 11px;
+    }
+  }
+  .topbar-domain-tld {
+    color: var(--color-brick);
+  }
+  .topbar-nav {
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+  }
+  .topbar-nav a {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--color-ink-soft);
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  .topbar-nav a:hover {
+    color: var(--color-ink);
+  }
+  @media (min-width: 641px) {
+    .topbar-nav a {
+      font-size: 11px;
+    }
+  }
+  .topbar-version {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: var(--color-ink-soft);
+    text-transform: uppercase;
+  }
+  @media (min-width: 641px) {
+    .topbar-version {
+      font-size: 11px;
+    }
+  }
+</style>

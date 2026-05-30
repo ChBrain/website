@@ -1,0 +1,111 @@
+---
+// SiteFooter — the global footer. Used on every page on every surface.
+// Replaces the old architecture-only Footer.astro and the inline main
+// surface footer.
+//
+// Always renders a global links row that includes Privacy (cross-domain
+// absolute URLs because surfaces live on different subdomains; same
+// string everywhere keeps the footer identical across the site).
+//
+// Class names (.footfed*) are preserved from Footer.astro so existing
+// design-contract tests against the architecture footer keep passing.
+
+interface Props {
+  siteLabel: string;
+  endLabel?: string;
+  tagline?: string;
+}
+
+const { siteLabel, endLabel = "KAI · HACKS · AI", tagline } = Astro.props;
+
+const globalLinks = [
+  { label: "Privacy", href: "https://kaihacks.ai/privacy/" },
+  { label: "CVI", href: "https://kaihacks.ai/main/cvi/" },
+];
+---
+
+<footer class="footfed">
+  <div class="footfed-row">
+    <span>{siteLabel}</span>
+    <span>{endLabel}</span>
+  </div>
+  {tagline && <div class="footfed-tagline">{tagline}</div>}
+  <nav class="footfed-legal" aria-label="Site">
+    {
+      globalLinks.map((l) => (
+        <a href={l.href} class="footfed-legal-link">
+          {l.label}
+        </a>
+      ))
+    }
+  </nav>
+</footer>
+
+<style>
+  .footfed {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    background: var(--color-paper);
+    padding: 1rem 0 1.25rem;
+    border-top: 1px solid var(--color-ink);
+  }
+  .footfed-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--color-ink-soft);
+    text-transform: uppercase;
+  }
+  .footfed-tagline {
+    margin-top: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--color-ink-soft);
+    text-transform: uppercase;
+  }
+  .footfed-legal {
+    margin-top: 10px;
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+  }
+  .footfed-legal-link {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--color-ink-soft);
+    text-transform: uppercase;
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-rule);
+  }
+  .footfed-legal-link:hover {
+    color: var(--color-ink);
+  }
+  @media (min-width: 641px) {
+    .footfed-legal-link {
+      font-size: 11px;
+    }
+  }
+
+  /* Mobile: drop sticky behavior + hide the second-row tagline.
+   * Rationale: sticky chrome on small viewports eats too much of
+   * the reading area. On mobile the footer lives inline at the
+   * end of the page; the topbar stays sticky as the always-on
+   * "where am I" anchor. */
+  @media (max-width: 640px) {
+    .footfed {
+      position: static;
+      padding: 0.75rem 0 1rem;
+    }
+    .footfed-tagline {
+      display: none;
+    }
+  }
+</style>

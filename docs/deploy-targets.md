@@ -28,18 +28,21 @@ host - the `kaihacks.ai/` segment does not appear in the host path.
 | -------------------- | ---------------------------------------- | ------------------------------------------------ |
 | `dist/architecture/` | `/public_html/architecture.kaihacks.ai/` | `/public_html/staging.kaihacks.ai/architecture/` |
 | `dist/main/`         | `/public_html/main/`                     | `/public_html/staging.kaihacks.ai/main/`         |
+| `dist/privacy/`      | `/public_html/privacy/`                  | `/public_html/staging.kaihacks.ai/privacy/`      |
 
 Production URLs:
 
 - `https://architecture.kaihacks.ai/` (subdomain root, clean URL)
 - `https://kaihacks.ai/main/` (apex `/main/` subpath)
 - `https://kaihacks.ai/main/cvi/` (the CVI colophon, nested under main)
+- `https://kaihacks.ai/privacy/` (apex `/privacy/` subpath; site-wide legal page)
 
 Staging URLs:
 
 - `https://staging.kaihacks.ai/architecture/`
 - `https://staging.kaihacks.ai/main/`
 - `https://staging.kaihacks.ai/main/cvi/`
+- `https://staging.kaihacks.ai/privacy/`
 
 ## Future surfaces
 

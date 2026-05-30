@@ -63,3 +63,12 @@ jobs:
             -e "ssh -i ~/.ssh/kaihacksai" \
             ./dist/main/ \
             c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/staging.kaihacks.ai/main/
+      - name: Deploy privacy surface via rsync
+        run: |
+          # Rsync dist/privacy/ to staging.kaihacks.ai/privacy/. Lands as
+          # /privacy/index.html - the site-wide privacy statement linked
+          # from every page's SiteFooter.
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/kaihacksai" \
+            ./dist/privacy/ \
+            c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/staging.kaihacks.ai/privacy/
