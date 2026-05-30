@@ -73,13 +73,3 @@ jobs:
             -e "ssh -i ~/.ssh/kaihacksai" \
             ./dist/main/ \
             c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/main/
-      - name: Deploy privacy surface via rsync
-        run: |
-          # Rsync dist/privacy/ to kaihacks.ai/privacy/ on the apex vhost.
-          # The privacy statement is site-global (linked from every page's
-          # SiteFooter) and so lives at the apex root rather than under any
-          # surface. Lands as /privacy/index.html.
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/kaihacksai" \
-            ./dist/privacy/ \
-            c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/privacy/
