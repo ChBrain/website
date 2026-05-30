@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "./BaseLayout.astro";
-import Topbar from "../components/Topbar.astro";
-import Footer from "../components/Footer.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
 import ClassPill from "../components/ClassPill.astro";
 import MnemonicStrip from "../components/MnemonicStrip.astro";
 import ChapterGrid from "../components/ChapterGrid.astro";
@@ -43,7 +43,7 @@ const nextId =
 
 <BaseLayout title={`${title} - kaihacks architecture`} description={frontmatter.subtitle}>
   <div class="arch-page">
-    <Topbar basePath="../" />
+    <SiteHeader domain="architecture" tld=".kaihacks.ai" basePath="../" version="v0.0.2" />
 
     <header class="spec-header">
       <div class="spec-meta">
@@ -91,7 +91,10 @@ const nextId =
       )
     }
 
-    <Footer />
+    <SiteFooter
+      siteLabel="architecture.kaihacks.ai · the specification"
+      tagline="one application · cultures.kaihacks.ai, focused on cultures"
+    />
   </div>
 
   <style>
