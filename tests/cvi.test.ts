@@ -17,15 +17,14 @@ import { BRAND } from "../src/lib/brand";
  * Pairs with tests/brand-contract.test.ts which scans ALL built pages
  * for hex drift; this file is the deep-dive on CVI specifically.
  *
- * Forward-compatible with the Colour chapter sub-panel split (a planned
- * source change that breaks §04 into three viewport-sized panels:
- * #color [ground & voice], #color-accents, #color-rules). Assertions
- * that previously queried `section#color` now scan
- * `section[id^="color"]` so they aggregate correctly across one or
- * many colour panels. The chapter iteration uses tolerant pattern
- * matchers (`nStartsWith`, `h2Contains`) for #color so the sub-marker
- * "04 · i" + sub-titled h2 "Colour – ground & voice" don't require a
- * test bump.
+ * Forward-compatible with chapter sub-panel splits. The §04 Colour
+ * chapter is already split (#color [ground & voice], #color-accents,
+ * #color-rules). The §05 Typography chapter is queued to split next
+ * (#type [the families], #type-scale [the scale]). Both use tolerant
+ * matchers in SECTIONS (nStartsWith / h2Contains) so the sub-marker
+ * "NN · i" + sub-titled h2 "Chapter – <subtitle>" don't require a
+ * test bump. Colour-aggregating assertions scan `section[id^="color"]`
+ * to combine swatches/labels across panels.
  */
 
 const pages = loadBuiltPages(process.cwd());
@@ -63,7 +62,10 @@ const SECTIONS: ChapterSpec[] = [
   // 04 · iii rules & tokens). On split, #color carries 04 · i and the
   // h2 carries an "– <subtitle>" tail.
   { id: "color", nStartsWith: "04", h2Contains: "Colour" },
-  { id: "type", n: "05", h2: "Typography" },
+  // #type uses tolerant matchers because the chapter may split into
+  // two sub-panels (05 · i the families, 05 · ii the scale). On split,
+  // #type carries 05 · i and the h2 carries an "– <subtitle>" tail.
+  { id: "type", nStartsWith: "05", h2Contains: "Typography" },
   { id: "icon", n: "06", h2: "Icon & favicon" },
   { id: "apply", n: "07", h2: "Applications & misuse" },
   { id: "voice", n: "08", h2: "In one breath" },
