@@ -16,6 +16,16 @@ import { BRAND } from "../src/lib/brand";
  *
  * Pairs with tests/brand-contract.test.ts which scans ALL built pages
  * for hex drift; this file is the deep-dive on CVI specifically.
+ *
+ * Forward-compatible with the Colour chapter sub-panel split (a planned
+ * source change that breaks §04 into three viewport-sized panels:
+ * #color [ground & voice], #color-accents, #color-rules). Assertions
+ * that previously queried `section#color` now scan
+ * `section[id^="color"]` so they aggregate correctly across one or
+ * many colour panels. The chapter iteration uses tolerant pattern
+ * matchers (`nStartsWith`, `h2Contains`) for #color so the sub-marker
+ * "04 · i" + sub-titled h2 "Colour – ground & voice" don't require a
+ * test bump.
  */
 
 const pages = loadBuiltPages(process.cwd());
@@ -32,11 +42,27 @@ const TOC = [
   { n: "08", title: "In one breath", href: "#voice" },
 ];
 
-const SECTIONS = [
+interface ChapterSpec {
+  id: string;
+  /** Exact .cvi-n text - if set, .cvi-n must equal this. */
+  n?: string;
+  /** Prefix .cvi-n text - if set, .cvi-n must startWith this (allows "04 · i" sub-markers). */
+  nStartsWith?: string;
+  /** Exact .cvi-h2 text - if set, .cvi-h2 must equal this. */
+  h2?: string;
+  /** Substring of .cvi-h2 text - if set, .cvi-h2 must contain this (allows sub-titles). */
+  h2Contains?: string;
+}
+
+const SECTIONS: ChapterSpec[] = [
   { id: "mark", n: "01", h2: "The mark" },
   { id: "set", n: "02", h2: "The set – which to use when" },
   { id: "space", n: "03", h2: "Clear space & minimum size" },
-  { id: "color", n: "04", h2: "Colour" },
+  // #color uses tolerant matchers because the chapter may split into
+  // three sub-panels (04 · i ground & voice, 04 · ii the accents,
+  // 04 · iii rules & tokens). On split, #color carries 04 · i and the
+  // h2 carries an "– <subtitle>" tail.
+  { id: "color", nStartsWith: "04", h2Contains: "Colour" },
   { id: "type", n: "05", h2: "Typography" },
   { id: "icon", n: "06", h2: "Icon & favicon" },
   { id: "apply", n: "07", h2: "Applications & misuse" },
@@ -121,21 +147,46 @@ describe("CVI - design contract", () => {
     });
   });
 
-  describe("8 numbered sections", () => {
+  describe("8 canonical chapters", () => {
     for (const sec of SECTIONS) {
-      it(`§${sec.n} #${sec.id}: has the canonical heading`, () => {
+      it(`§${sec.n ?? sec.nStartsWith}* #${sec.id}: has the canonical heading`, () => {
         const dom = new JSDOM(cvi!.html);
         const section = dom.window.document.querySelector(`section#${sec.id}.cvi-section`);
         expect(section, `missing section#${sec.id}`).not.toBeNull();
-        expect(section!.querySelector(".cvi-n")?.textContent?.trim()).toBe(sec.n);
-        expect(section!.querySelector(".cvi-h2")?.textContent?.trim()).toBe(sec.h2);
+        const nText = section!.querySelector(".cvi-n")?.textContent?.trim() ?? "";
+        const h2Text = section!.querySelector(".cvi-h2")?.textContent?.trim() ?? "";
+        if (sec.n !== undefined) {
+          expect(nText).toBe(sec.n);
+        }
+        if (sec.nStartsWith !== undefined) {
+          expect(
+            nText.startsWith(sec.nStartsWith),
+            `expected ${sec.id} .cvi-n "${nText}" to start with "${sec.nStartsWith}"`,
+          ).toBe(true);
+        }
+        if (sec.h2 !== undefined) {
+          expect(h2Text).toBe(sec.h2);
+        }
+        if (sec.h2Contains !== undefined) {
+          expect(
+            h2Text.includes(sec.h2Contains),
+            `expected ${sec.id} .cvi-h2 "${h2Text}" to contain "${sec.h2Contains}"`,
+          ).toBe(true);
+        }
       });
     }
 
-    it("sections appear in canonical 01-08 order", () => {
+    it("the 8 canonical chapter IDs appear in canonical order", () => {
+      // Note: extra sub-panel sections (e.g. #color-accents, #color-rules)
+      // are allowed between canonical IDs; we filter to canonical and
+      // assert THEIR order is preserved.
       const dom = new JSDOM(cvi!.html);
-      const ids = [...dom.window.document.querySelectorAll("section.cvi-section")].map((s) => s.id);
-      expect(ids).toEqual(SECTIONS.map((s) => s.id));
+      const allIds = [...dom.window.document.querySelectorAll("section.cvi-section")].map(
+        (s) => s.id,
+      );
+      const canonical = SECTIONS.map((s) => s.id);
+      const filtered = allIds.filter((id) => canonical.includes(id));
+      expect(filtered).toEqual(canonical);
     });
   });
 
@@ -164,17 +215,24 @@ describe("CVI - design contract", () => {
   });
 
   describe("§04 colour - the palette", () => {
+    // Queries scan ALL colour-prefixed sections so they aggregate across
+    // the one-panel layout (today) AND the three-panel sub-snap split
+    // (planned: #color / #color-accents / #color-rules).
+
     it("renders 4 surfaces + 3 inks + 2 rules + 6 accents = 15 swatches", () => {
       const dom = new JSDOM(cvi!.html);
-      const colourSection = dom.window.document.querySelector("section#color");
-      const swatches = colourSection!.querySelectorAll(".cvi-swatch");
+      const colourSections = [
+        ...dom.window.document.querySelectorAll('section[id^="color"].cvi-section'),
+      ];
+      const swatches = colourSections.flatMap((s) => [...s.querySelectorAll(".cvi-swatch")]);
       expect(swatches.length).toBe(15);
     });
 
     it("every chip background is a BRAND hex", () => {
       const dom = new JSDOM(cvi!.html);
-      const colourSection = dom.window.document.querySelector("section#color");
-      const chips = [...colourSection!.querySelectorAll(".cvi-chip")];
+      const chips = [
+        ...dom.window.document.querySelectorAll('section[id^="color"].cvi-section .cvi-chip'),
+      ];
       const brandHexes = new Set(Object.values(BRAND).map((h) => h.toLowerCase()));
       for (const chip of chips) {
         const style = chip.getAttribute("style") ?? "";
@@ -184,11 +242,11 @@ describe("CVI - design contract", () => {
       }
     });
 
-    it("displays the surface group label", () => {
+    it("displays the 4 canonical group labels in canonical order", () => {
       const dom = new JSDOM(cvi!.html);
-      const labels = [...dom.window.document.querySelectorAll("section#color .cvi-grouplabel")].map(
-        (g) => g.textContent?.trim(),
-      );
+      const labels = [
+        ...dom.window.document.querySelectorAll('section[id^="color"].cvi-section .cvi-grouplabel'),
+      ].map((g) => g.textContent?.trim());
       expect(labels).toEqual([
         "Surfaces – the ground",
         "Ink – text",
