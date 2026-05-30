@@ -44,13 +44,14 @@ const ALLOWED_RENDERER_WORDS = new Set([
   "icon",
   "svg",
   "img",
-  // shared Topbar component (src/components/Topbar.astro):
+  // shared SiteHeader component (src/components/SiteHeader.astro):
   // "architecture.kaihacks.ai · architecture.md · instructions.md · khai · vX.Y.Z"
   "instructions",
   "khai",
-  // shared Footer component (src/components/Footer.astro):
+  // shared SiteFooter component (src/components/SiteFooter.astro):
   // "architecture.kaihacks.ai · the specification / KAI · HACKS · AI /
-  //  one application · cultures.kaihacks.ai, focused on cultures"
+  //  one application · cultures.kaihacks.ai, focused on cultures /
+  //  Privacy · CVI" (global legal-links row)
   "specification",
   "kai",
   "hacks",
@@ -58,6 +59,8 @@ const ALLOWED_RENDERER_WORDS = new Set([
   "application",
   "cultures",
   "focused",
+  "privacy",
+  "cvi",
   // shared SpecPage prev/next slider nav (src/layouts/SpecPage.astro):
   // each typed spec links to its neighbors in canonical order. The visible
   // label is the neighbor's name in Newsreader display, so e.g. Position's
