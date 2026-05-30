@@ -13,12 +13,12 @@ const apexNav = [
 const processors = [
   {
     who: "GoDaddy",
-    what: "Domain registrar, DNS, and host. Holds domain-registration records and serves the site's pages from a cPanel server; logs visitor requests for security and abuse.",
+    what: "Domain registrar and cPanel host. Holds the domain-registration records and serves the site's pages from a shared cPanel server; logs visitor requests for security and abuse.",
     policy: "https://www.godaddy.com/legal/agreements/privacy-policy",
   },
   {
     who: "Cloudflare",
-    what: "Content delivery and security in front of the site (proxying mode). Processes every visitor's IP address and may set strictly-necessary security cookies.",
+    what: "DNS provider and TLS-terminating reverse proxy. Resolves the site's DNS, issues the HTTPS certificate, and sits between visitors and the GoDaddy origin; processes every visitor's IP address and may set strictly-necessary security cookies (__cf_bm).",
     policy: "https://www.cloudflare.com/privacypolicy/",
   },
   {
@@ -55,9 +55,7 @@ const processors = [
           >
         </div>
         <div>
-          <span class="p-k">Effective</span><span class="p-v"
-            ><span class="p-todo">TODO · date</span></span
-          >
+          <span class="p-k">Effective</span><span class="p-v">15 March 2026</span>
         </div>
         <div>
           <span class="p-k">Controller</span><span class="p-v"
@@ -212,9 +210,8 @@ const processors = [
         KAI HACKS AI · Privacy statement · <span class="p-fillme">DRAFT - not yet published</span>
       </p>
       <p class="p-mono p-foot-line">
-        Controller: Kai Schlüter, KAI HACKS AI (Denmark, CVR 41768274) · Effective <span
-          class="p-todo">TODO</span
-        > · privacy@kaihacks.ai
+        Controller: Kai Schlüter, KAI HACKS AI (Denmark, CVR 41768274) · Effective 15 March 2026 ·
+        privacy@kaihacks.ai
       </p>
     </footer>
 
