@@ -17,14 +17,14 @@ import { BRAND } from "../src/lib/brand";
  * Pairs with tests/brand-contract.test.ts which scans ALL built pages
  * for hex drift; this file is the deep-dive on CVI specifically.
  *
- * Forward-compatible with chapter sub-panel splits. The §04 Colour
- * chapter is already split (#color [ground & voice], #color-accents,
- * #color-rules). The §05 Typography chapter is queued to split next
- * (#type [the families], #type-scale [the scale]). Both use tolerant
- * matchers in SECTIONS (nStartsWith / h2Contains) so the sub-marker
- * "NN · i" + sub-titled h2 "Chapter – <subtitle>" don't require a
- * test bump. Colour-aggregating assertions scan `section[id^="color"]`
- * to combine swatches/labels across panels.
+ * Sub-panel splits are LOCKED. §04 Colour is split into three panels
+ * (#color "04 · i" ground & voice, #color-accents "04 · ii" the accents,
+ * #color-rules "04 · iii" rules & tokens). §05 Typography is split into
+ * two panels (#type "05 · i" the families, #type-scale "05 · ii" the
+ * scale). Canonical SECTIONS asserts the first panel of each chapter
+ * exactly; SUB_PANELS asserts the secondary panels exactly. Colour-
+ * aggregating assertions scan `section[id^="color"]` to combine swatches
+ * and labels across all three colour panels.
  */
 
 const pages = loadBuiltPages(process.cwd());
@@ -43,32 +43,32 @@ const TOC = [
 
 interface ChapterSpec {
   id: string;
-  /** Exact .cvi-n text - if set, .cvi-n must equal this. */
-  n?: string;
-  /** Prefix .cvi-n text - if set, .cvi-n must startWith this (allows "04 · i" sub-markers). */
-  nStartsWith?: string;
-  /** Exact .cvi-h2 text - if set, .cvi-h2 must equal this. */
-  h2?: string;
-  /** Substring of .cvi-h2 text - if set, .cvi-h2 must contain this (allows sub-titles). */
-  h2Contains?: string;
+  /** Exact .cvi-n text - .cvi-n must equal this. */
+  n: string;
+  /** Exact .cvi-h2 text - .cvi-h2 must equal this. */
+  h2: string;
 }
 
 const SECTIONS: ChapterSpec[] = [
   { id: "mark", n: "01", h2: "The mark" },
   { id: "set", n: "02", h2: "The set – which to use when" },
   { id: "space", n: "03", h2: "Clear space & minimum size" },
-  // #color uses tolerant matchers because the chapter may split into
-  // three sub-panels (04 · i ground & voice, 04 · ii the accents,
-  // 04 · iii rules & tokens). On split, #color carries 04 · i and the
-  // h2 carries an "– <subtitle>" tail.
-  { id: "color", nStartsWith: "04", h2Contains: "Colour" },
-  // #type uses tolerant matchers because the chapter may split into
-  // two sub-panels (05 · i the families, 05 · ii the scale). On split,
-  // #type carries 05 · i and the h2 carries an "– <subtitle>" tail.
-  { id: "type", nStartsWith: "05", h2Contains: "Typography" },
+  // §04 colour is split into 3 sub-panels; #color is panel i.
+  // Panels ii (#color-accents) and iii (#color-rules) are asserted
+  // separately in SUB_PANELS below.
+  { id: "color", n: "04 · i", h2: "Colour – ground & voice" },
+  // §05 typography is split into 2 sub-panels; #type is panel i.
+  // Panel ii (#type-scale) is asserted separately in SUB_PANELS below.
+  { id: "type", n: "05 · i", h2: "Typography – the families" },
   { id: "icon", n: "06", h2: "Icon & favicon" },
   { id: "apply", n: "07", h2: "Applications & misuse" },
   { id: "voice", n: "08", h2: "In one breath" },
+];
+
+const SUB_PANELS: ChapterSpec[] = [
+  { id: "color-accents", n: "04 · ii", h2: "Colour – the accents" },
+  { id: "color-rules", n: "04 · iii", h2: "Colour – rules & tokens" },
+  { id: "type-scale", n: "05 · ii", h2: "Typography – the scale" },
 ];
 
 const LOCKUP_VARIANTS = [
@@ -151,37 +151,19 @@ describe("CVI - design contract", () => {
 
   describe("8 canonical chapters", () => {
     for (const sec of SECTIONS) {
-      it(`§${sec.n ?? sec.nStartsWith}* #${sec.id}: has the canonical heading`, () => {
+      it(`§${sec.n} #${sec.id}: has the canonical heading`, () => {
         const dom = new JSDOM(cvi!.html);
         const section = dom.window.document.querySelector(`section#${sec.id}.cvi-section`);
         expect(section, `missing section#${sec.id}`).not.toBeNull();
-        const nText = section!.querySelector(".cvi-n")?.textContent?.trim() ?? "";
-        const h2Text = section!.querySelector(".cvi-h2")?.textContent?.trim() ?? "";
-        if (sec.n !== undefined) {
-          expect(nText).toBe(sec.n);
-        }
-        if (sec.nStartsWith !== undefined) {
-          expect(
-            nText.startsWith(sec.nStartsWith),
-            `expected ${sec.id} .cvi-n "${nText}" to start with "${sec.nStartsWith}"`,
-          ).toBe(true);
-        }
-        if (sec.h2 !== undefined) {
-          expect(h2Text).toBe(sec.h2);
-        }
-        if (sec.h2Contains !== undefined) {
-          expect(
-            h2Text.includes(sec.h2Contains),
-            `expected ${sec.id} .cvi-h2 "${h2Text}" to contain "${sec.h2Contains}"`,
-          ).toBe(true);
-        }
+        expect(section!.querySelector(".cvi-n")?.textContent?.trim()).toBe(sec.n);
+        expect(section!.querySelector(".cvi-h2")?.textContent?.trim()).toBe(sec.h2);
       });
     }
 
     it("the 8 canonical chapter IDs appear in canonical order", () => {
-      // Note: extra sub-panel sections (e.g. #color-accents, #color-rules)
-      // are allowed between canonical IDs; we filter to canonical and
-      // assert THEIR order is preserved.
+      // Sub-panel sections (#color-accents, #color-rules, #type-scale)
+      // are interspersed between canonical IDs; we filter to canonical
+      // and assert THEIR order is preserved.
       const dom = new JSDOM(cvi!.html);
       const allIds = [...dom.window.document.querySelectorAll("section.cvi-section")].map(
         (s) => s.id,
@@ -189,6 +171,34 @@ describe("CVI - design contract", () => {
       const canonical = SECTIONS.map((s) => s.id);
       const filtered = allIds.filter((id) => canonical.includes(id));
       expect(filtered).toEqual(canonical);
+    });
+  });
+
+  describe("sub-panel splits (§04 colour, §05 typography)", () => {
+    for (const sub of SUB_PANELS) {
+      it(`§${sub.n} #${sub.id}: has the canonical sub-panel heading`, () => {
+        const dom = new JSDOM(cvi!.html);
+        const section = dom.window.document.querySelector(`section#${sub.id}.cvi-section`);
+        expect(section, `missing sub-panel section#${sub.id}`).not.toBeNull();
+        expect(section!.querySelector(".cvi-n")?.textContent?.trim()).toBe(sub.n);
+        expect(section!.querySelector(".cvi-h2")?.textContent?.trim()).toBe(sub.h2);
+      });
+    }
+
+    it("colour sub-panels appear in canonical i → ii → iii order", () => {
+      const dom = new JSDOM(cvi!.html);
+      const colourIds = [
+        ...dom.window.document.querySelectorAll('section[id^="color"].cvi-section'),
+      ].map((s) => s.id);
+      expect(colourIds).toEqual(["color", "color-accents", "color-rules"]);
+    });
+
+    it("typography sub-panels appear in canonical i → ii order", () => {
+      const dom = new JSDOM(cvi!.html);
+      const typeIds = [
+        ...dom.window.document.querySelectorAll('section[id^="type"].cvi-section'),
+      ].map((s) => s.id);
+      expect(typeIds).toEqual(["type", "type-scale"]);
     });
   });
 
@@ -217,9 +227,8 @@ describe("CVI - design contract", () => {
   });
 
   describe("§04 colour - the palette", () => {
-    // Queries scan ALL colour-prefixed sections so they aggregate across
-    // the one-panel layout (today) AND the three-panel sub-snap split
-    // (planned: #color / #color-accents / #color-rules).
+    // Queries scan all three colour panels (#color, #color-accents,
+    // #color-rules) so swatch / label counts aggregate across the split.
 
     it("renders 4 surfaces + 3 inks + 2 rules + 6 accents = 15 swatches", () => {
       const dom = new JSDOM(cvi!.html);
