@@ -172,13 +172,14 @@ const movements = [
       scroll-snap-stop: always;
     }
     @media (min-width: 641px) {
+      /* Every snapped section vertical-centers its content. Center-snap
+       * is the site standard (matches main + CVI): content arrives at
+       * eye-level rather than the viewer scanning downward for the
+       * heading. Short sections get breathing room evenly above and
+       * below; longer ones (the 3-jump reading) sit naturally in the
+       * vertical centre. */
       .arch-home > section {
         min-height: calc(100vh - 8rem);
-      }
-      /* Only the masthead vertical-centers - it's the hero. The other
-       * sections (reading, the 3-jump diagram) start at top, content
-       * flows downward as a normal reading column. */
-      .arch-home > .masthead {
         display: flex;
         flex-direction: column;
         justify-content: center;
