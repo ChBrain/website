@@ -15,6 +15,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "postbuild": "node scripts/copy-public-to-surfaces.mjs",
     "preview": "astro preview",
     "test": "npm run build && vitest run",
     "test:watch": "vitest",
