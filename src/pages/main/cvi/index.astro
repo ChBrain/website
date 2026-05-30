@@ -618,12 +618,15 @@ const donts = [
   <style is:global>
     /* Chapter snap on the document, only when the CVI page is rendered.
      * Each chapter (masthead + 8 numbered sections) becomes its own
-     * snap stop. Scroll-padding leaves room for fixed chrome. Disabled
-     * on narrow viewports - snap is friction on mobile. */
+     * snap stop. Mandatory snap makes the page read like a brand book:
+     * one wheel-tick = one chapter. Scroll-padding matches the sticky
+     * SiteHeader + SiteFooter heights so a snapped chapter heading lands
+     * cleanly below the topbar rather than under it. Disabled on narrow
+     * viewports - snap is friction on mobile. */
     html:has(.cvi) {
-      scroll-snap-type: y proximity;
-      scroll-padding-top: 1rem;
-      scroll-padding-bottom: 1rem;
+      scroll-snap-type: y mandatory;
+      scroll-padding-top: 4rem;
+      scroll-padding-bottom: 4rem;
       scroll-behavior: smooth;
     }
     @media (max-width: 640px) {
@@ -639,6 +642,31 @@ const donts = [
     .cvi-section {
       scroll-snap-align: start;
       scroll-snap-stop: always;
+    }
+    @media (min-width: 641px) {
+      /* Each chapter fills the viewport (minus the sticky chrome) so it
+       * stands on its own. Short chapters get breathing room; long ones
+       * (§04 Colour swatches, §05 Type) overflow with internal scroll
+       * before the next snap point. */
+      .cvi-mast,
+      .cvi-section {
+        min-height: calc(100vh - 8rem);
+      }
+      /* The masthead is the hero - vertical-center its content within the
+       * full chapter height. Numbered sections stay top-aligned so the
+       * §NN label anchors at the top of each chapter view. */
+      .cvi-mast {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+    }
+    @media (max-width: 640px) {
+      .cvi-mast,
+      .cvi-section {
+        scroll-snap-align: none;
+        scroll-snap-stop: normal;
+      }
     }
 
     /* ── base ───────────────────────────────────────────────────────────── */
