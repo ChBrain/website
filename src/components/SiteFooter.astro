@@ -43,6 +43,22 @@ const globalLinks = [
   </nav>
 </footer>
 
+<style is:global>
+  /* On snap-enabled pages, the SiteFooter becomes a reachable snap stop —
+   * sticky-bottom fights mandatory snap. The footer pinned to viewport
+   * bottom appears to "snap back" out of view because mandatory snap
+   * forces the scroll rest position to align with the last section's
+   * snap-stop, so the colophon is unreachable as a resting state.
+   * Switching to position: relative + scroll-snap-align: start makes
+   * the footer the FINAL chapter — one wheel-tick past §N lands the
+   * colophon as its own snap-stop, stable at rest. Scoped to the three
+   * snap pages so non-snap pages keep their sticky-bottom footer. */
+  :where(html:has(.arch-home), html:has(.cvi), html:has(.main-home)) .footfed {
+    position: relative;
+    scroll-snap-align: start;
+  }
+</style>
+
 <style>
   .footfed {
     position: sticky;
