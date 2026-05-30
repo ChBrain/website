@@ -39,7 +39,11 @@ jobs:
         run: |
           BASE="${{ github.event.pull_request.base.sha }}"
           HEAD="${{ github.event.pull_request.head.sha }}"
-          CHANGED=$(git diff --name-only "$BASE" "$HEAD")
+          # Three-dot diff: from merge-base(BASE,HEAD) to HEAD. Two-dot
+          # would show files that main added since the PR branched off
+          # as if THIS PR changed them, misfiring META-2 on any branch
+          # that has fallen behind main.
+          CHANGED=$(git diff --name-only "$BASE"..."$HEAD")
 
           HAS_SOURCE=0
           HAS_TEST=0
