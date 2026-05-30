@@ -98,96 +98,19 @@ describe("architecture home - design contract", () => {
     });
   });
 
-  describe("§2 the types - descent", () => {
-    const expectedTypes = [
-      { order: "00", name: "Plot", badge: "system" },
-      { order: "01", name: "Process", badge: "draft" },
-      { order: "02", name: "Position", badge: "draft" },
-      { order: "03", name: "Piece", badge: "draft" },
-      { order: "04", name: "Place", badge: "draft" },
-      { order: "05", name: "Persona", badge: "draft" },
-    ];
-
-    it("has 6 type rows in the descent", () => {
-      const dom = new JSDOM(home!.html);
-      const rows = dom.window.document.querySelectorAll(".type-row");
-      expect(rows.length).toBe(6);
-    });
-
-    for (const [i, t] of expectedTypes.entries()) {
-      it(`type row ${i} is ${t.order} ${t.name} (${t.badge})`, () => {
-        const dom = new JSDOM(home!.html);
-        const rows = dom.window.document.querySelectorAll(".type-row");
-        const row = rows[i];
-        expect(row.querySelector(".type-row-order")!.textContent?.trim()).toBe(t.order);
-        expect(row.querySelector(".type-row-name")!.textContent?.trim()).toBe(t.name);
-        expect(row.querySelector(".type-row-badge")!.textContent?.trim()).toBe(t.badge);
-      });
-    }
-
-    it("Plot is the only type-row--system row", () => {
-      const dom = new JSDOM(home!.html);
-      const systemRows = dom.window.document.querySelectorAll(".type-row--system");
-      expect(systemRows.length).toBe(1);
-      expect(systemRows[0].querySelector(".type-row-name")!.textContent?.trim()).toBe("Plot");
-    });
-
-    it("has the 'Read the types' CTA", () => {
-      const dom = new JSDOM(home!.html);
-      const cta = dom.window.document.querySelector(".types-readmore-link");
-      expect(cta).not.toBeNull();
-      expect(cta!.textContent).toContain("Read the types");
-    });
-  });
-
-  describe("§3 the model - tree + infrastructure", () => {
-    it("has the Play container row", () => {
-      const dom = new JSDOM(home!.html);
-      const container = dom.window.document.querySelector(".tree-row--container .tree-name");
-      expect(container).not.toBeNull();
-      expect(container!.textContent?.trim()).toBe("Play");
-    });
-
-    it("has the Plot system row with 0..n cardinality", () => {
-      const dom = new JSDOM(home!.html);
-      const system = dom.window.document.querySelector(".tree-row--system");
-      expect(system).not.toBeNull();
-      expect(system!.querySelector(".tree-card")!.textContent?.trim()).toBe("0..n");
-      expect(system!.querySelector(".tree-name")!.textContent?.trim()).toBe("Plot");
-    });
-
-    it("has 5 element rows under Plot", () => {
-      const dom = new JSDOM(home!.html);
-      const elements = dom.window.document.querySelectorAll(".tree-row--element");
-      expect(elements.length).toBe(5);
-    });
-
-    it("infrastructure relations are: sits on, based on, primed by (in that order)", () => {
-      const dom = new JSDOM(home!.html);
-      const labels = Array.from(dom.window.document.querySelectorAll(".relation-label")).map((l) =>
-        l.textContent?.trim(),
-      );
-      expect(labels).toEqual(["sits on", "based on", "primed by"]);
-    });
-
-    it("infrastructure tags are: Claude.ai, Perplexity, Self-Hosted", () => {
-      const dom = new JSDOM(home!.html);
-      const tags = Array.from(dom.window.document.querySelectorAll(".infra-tag")).map((t) =>
-        t.textContent?.trim(),
-      );
-      expect(tags).toEqual(["Claude.ai", "Perplexity", "Self-Hosted"]);
-    });
-  });
+  // §2 the types - descent + §3 the model - tree + infrastructure are
+  // absorbed into the 3-jump diagram (replaces the per-type table and
+  // the containment tree with a single holistic three-tier read). The
+  // contract for that diagram is added in a follow-up test PR after
+  // the source PR lands; this PR drops the now-obsolete assertions.
 
   describe("section structure", () => {
-    it("all section numbers (§1 §2 §3) are present", () => {
+    it("§1 is present on the home; §2 and §3 are absorbed into the 3-jump diagram", () => {
       const dom = new JSDOM(home!.html);
       const nos = Array.from(dom.window.document.querySelectorAll(".section-no")).map((n) =>
         n.textContent?.trim(),
       );
       expect(nos).toContain("§1");
-      expect(nos).toContain("§2");
-      expect(nos).toContain("§3");
     });
   });
 });
