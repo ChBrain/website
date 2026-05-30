@@ -287,9 +287,9 @@ const donts = [
 
     <section id="color" class="cvi-section">
       <div class="cvi-seclabel">
-        <span class="cvi-n">04</span>
+        <span class="cvi-n">04 · i</span>
         <div class="cvi-seclabel-body">
-          <div class="cvi-sectop"><h2 class="cvi-h2">Colour</h2></div>
+          <div class="cvi-sectop"><h2 class="cvi-h2">Colour – ground & voice</h2></div>
           <p>
             One palette, three lenses. Warm paper is the ground, ink is the voice, and the accents
             appear one at a time. <strong>No hex beyond this set.</strong>
@@ -344,6 +344,15 @@ const donts = [
           ))
         }
       </div>
+    </section>
+
+    <section id="color-accents" class="cvi-section">
+      <div class="cvi-seclabel">
+        <span class="cvi-n">04 · ii</span>
+        <div class="cvi-seclabel-body">
+          <div class="cvi-sectop"><h2 class="cvi-h2">Colour – the accents</h2></div>
+        </div>
+      </div>
 
       <div class="cvi-grouplabel">Accents – the regional hues</div>
       <div class="cvi-grid3">
@@ -364,6 +373,15 @@ const donts = [
             </div>
           ))
         }
+      </div>
+    </section>
+
+    <section id="color-rules" class="cvi-section">
+      <div class="cvi-seclabel">
+        <span class="cvi-n">04 · iii</span>
+        <div class="cvi-seclabel-body">
+          <div class="cvi-sectop"><h2 class="cvi-h2">Colour – rules & tokens</h2></div>
+        </div>
       </div>
 
       <div class="cvi-twocol cvi-color-usage">
@@ -1017,6 +1035,18 @@ const donts = [
     }
     .cvi-grouplabel--spaced {
       margin-top: 42px;
+    }
+
+    /* ── §04 · i compaction (the neutrals) ──────────────────────────────── */
+    /* Shorter chips + tighter group labels in the ground/voice panel so
+     * all 9 neutrals (4 surfaces + 3 inks + 2 hairlines) fit one viewport.
+     * The accents panel (#color-accents) keeps full chip height - the
+     * loud colours earn the space; quiet things sit quiet. */
+    #color .cvi-chip {
+      height: 72px;
+    }
+    #color .cvi-grouplabel {
+      margin: 18px 0 10px;
     }
 
     /* ── clear space / min size visuals ─────────────────────────────────── */
