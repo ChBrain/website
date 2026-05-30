@@ -49,18 +49,21 @@ const ALLOWED_RENDERER_WORDS = new Set([
   "instructions",
   "khai",
   // shared SiteFooter component (src/components/SiteFooter.astro):
-  // "architecture.kaihacks.ai · the specification / KAI · HACKS · AI /
-  //  one application · cultures.kaihacks.ai, focused on cultures /
-  //  Privacy · CVI" (global legal-links row)
-  "specification",
+  // "KAI HACKS AI · CVR 41768274 · info@kaihacks.ai · © 2026 · Privacy · CVI"
+  // The historical per-page tagline words (specification / one / application /
+  // focused) are kept for now so this test passes against both the old
+  // SiteFooter and the new one. Prune them after PR #74 merges.
   "kai",
   "hacks",
+  "cvr",
+  "info",
+  "privacy",
+  "cvi",
+  "specification",
   "one",
   "application",
   "cultures",
   "focused",
-  "privacy",
-  "cvi",
   // shared SpecPage prev/next slider nav (src/layouts/SpecPage.astro):
   // each typed spec links to its neighbors in canonical order. The visible
   // label is the neighbor's name in Newsreader display, so e.g. Position's
