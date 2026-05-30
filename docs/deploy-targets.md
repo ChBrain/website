@@ -10,24 +10,24 @@ The apex `kaihacks.ai` is the main domain and serves directly from
 `/public_html/`. Each subdomain has its own document root inside
 `/public_html/`. From the cPanel domain table:
 
-| Domain                   | Document root on host                   |
-| ------------------------ | --------------------------------------- |
-| `kaihacks.ai` (main)     | `/public_html/`                         |
+| Domain                     | Document root on host                    |
+| -------------------------- | ---------------------------------------- |
+| `kaihacks.ai` (main)       | `/public_html/`                          |
 | `architecture.kaihacks.ai` | `/public_html/architecture.kaihacks.ai/` |
-| `cultures.kaihacks.ai`   | `/public_html/cultures.kaihacks.ai/`    |
-| `staging.kaihacks.ai`    | `/public_html/staging.kaihacks.ai/`     |
+| `cultures.kaihacks.ai`     | `/public_html/cultures.kaihacks.ai/`     |
+| `staging.kaihacks.ai`      | `/public_html/staging.kaihacks.ai/`      |
 
 Note: the apex maps to `/public_html/` directly, NOT
 `/public_html/kaihacks.ai/`. Anything URL-pathed under the apex
 (e.g. `kaihacks.ai/main/`) lives at `/public_html/<path>/` on the
-host — the `kaihacks.ai/` segment does not appear in the host path.
+host - the `kaihacks.ai/` segment does not appear in the host path.
 
-## Build outputs → deploy targets
+## Build outputs -> deploy targets
 
-| `dist/` subfolder    | Production rsync target                                         | Staging rsync target                                              |
-| -------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `dist/architecture/` | `/public_html/architecture.kaihacks.ai/`                        | `/public_html/staging.kaihacks.ai/architecture/`                  |
-| `dist/main/`         | `/public_html/main/`                                            | `/public_html/staging.kaihacks.ai/main/`                          |
+| `dist/` subfolder    | Production rsync target                  | Staging rsync target                             |
+| -------------------- | ---------------------------------------- | ------------------------------------------------ |
+| `dist/architecture/` | `/public_html/architecture.kaihacks.ai/` | `/public_html/staging.kaihacks.ai/architecture/` |
+| `dist/main/`         | `/public_html/main/`                     | `/public_html/staging.kaihacks.ai/main/`         |
 
 Production URLs:
 
@@ -49,8 +49,8 @@ output comes online (likely from chbrain/cultures, or from a future
 subpages tree under chbrain/website), the deploy workflows extend
 the same way:
 
-- production: `rsync ./dist/cultures/ … c216mkgp1lzk@…:/public_html/cultures.kaihacks.ai/`
-- staging:    `rsync ./dist/cultures/ … c216mkgp1lzk@…:/public_html/staging.kaihacks.ai/cultures/`
+- production: `rsync ./dist/cultures/ ... c216mkgp1lzk@...:/public_html/cultures.kaihacks.ai/`
+- staging: `rsync ./dist/cultures/ ... c216mkgp1lzk@...:/public_html/staging.kaihacks.ai/cultures/`
 
 Any additional subdomain follows the same pattern: production at
 `/public_html/<subdomain>/`, staging at
