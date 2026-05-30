@@ -10,11 +10,13 @@
 // block. No props: every page is the same brand entity, so the old
 // per-page siteLabel / endLabel / tagline knobs are gone.
 //
-// Privacy + CVI hrefs go through URLS so a staging build keeps the
-// links inside staging.kaihacks.ai rather than jumping out to prod.
-// Class names (.footfed, .footfed-row, .footfed-legal-link) are
-// preserved so the design-contract tests (privacy, cvi, main) keep
-// passing without modification.
+// "KAI HACKS AI" links back to the front page (URLS.main) — the company
+// wordmark is the way home from any surface. Privacy + CVI hrefs also
+// go through URLS so a staging build keeps the links inside
+// staging.kaihacks.ai rather than jumping out to prod. Class names
+// (.footfed, .footfed-row, .footfed-legal-link) are preserved so the
+// design-contract tests (privacy, cvi, main) keep passing without
+// modification.
 
 import { URLS } from "../lib/urls";
 ---
@@ -22,7 +24,7 @@ import { URLS } from "../lib/urls";
 <footer class="footfed">
   <div class="footfed-row">
     <div class="footfed-identity">
-      KAI HACKS AI · CVR 41768274 ·
+      <a href={URLS.main}>KAI HACKS AI</a> · CVR 41768274 ·
       <a href="mailto:info@kaihacks.ai">info@kaihacks.ai</a>
     </div>
     <nav class="footfed-legal" aria-label="Site">
