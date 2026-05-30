@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import Topbar from "../../components/Topbar.astro";
-import Footer from "../../components/Footer.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
 import JumpDiagram from "../../components/JumpDiagram.astro";
 
 const movements = [
@@ -40,7 +40,7 @@ const movements = [
   description="KAI HACKS AI. The kaihacks specification reads itself: who builds, how it operates, how it runs."
 >
   <div class="arch-home">
-    <Topbar basePath="./" />
+    <SiteHeader domain="architecture" tld=".kaihacks.ai" basePath="./" version="v0.0.2" />
 
     <section class="masthead">
       <div class="section-label">§0 · the specification</div>
@@ -115,7 +115,10 @@ const movements = [
 
     <JumpDiagram />
 
-    <Footer />
+    <SiteFooter
+      siteLabel="architecture.kaihacks.ai · the specification"
+      tagline="one application · cultures.kaihacks.ai, focused on cultures"
+    />
   </div>
 
   <style is:global>
@@ -188,7 +191,7 @@ const movements = [
       }
     }
 
-    /* topbar styles live in src/components/Topbar.astro */
+    /* topbar styles live in src/components/SiteHeader.astro */
 
     /* masthead */
     .masthead {
@@ -461,6 +464,6 @@ const movements = [
       margin-right: 8px;
     }
 
-    /* footer styles live in src/components/Footer.astro */
+    /* footer styles live in src/components/SiteFooter.astro */
   </style>
 </BaseLayout>
