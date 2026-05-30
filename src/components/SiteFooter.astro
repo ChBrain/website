@@ -3,12 +3,14 @@
 // Replaces the old architecture-only Footer.astro and the inline main
 // surface footer.
 //
-// Always renders a global links row that includes Privacy (cross-domain
-// absolute URLs because surfaces live on different subdomains; same
-// string everywhere keeps the footer identical across the site).
+// Always renders a global links row that includes Privacy. Hrefs are
+// resolved through URLS so a staging build keeps the links inside
+// staging.kaihacks.ai rather than jumping out to production.
 //
 // Class names (.footfed*) are preserved from Footer.astro so existing
 // design-contract tests against the architecture footer keep passing.
+
+import { URLS } from "../lib/urls";
 
 interface Props {
   siteLabel: string;
@@ -19,8 +21,8 @@ interface Props {
 const { siteLabel, endLabel = "KAI · HACKS · AI", tagline } = Astro.props;
 
 const globalLinks = [
-  { label: "Privacy", href: "https://kaihacks.ai/privacy/" },
-  { label: "CVI", href: "https://kaihacks.ai/main/cvi/" },
+  { label: "Privacy", href: URLS.privacy },
+  { label: "CVI", href: URLS.cvi },
 ];
 ---
 
