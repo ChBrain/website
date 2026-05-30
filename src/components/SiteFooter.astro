@@ -1,58 +1,49 @@
 ---
-// SiteFooter — the global footer. Used on every page on every surface.
-// Replaces the old architecture-only Footer.astro and the inline main
-// surface footer.
+// SiteFooter — the one global colophon for every surface.
 //
-// Always renders a global links row that includes Privacy. Hrefs are
-// resolved through URLS so a staging build keeps the links inside
-// staging.kaihacks.ai rather than jumping out to production.
+// One editorial line, used identically on every page:
 //
-// Class names (.footfed*) are preserved from Footer.astro so existing
-// design-contract tests against the architecture footer keep passing.
+//   KAI HACKS AI · CVR 41768274 · info@kaihacks.ai      © 2026 · Privacy · CVI
+//
+// Identity + contact float left; year + legal links float right. Mono,
+// ink-mute, uppercase, letter-spaced — same restraint as CVI's bottom
+// block. No props: every page is the same brand entity, so the old
+// per-page siteLabel / endLabel / tagline knobs are gone.
+//
+// Privacy + CVI hrefs go through URLS so a staging build keeps the
+// links inside staging.kaihacks.ai rather than jumping out to prod.
+// Class names (.footfed, .footfed-row, .footfed-legal-link) are
+// preserved so the design-contract tests (privacy, cvi, main) keep
+// passing without modification.
 
 import { URLS } from "../lib/urls";
-
-interface Props {
-  siteLabel: string;
-  endLabel?: string;
-  tagline?: string;
-}
-
-const { siteLabel, endLabel = "KAI · HACKS · AI", tagline } = Astro.props;
-
-const globalLinks = [
-  { label: "Privacy", href: URLS.privacy },
-  { label: "CVI", href: URLS.cvi },
-];
 ---
 
 <footer class="footfed">
   <div class="footfed-row">
-    <span>{siteLabel}</span>
-    <span>{endLabel}</span>
+    <div class="footfed-identity">
+      KAI HACKS AI · CVR 41768274 ·
+      <a href="mailto:info@kaihacks.ai">info@kaihacks.ai</a>
+    </div>
+    <nav class="footfed-legal" aria-label="Site">
+      © 2026 ·
+      <a class="footfed-legal-link" href={URLS.privacy}>Privacy</a> ·
+      <a class="footfed-legal-link" href={URLS.cvi}>CVI</a>
+    </nav>
   </div>
-  {tagline && <div class="footfed-tagline">{tagline}</div>}
-  <nav class="footfed-legal" aria-label="Site">
-    {
-      globalLinks.map((l) => (
-        <a href={l.href} class="footfed-legal-link">
-          {l.label}
-        </a>
-      ))
-    }
-  </nav>
 </footer>
 
 <style is:global>
-  /* On snap-enabled pages, the SiteFooter becomes a reachable snap stop —
-   * sticky-bottom fights mandatory snap. The footer pinned to viewport
+  /* On snap-enabled pages the SiteFooter becomes the final snap stop —
+   * sticky-bottom fights mandatory snap (the footer pinned to viewport
    * bottom appears to "snap back" out of view because mandatory snap
-   * forces the scroll rest position to align with the last section's
-   * snap-stop, so the colophon is unreachable as a resting state.
-   * Switching to position: relative + scroll-snap-align: start makes
-   * the footer the FINAL chapter — one wheel-tick past §N lands the
-   * colophon as its own snap-stop, stable at rest. Scoped to the three
-   * snap pages so non-snap pages keep their sticky-bottom footer. */
+   * forces the resting scroll position to align with the last
+   * section's snap-stop, so the colophon is unreachable as a resting
+   * state). Switching to position: relative + scroll-snap-align: start
+   * makes the footer the FINAL chapter — one wheel-tick past §N lands
+   * the colophon as its own snap-stop, stable at rest. Scoped to the
+   * three snap pages so non-snap pages keep their sticky-bottom
+   * behaviour. */
   :where(html:has(.arch-home), html:has(.cvi), html:has(.main-home)) .footfed {
     position: relative;
     scroll-snap-align: start;
@@ -73,57 +64,44 @@ const globalLinks = [
     justify-content: space-between;
     align-items: baseline;
     flex-wrap: wrap;
-    gap: 10px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    color: var(--color-ink-soft);
-    text-transform: uppercase;
-  }
-  .footfed-tagline {
-    margin-top: 8px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    color: var(--color-ink-soft);
-    text-transform: uppercase;
-  }
-  .footfed-legal {
-    margin-top: 10px;
-    display: flex;
-    gap: 1.25rem;
-    flex-wrap: wrap;
-  }
-  .footfed-legal-link {
+    column-gap: 24px;
+    row-gap: 6px;
     font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.18em;
-    color: var(--color-ink-soft);
+    color: var(--color-ink-mute);
     text-transform: uppercase;
-    text-decoration: none;
-    border-bottom: 1px solid var(--color-rule);
-  }
-  .footfed-legal-link:hover {
-    color: var(--color-ink);
   }
   @media (min-width: 641px) {
-    .footfed-legal-link {
+    .footfed-row {
       font-size: 11px;
     }
   }
 
-  /* Mobile: drop sticky behavior + hide the second-row tagline.
-   * Rationale: sticky chrome on small viewports eats too much of
-   * the reading area. On mobile the footer lives inline at the
-   * end of the page; the topbar stays sticky as the always-on
-   * "where am I" anchor. */
+  .footfed-identity,
+  .footfed-legal {
+    display: inline;
+  }
+
+  .footfed-identity a,
+  .footfed-legal-link {
+    color: var(--color-ink-mute);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-rule);
+  }
+  .footfed-identity a:hover,
+  .footfed-legal-link:hover {
+    color: var(--color-ink);
+  }
+
+  /* Mobile: drop sticky behaviour. Sticky chrome on small viewports
+   * eats too much of the reading area; on mobile the footer lives
+   * inline at the end of the page. The topbar stays sticky as the
+   * always-on "where am I" anchor. */
   @media (max-width: 640px) {
     .footfed {
       position: static;
       padding: 0.75rem 0 1rem;
-    }
-    .footfed-tagline {
-      display: none;
     }
   }
 </style>
