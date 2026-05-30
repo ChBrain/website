@@ -2,9 +2,10 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
+import { URLS } from "../../lib/urls";
 
 const mainNav = [
-  { label: "architecture", href: "https://architecture.kaihacks.ai/" },
+  { label: "architecture", href: URLS.architecture },
   { label: "cultures", href: "#" },
   { label: "services", href: "#services" },
 ];
@@ -30,7 +31,7 @@ const apps = [
     url: "architecture.kaihacks.ai",
     title: "Architecture",
     note: "the method, documented – the specification",
-    href: "https://architecture.kaihacks.ai/",
+    href: URLS.architecture,
     state: "live",
   },
   {
@@ -112,7 +113,7 @@ const apps = [
       </div>
 
       <div class="method-cta">
-        <a href="https://architecture.kaihacks.ai/" class="method-cta-link">
+        <a href={URLS.architecture} class="method-cta-link">
           <span>Read the full specification</span>
           <span class="method-cta-arrow">architecture.kaihacks.ai →</span>
         </a>

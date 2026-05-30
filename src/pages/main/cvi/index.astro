@@ -4,11 +4,12 @@ import SiteHeader from "../../../components/SiteHeader.astro";
 import SiteFooter from "../../../components/SiteFooter.astro";
 import KhaiMark from "../../../components/KhaiMark.astro";
 import { BRAND } from "../../../lib/brand";
+import { URLS } from "../../../lib/urls";
 
 const mainNav = [
-  { label: "architecture", href: "https://architecture.kaihacks.ai/" },
+  { label: "architecture", href: URLS.architecture },
   { label: "cultures", href: "#" },
-  { label: "services", href: "https://kaihacks.ai/main/#services" },
+  { label: "services", href: `${URLS.main}#services` },
 ];
 
 const tocLinks = [

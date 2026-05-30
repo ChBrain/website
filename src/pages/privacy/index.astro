@@ -2,10 +2,11 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
+import { URLS } from "../../lib/urls";
 
 const apexNav = [
-  { label: "company", href: "https://kaihacks.ai/main/" },
-  { label: "architecture", href: "https://architecture.kaihacks.ai/" },
+  { label: "company", href: URLS.main },
+  { label: "architecture", href: URLS.architecture },
   { label: "cultures", href: "#" },
 ];
 
@@ -39,7 +40,7 @@ const processors = [
   description="How KAI HACKS AI handles the small amount of data that passes through this site and its newsletter - who processes it, why, and what you can ask us to do about it."
 >
   <div class="arch-page privacy">
-    <SiteHeader domain="kaihacks" tld=".ai" basePath="https://kaihacks.ai/main/" nav={apexNav} />
+    <SiteHeader domain="kaihacks" tld=".ai" basePath={URLS.main} nav={apexNav} />
 
     <header class="p-mast">
       <div class="p-mono">privacy</div>
