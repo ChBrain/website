@@ -1,7 +1,15 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
+import SiteHeader from "../../../components/SiteHeader.astro";
+import SiteFooter from "../../../components/SiteFooter.astro";
 import KhaiMark from "../../../components/KhaiMark.astro";
 import { BRAND } from "../../../lib/brand";
+
+const mainNav = [
+  { label: "architecture", href: "https://architecture.kaihacks.ai/" },
+  { label: "cultures", href: "#" },
+  { label: "services", href: "https://kaihacks.ai/main/#services" },
+];
 
 const tocLinks = [
   { n: "01", t: "The mark", href: "#mark" },
@@ -114,6 +122,8 @@ const donts = [
   description="The canonical visual reference for the kaihacks.ai brand: mark, palette, type, and the rules that hold them together."
 >
   <div class="arch-page cvi">
+    <SiteHeader domain="kaihacks" tld=".ai" basePath="../" nav={mainNav} />
+
     <header class="cvi-mast">
       <div class="cvi-mast-grid">
         <div class="cvi-mark"><KhaiMark size={132} /></div>
@@ -600,6 +610,8 @@ const donts = [
         brick #8d3a2c · sea #3a4a52 · amber #c98e36
       </p>
     </footer>
+
+    <SiteFooter siteLabel="kaihacks.ai · colophon" />
   </div>
 
   <style is:global>
