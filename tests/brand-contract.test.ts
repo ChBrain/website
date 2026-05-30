@@ -32,11 +32,6 @@ const ROOT = process.cwd();
 
 /** Hex literals we explicitly accept outside BRAND + tokens.css. */
 const ALLOWED_DERIVATIONS = new Map<string, string>([
-  // amber-dark ink for text on amber-bg in the privacy page's TODO chips.
-  // The contrast ratio against rgba(amber, 0.12) needs the darker amber;
-  // BRAND.amber itself is too light. Candidate for promotion to tokens.css
-  // as --color-amber-ink in a follow-up source PR.
-  ["#7a5212", "privacy DRAFT TODO chip text"],
   // Pure white. Used as a fill in the few svg/img stages that need it.
   ["#ffffff", "white fill in stage decorations"],
 ]);
