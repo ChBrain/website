@@ -2,36 +2,202 @@
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import SiteHeader from "../../../components/SiteHeader.astro";
 import SiteFooter from "../../../components/SiteFooter.astro";
-import JumpDiagram from "../../../components/JumpDiagram.astro";
+import { loadAllSpecs, loadArchitecture } from "../../../lib/load-specs";
+import { parseSpec, type ParsedSpec } from "../../../lib/parse-spec";
+
+// Canonical order of the playbook. Plot at the top (the system),
+// the five Casts (the elements Plot casts), and the two substrate
+// files everything rests on. This order is the design contract.
+const ORDER = [
+  "plot",
+  "process",
+  "position",
+  "piece",
+  "place",
+  "persona",
+  "architecture",
+  "instructions",
+];
+
+const ROLE_LABEL: Record<string, string> = {
+  system: "the system",
+  element: "element",
+  meta: "meta",
+};
+
+const allSpecs = loadAllSpecs();
+const architectureSpec = loadArchitecture();
+// Build a lookup of every spec we can find. loadAllSpecs() returns the
+// per-type files; loadArchitecture() returns architecture.md if present.
+const bySlug = new Map<string, ParsedSpec | null>();
+for (const raw of allSpecs) {
+  try {
+    bySlug.set(raw.id, parseSpec(raw.text));
+  } catch {
+    bySlug.set(raw.id, null);
+  }
+}
+if (architectureSpec) {
+  try {
+    bySlug.set("architecture", parseSpec(architectureSpec.text));
+  } catch {
+    bySlug.set("architecture", null);
+  }
+}
+
+// Assemble the canonical 8 spreads. A spread always renders — if a spec
+// isn't yet in the package, the spread is rendered as a "coming" stub.
+const spreads = ORDER.map((slug, i) => {
+  const parsed = bySlug.get(slug) ?? null;
+  const fm = parsed?.frontmatter;
+  const role = fm?.class ?? "element";
+  const groupKey = role === "system" ? "system" : role === "meta" ? "meta" : "element";
+  return {
+    slug,
+    idx: i,
+    n: String(i).padStart(2, "0"),
+    name: fm?.id ? fm.id.charAt(0).toUpperCase() + fm.id.slice(1) : null,
+    subtitle: fm?.subtitle ?? null,
+    status: fm?.status ?? "draft",
+    role,
+    roleLabel: ROLE_LABEL[role] ?? role,
+    chapters: parsed?.chapters ?? [],
+    coda: parsed?.coda ?? null,
+    groupKey,
+    written: !!parsed,
+  };
+});
+
+const groupLabels: Record<string, string> = {
+  system: "the system",
+  element: "casts",
+  meta: "rests on",
+};
+
+// Build the overlay TOC structure grouped by role.
+const tocGroups = ["system", "element", "meta"].map((g) => ({
+  key: g,
+  label: groupLabels[g],
+  items: spreads.filter((s) => s.groupKey === g),
+}));
+
+const total = spreads.length;
 ---
 
 <BaseLayout
   title="Playbook · architecture · kaihacks"
-  description="The KAI HACKS AI playbook – the bound specification. Plot, the five elements that Plot casts, and the two substrate files everything rests on."
+  description="The KAI HACKS AI playbook – Plot, the five elements that Plot casts, and the two substrate files everything rests on."
 >
   <div class="playbook">
     <SiteHeader domain="architecture" tld=".kaihacks.ai" basePath="../" version="v0.0.2" />
 
-    <header class="playbook-mast">
-      <div class="section-label">§0 · the playbook</div>
-      <h1 class="playbook-title">
-        Playbook<em>.</em>
-      </h1>
-      <p class="playbook-subline">The elements of how a world is moved – one file at a time.</p>
-    </header>
+    {
+      /* Collapsed-strip indicator on the left edge. Click to expand the
+        rail overlay (full contents). Each horizontal bar is one spread;
+        the brick one is the current. Hidden on mobile (long scroll). */
+    }
+    <button class="pb-strip" type="button" aria-label="Open contents" aria-expanded="false">
+      <span class="pb-strip-pos"
+        ><span class="pb-strip-cur">00</span>/{String(total).padStart(2, "0")}</span
+      >
+      <span class="pb-strip-bars" aria-hidden="true">
+        {
+          spreads.map((_, i) => (
+            <span class={`pb-strip-bar ${i === 0 ? "is-current" : ""}`} data-idx={i} />
+          ))
+        }
+      </span>
+      <span class="pb-strip-label">Contents</span>
+    </button>
 
-    <JumpDiagram />
+    {
+      /* Rail overlay (TOC). Hidden by default; opens via the strip
+        click. Esc closes. Groups by role so the system / casts / rests-on
+        hierarchy reads. */
+    }
+    <div class="pb-overlay" role="dialog" aria-modal="true" aria-label="Playbook contents" hidden>
+      <div class="pb-overlay-card">
+        <div class="pb-overlay-head">
+          <span class="pb-overlay-eyebrow">The Specification</span>
+          <button class="pb-overlay-close" type="button" aria-label="Close contents">×</button>
+        </div>
+        <nav class="pb-toc" aria-label="Spreads">
+          {
+            tocGroups.map((g) => (
+              <div class="pb-toc-group">
+                <div class="pb-toc-grouplabel">{g.label}</div>
+                {g.items.map((s) => (
+                  <a
+                    href={`#${s.slug}`}
+                    class={`pb-toc-link ${s.written ? "" : "pb-toc-link--draft"}`}
+                    data-idx={s.idx}
+                  >
+                    <span class="pb-toc-n">{s.n}</span>
+                    <span class="pb-toc-name">{s.name ?? s.slug}</span>
+                  </a>
+                ))}
+              </div>
+            ))
+          }
+        </nav>
+      </div>
+    </div>
+
+    {/* The spreads. One snap-stop per spec; mobile scrolls naturally. */}
+    <main class="pb-spreads">
+      {
+        spreads.map((s) => (
+          <article id={s.slug} class={`pb-spread ${s.written ? "" : "pb-spread--draft"}`}>
+            <header class="pb-spread-head">
+              <span class="pb-spread-no">
+                {s.n} · {s.roleLabel}
+              </span>
+              <span class={`pb-spread-state pb-spread-state--${s.status}`}>{s.status}</span>
+            </header>
+
+            <h2 class="pb-spread-title">
+              {s.name ?? s.slug}
+              <em>.</em>
+            </h2>
+
+            {s.subtitle && <p class="pb-spread-sub">{s.subtitle}</p>}
+
+            {s.written && s.chapters.length > 0 && (
+              <div class="pb-facets">
+                {s.chapters.map((ch) => (
+                  <article class="pb-facet">
+                    <h3 class="pb-facet-name">
+                      <span class="pb-facet-initial">{ch.letter}</span>
+                      {ch.name.slice(1)}
+                    </h3>
+                    <p class="pb-facet-body">{ch.body}</p>
+                  </article>
+                ))}
+              </div>
+            )}
+
+            {s.written && s.coda && (
+              <>
+                <span class="pb-spread-rule" aria-hidden="true" />
+                <p class="pb-spread-coda">{s.coda}</p>
+              </>
+            )}
+
+            {!s.written && (
+              <div class="pb-spread-stub">
+                <span class="pb-spread-stub-label">coming</span>
+              </div>
+            )}
+          </article>
+        ))
+      }
+    </main>
 
     <SiteFooter />
   </div>
 
   <style is:global>
-    /* The playbook borrows the architecture-home's full-bleed override
-     * and snap chassis. JumpDiagram (the diagram component) was built
-     * to live on the architecture home; here it sits at /playbook/ as
-     * the focused field manual. Future PRs will replace JumpDiagram
-     * with the bound 8-spread book (cover + 5 casts + 2 substrate)
-     * driven by a rail-overlay + collapsed-strip indicator. */
+    /* Full-bleed override + snap chassis, scoped to .playbook. */
     body:has(.playbook) {
       padding: 0;
     }
@@ -50,6 +216,10 @@ import JumpDiagram from "../../../components/JumpDiagram.astro";
         scroll-snap-type: none;
       }
     }
+    /* Lock body scroll when the overlay is open. */
+    body:has(.pb-overlay:not([hidden])) {
+      overflow: hidden;
+    }
   </style>
 
   <style>
@@ -67,55 +237,234 @@ import JumpDiagram from "../../../components/JumpDiagram.astro";
       }
     }
 
-    .playbook-mast {
+    /* ── strip indicator (left edge, always visible on desktop) ──────────── */
+    .pb-strip {
+      position: fixed;
+      top: 50%;
+      left: 14px;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      background: transparent;
+      border: none;
+      padding: 14px 4px;
+      cursor: pointer;
+      z-index: 40;
+      font-family: var(--font-mono);
+      color: var(--color-ink-mute);
+    }
+    .pb-strip:focus-visible {
+      outline: 2px solid var(--color-brick);
+      outline-offset: 4px;
+    }
+    .pb-strip-pos {
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .pb-strip-cur {
+      color: var(--color-brick);
+      font-weight: 600;
+    }
+    .pb-strip-bars {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .pb-strip-bar {
+      width: 18px;
+      height: 2px;
+      background: var(--color-rule);
+      transition: background 0.16s;
+    }
+    .pb-strip-bar.is-current {
+      background: var(--color-brick);
+    }
+    .pb-strip-label {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-size: 9.5px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+    @media (max-width: 760px) {
+      .pb-strip {
+        display: none;
+      }
+    }
+
+    /* ── overlay (TOC) ───────────────────────────────────────────────────── */
+    .pb-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(22, 19, 15, 0.32);
+      z-index: 50;
+      display: flex;
+      align-items: stretch;
+    }
+    .pb-overlay[hidden] {
+      display: none;
+    }
+    .pb-overlay-card {
+      background: var(--color-paper);
+      border-right: 1px solid var(--color-ink);
+      width: min(420px, 86vw);
+      padding: 28px 32px 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+    .pb-overlay-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .pb-overlay-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--color-brick);
+    }
+    .pb-overlay-close {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: var(--color-ink);
+      font-size: 24px;
+      line-height: 1;
+      padding: 0 4px;
+    }
+    .pb-toc {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+    .pb-toc-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .pb-toc-grouplabel {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--color-ink-mute);
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--color-rule-soft);
+      margin-bottom: 4px;
+    }
+    .pb-toc-link {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      padding: 6px 0;
+      text-decoration: none;
+      color: var(--color-ink);
+      font-family: var(--font-display);
+      font-size: 22px;
+      letter-spacing: -0.005em;
+      transition: color 0.12s;
+    }
+    .pb-toc-link:hover {
+      color: var(--color-brick);
+    }
+    .pb-toc-n {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      color: var(--color-ink-mute);
+      flex: 0 0 30px;
+    }
+    .pb-toc-link--draft {
+      color: var(--color-ink-mute);
+    }
+    .pb-toc-link.is-current .pb-toc-name {
+      font-weight: 500;
+      color: var(--color-brick);
+    }
+
+    /* ── spreads ─────────────────────────────────────────────────────────── */
+    .pb-spreads {
+      display: flex;
+      flex-direction: column;
+    }
+    .pb-spread {
       scroll-snap-align: start;
       scroll-snap-stop: always;
-      padding: 1.875rem 0 1.5rem;
+      padding: 1.75rem 0 1.5rem;
+      border-bottom: 1px solid var(--color-rule-soft);
     }
     @media (min-width: 641px) {
-      .playbook-mast {
+      .pb-spread {
         min-height: calc(100vh - 8rem);
         display: flex;
         flex-direction: column;
         justify-content: center;
-        padding: 4rem 0 2.5rem;
+        padding: 2.25rem 0;
       }
     }
     @media (max-width: 640px) {
-      .playbook-mast {
+      .pb-spread {
         scroll-snap-align: none;
         scroll-snap-stop: normal;
       }
     }
+    .pb-spread:last-child {
+      border-bottom: none;
+    }
 
-    .section-label {
+    .pb-spread-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--color-rule);
+    }
+    .pb-spread-no {
       font-family: var(--font-mono);
       font-size: 11px;
-      letter-spacing: 0.26em;
-      color: var(--color-ink-soft);
+      letter-spacing: 0.2em;
+      color: var(--color-brick);
       text-transform: uppercase;
     }
-    .playbook-title {
-      margin: 1.125rem 0 0;
+    .pb-spread-state {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.22em;
+      color: var(--color-ink-mute);
+      text-transform: uppercase;
+    }
+    .pb-spread-state--published {
+      color: var(--color-brick);
+    }
+
+    .pb-spread-title {
       font-family: var(--font-display);
-      font-weight: 400;
+      font-weight: 380;
       font-size: 64px;
       line-height: 0.94;
-      letter-spacing: -0.03em;
+      letter-spacing: -0.02em;
+      margin: 22px 0 0;
       color: var(--color-ink);
     }
     @media (min-width: 641px) {
-      .playbook-title {
-        font-size: 132px;
+      .pb-spread-title {
+        font-size: 84px;
       }
     }
-    .playbook-title em {
+    .pb-spread-title em {
       color: var(--color-brick);
       font-style: normal;
     }
-    .playbook-subline {
-      margin: 1.375rem 0 0;
-      max-width: 680px;
+    .pb-spread-sub {
+      margin: 14px 0 0;
+      max-width: 720px;
       font-family: var(--font-prose);
       font-style: italic;
       font-size: 17px;
@@ -124,10 +473,152 @@ import JumpDiagram from "../../../components/JumpDiagram.astro";
       text-wrap: pretty;
     }
     @media (min-width: 641px) {
-      .playbook-subline {
-        margin-top: 1.75rem;
-        font-size: 23px;
+      .pb-spread-sub {
+        font-size: 21px;
       }
     }
+
+    /* facets grid – 2x2 by default, 2x3 for instructions later */
+    .pb-facets {
+      margin-top: 30px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+    @media (min-width: 641px) {
+      .pb-facets {
+        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+      }
+    }
+    .pb-facet {
+      background: var(--color-paper-warm);
+      border: 1px solid var(--color-rule-soft);
+      border-radius: 3px;
+      padding: 18px 22px 20px;
+    }
+    .pb-facet-name {
+      margin: 0 0 8px;
+      font-family: var(--font-display);
+      font-weight: 420;
+      font-size: 22px;
+      letter-spacing: -0.005em;
+      color: var(--color-ink);
+    }
+    .pb-facet-initial {
+      color: var(--color-brick);
+    }
+    .pb-facet-body {
+      margin: 0;
+      font-family: var(--font-prose);
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--color-ink-soft);
+      text-wrap: pretty;
+    }
+
+    .pb-spread-rule {
+      display: block;
+      width: 100%;
+      height: 1px;
+      background: var(--color-rule-soft);
+      margin: 26px 0 16px;
+    }
+    .pb-spread-coda {
+      margin: 0;
+      max-width: 740px;
+      font-family: var(--font-prose);
+      font-size: 15px;
+      line-height: 1.55;
+      color: var(--color-ink-soft);
+      text-wrap: pretty;
+    }
+
+    /* draft stub – spec exists in the spine but hasn't been authored yet */
+    .pb-spread--draft .pb-spread-title {
+      color: var(--color-ink-mute);
+    }
+    .pb-spread-stub {
+      margin-top: 30px;
+      padding: 22px 26px;
+      border: 1px dashed var(--color-rule);
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pb-spread-stub-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--color-ink-mute);
+    }
   </style>
+
+  <script>
+    (function () {
+      const strip = document.querySelector(".pb-strip") as HTMLButtonElement | null;
+      const overlay = document.querySelector(".pb-overlay") as HTMLElement | null;
+      const closeBtn = document.querySelector(".pb-overlay-close") as HTMLButtonElement | null;
+      const bars = Array.from(document.querySelectorAll(".pb-strip-bar")) as HTMLElement[];
+      const tocLinks = Array.from(document.querySelectorAll(".pb-toc-link")) as HTMLAnchorElement[];
+      const spreads = Array.from(document.querySelectorAll(".pb-spread")) as HTMLElement[];
+      const curEl = document.querySelector(".pb-strip-cur") as HTMLElement | null;
+
+      function setCurrent(idx: number) {
+        bars.forEach((b, i) => b.classList.toggle("is-current", i === idx));
+        tocLinks.forEach((l, i) => l.classList.toggle("is-current", i === idx));
+        if (curEl) curEl.textContent = String(idx).padStart(2, "0");
+      }
+
+      function openOverlay() {
+        if (!overlay || !strip) return;
+        overlay.hidden = false;
+        strip.setAttribute("aria-expanded", "true");
+      }
+      function closeOverlay() {
+        if (!overlay || !strip) return;
+        overlay.hidden = true;
+        strip.setAttribute("aria-expanded", "false");
+      }
+
+      if (strip) strip.addEventListener("click", openOverlay);
+      if (closeBtn) closeBtn.addEventListener("click", closeOverlay);
+      if (overlay) {
+        overlay.addEventListener("click", (e) => {
+          if (e.target === overlay) closeOverlay();
+        });
+      }
+      tocLinks.forEach((link) => {
+        link.addEventListener("click", () => {
+          // Let the hash navigation run, then collapse the overlay.
+          setTimeout(closeOverlay, 0);
+        });
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && overlay && !overlay.hidden) closeOverlay();
+      });
+
+      // IntersectionObserver: track the most-visible spread, update strip.
+      if ("IntersectionObserver" in window && spreads.length) {
+        const obs = new IntersectionObserver(
+          (entries) => {
+            let best: IntersectionObserverEntry | null = null;
+            for (const e of entries) {
+              if (e.isIntersecting && (!best || e.intersectionRatio > best.intersectionRatio)) {
+                best = e;
+              }
+            }
+            if (best) {
+              const idx = spreads.indexOf(best.target as HTMLElement);
+              if (idx >= 0) setCurrent(idx);
+            }
+          },
+          { threshold: [0.5, 0.75] },
+        );
+        spreads.forEach((s) => obs.observe(s));
+      }
+    })();
+  </script>
 </BaseLayout>
