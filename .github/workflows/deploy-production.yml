@@ -1,9 +1,14 @@
 name: deploy-production
 
 # Runs on tag push (v*). Builds the site, verifies that the tag matches
-# package.json version, runs tests, and rsyncs the architecture subfolder
-# of dist/ to architecture.kaihacks.ai/. The production URL is
-# https://architecture.kaihacks.ai/ (clean URL, no /architecture/ prefix).
+# package.json version, runs tests, and rsyncs two surfaces from dist/:
+#   - dist/architecture/ -> architecture.kaihacks.ai/   (subdomain root)
+#   - dist/main/         -> kaihacks.ai/main/           (apex /main/ subpath)
+# Production URLs are https://architecture.kaihacks.ai/ (clean, no
+# /architecture/ prefix on the subdomain) and https://kaihacks.ai/main/.
+#
+# See docs/deploy-targets.md for the full host layout (apex vs subdomain
+# document roots on the shared cPanel host).
 
 on:
   push:
@@ -45,13 +50,26 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/kaihacksai
           chmod 600 ~/.ssh/kaihacksai
           ssh-keyscan 92.205.150.56 >> ~/.ssh/known_hosts || true
-      - name: Deploy via rsync
+      - name: Deploy architecture surface via rsync
         run: |
           # Rsync dist/architecture/ (not dist/) so dist/architecture/index.html
           # lands as architecture.kaihacks.ai/index.html (the listing IS the
           # subdomain landing), and dist/architecture/<slug>/index.html lands
           # as architecture.kaihacks.ai/<slug>/index.html (clean per-spec URL).
+          # Subdomain doc root: /public_html/architecture.kaihacks.ai/
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/kaihacksai" \
             ./dist/architecture/ \
             c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/architecture.kaihacks.ai/
+      - name: Deploy main surface via rsync
+        run: |
+          # Rsync dist/main/ to kaihacks.ai/main/ on the apex vhost. Lands as
+          # /main/index.html (the company front door) and
+          # /main/cvi/index.html (the CVI colophon).
+          # The apex domain kaihacks.ai maps to /public_html/ directly
+          # (the home directory IS the apex web root), so kaihacks.ai/main/
+          # is /public_html/main/ on the host — NOT /public_html/kaihacks.ai/main/.
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/kaihacksai" \
+            ./dist/main/ \
+            c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/main/
