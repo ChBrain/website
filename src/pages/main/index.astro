@@ -32,11 +32,27 @@ const arc = [
   { y: "2026", co: "KAI HACKS AI", role: "AI · worlds · cultures", ai: true },
 ];
 
-// §03 Method – the name reads itself. HACKS is bricked (the verbs).
+// §03 Method – the name reads itself. HACKS is bricked.
+// Each sense is the acronym expansion, not a grammar label.
 const movements = [
-  { t: "KAI", sense: "the noun", gloss: "who builds · the architect", accent: false },
-  { t: "HACKS", sense: "the verbs", gloss: "how it operates · the method", accent: true },
-  { t: "AI", sense: "the verb", gloss: "how it runs · the optional layer", accent: false },
+  {
+    t: "KAI",
+    sense: "Kais Architecture Instructions",
+    gloss: "who builds · the architect",
+    accent: false,
+  },
+  {
+    t: "HACKS",
+    sense: "Human Agent Collaboration Knowledge System",
+    gloss: "how it operates · the method",
+    accent: true,
+  },
+  {
+    t: "AI",
+    sense: "Agent Implemented",
+    gloss: "how it runs · the optional layer",
+    accent: false,
+  },
 ];
 
 // §04 Applications – what runs on the architecture.
@@ -71,13 +87,12 @@ const apps = [
 
     <main class="snap-scroll">
       <section class="snap-panel masthead">
-        <div class="overline">the company · enterprise architecture · est. 2026</div>
+        <div class="overline">the company · est. 2026</div>
         <h1 class="masthead-title" aria-label="KAI HACKS AI">
           <span>KAI</span>
           <span class="masthead-title-accent">HACKS</span>
-          <span>AI<span class="masthead-title-dot">.</span></span>
+          <span>AI</span>
         </h1>
-        <div class="readout">Kais Artificial Intelligences</div>
         <p class="lede">
           An enterprise architect’s method – applied across AI, ITSM, DevOps and enterprise
           architecture, with or without AI. The name is the method: it states who builds, how they
@@ -107,14 +122,10 @@ const apps = [
             <div class="services-col">
               <div class="services-col-head">What we work in</div>
               {
-                domains.map((d) => (
-                  <div class="services-domain">
-                    <span class="services-domain-name">
-                      <span class="services-domain-initial">{d.charAt(0)}</span>
-                      {d.slice(1)}
-                    </span>
-                  </div>
-                ))
+                domains.map((d) =>
+                  // prettier-ignore
+                  <div class="services-domain"><span class="services-domain-initial">{d.charAt(0)}</span>{d.slice(1)}</div>,
+                )
               }
               <div class="services-domain services-domain--coda">…you name it</div>
             </div>
@@ -140,7 +151,7 @@ const apps = [
         <div class="section-heading">
           <div class="section-heading-lead">
             <span class="section-no">§02</span>
-            <span class="section-title">The author</span>
+            <span class="section-title">The Founder</span>
           </div>
           <div class="section-note">the range · AI → delivery → AI</div>
         </div>
@@ -169,7 +180,7 @@ const apps = [
         <div class="section-heading">
           <div class="section-heading-lead">
             <span class="section-no">§03</span>
-            <span class="section-title">Method &amp; architecture</span>
+            <span class="section-title">Method &amp; Architecture</span>
           </div>
           <div class="section-note">the name reads itself · and what it runs on</div>
         </div>
@@ -189,12 +200,6 @@ const apps = [
             ))
           }
         </div>
-
-        <p class="method-line">
-          One method, four disciplines – <strong>AI</strong>, <strong>ITSM</strong>,
-          <strong>DevOps</strong>, <strong>enterprise architecture</strong> – each delivered
-          <em>with or without an AI layer</em>.
-        </p>
 
         <div class="architecture-sub">
           <span class="architecture-sub-label">Architecture · what the method runs on</span>
@@ -251,32 +256,55 @@ const apps = [
     <SiteFooter siteLabel="kaihacks.ai · the company" />
   </div>
 
+  <style is:global>
+    /* Chapter snap on the document, only when this page is rendered.
+     * Mirrors src/pages/main/cvi/index.astro. The viewport (html) is the
+     * scroll container; putting scroll-snap-type on any nested in-flow
+     * element is a no-op. `:has(.main-home)` scopes the rule to this
+     * page so other surfaces (privacy, architecture) keep free scrolling.
+     * scroll-padding-top/bottom match the sticky SiteHeader + SiteFooter
+     * heights so snapped chapters land below the topbar rather than
+     * under it. Disabled on narrow viewports – snap is friction on
+     * phones, and a pitch page reads better as one long scroll there. */
+    html:has(.main-home) {
+      scroll-snap-type: y mandatory;
+      scroll-padding-top: 4rem;
+      scroll-padding-bottom: 4rem;
+      scroll-behavior: smooth;
+    }
+    @media (max-width: 640px) {
+      html:has(.main-home) {
+        scroll-snap-type: none;
+      }
+    }
+  </style>
+
   <style>
     /* topbar + footer styles live in SiteHeader.astro + SiteFooter.astro */
 
     /* ── snap chassis (CVI parity) ──────────────────────────────────────────
-     * Mandatory y-axis snap with always-stop. Each .snap-panel takes a
-     * viewport-height-minus-topbar minimum so chapters land aligned. The
-     * SiteFooter lives OUTSIDE this container and scrolls naturally after
-     * the last panel. Snap is desktop-only – phones get the long-flow
-     * read, which suits a narrative pitch page better than mandatory snap.
-     */
-    .snap-scroll {
-      display: block;
+     * snap-type lives on `html:has(.main-home)` in the is:global block
+     * above; here we set the per-panel snap-align and the viewport-height
+     * sizing that makes each chapter stand on its own. SiteFooter sits
+     * outside main.snap-scroll so it scrolls past the last snap point. */
+    .snap-panel {
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
     }
     @media (min-width: 641px) {
-      .snap-scroll {
-        scroll-snap-type: y mandatory;
-      }
       .snap-panel {
-        scroll-snap-align: start;
-        scroll-snap-stop: always;
         min-height: calc(100vh - 8rem);
         display: flex;
         flex-direction: column;
         justify-content: center;
         padding-top: 2.25rem;
         padding-bottom: 2.25rem;
+      }
+    }
+    @media (max-width: 640px) {
+      .snap-panel {
+        scroll-snap-align: none;
+        scroll-snap-stop: normal;
       }
     }
 
@@ -321,22 +349,6 @@ const apps = [
     }
     .masthead-title-accent {
       color: var(--color-brick);
-    }
-    .masthead-title-dot {
-      color: var(--color-ink-soft);
-    }
-    .readout {
-      margin-top: 12px;
-      font-family: var(--font-mono);
-      font-size: 10px;
-      letter-spacing: 0.16em;
-      color: var(--color-ink-soft);
-      text-transform: uppercase;
-    }
-    @media (min-width: 641px) {
-      .readout {
-        font-size: 11px;
-      }
     }
     .lede {
       margin: 22px 0 0;
@@ -725,30 +737,6 @@ const apps = [
       font-size: 15px;
       color: var(--color-ink-soft);
     }
-    .method-line {
-      margin: 22px 0 0;
-      border-top: 1px solid var(--color-ink);
-      padding-top: 16px;
-      max-width: 760px;
-      font-family: var(--font-prose);
-      font-size: 17px;
-      line-height: 1.5;
-      color: var(--color-ink);
-      text-wrap: pretty;
-    }
-    @media (min-width: 641px) {
-      .method-line {
-        font-size: 19px;
-      }
-    }
-    .method-line strong {
-      font-weight: 600;
-      color: var(--color-ink);
-    }
-    .method-line em {
-      font-style: italic;
-    }
-
     /* sub-divider – folded under §03, not its own § */
     .architecture-sub {
       display: flex;
