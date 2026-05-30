@@ -1,8 +1,13 @@
 name: deploy-staging
 
-# Runs after CI green on push to main. Builds the site and rsyncs the
-# architecture subfolder of dist/ to staging.kaihacks.ai/architecture/.
-# The staging URL is https://staging.kaihacks.ai/architecture/
+# Runs after CI green on push to main. Builds the site and rsyncs two
+# surfaces from dist/:
+#   - dist/architecture/ -> staging.kaihacks.ai/architecture/
+#   - dist/main/         -> staging.kaihacks.ai/main/
+# The staging URLs are https://staging.kaihacks.ai/architecture/ and
+# https://staging.kaihacks.ai/main/. The apex staging.kaihacks.ai/
+# root is intentionally not deployed from this workflow; it is owned
+# by the placeholder in chbrain/kaihacks.
 
 on:
   workflow_run:
@@ -37,7 +42,7 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/kaihacksai
           chmod 600 ~/.ssh/kaihacksai
           ssh-keyscan 92.205.150.56 >> ~/.ssh/known_hosts || true
-      - name: Deploy via rsync
+      - name: Deploy architecture surface via rsync
         run: |
           # Rsync dist/architecture/ (not dist/) so dist/architecture/index.html
           # lands as staging.kaihacks.ai/architecture/index.html (the listing),
@@ -49,3 +54,12 @@ jobs:
             -e "ssh -i ~/.ssh/kaihacksai" \
             ./dist/architecture/ \
             c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/staging.kaihacks.ai/architecture/
+      - name: Deploy main surface via rsync
+        run: |
+          # Rsync dist/main/ to staging.kaihacks.ai/main/. Lands as
+          # /main/index.html (the company front door) and
+          # /main/cvi/index.html (the CVI colophon).
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/kaihacksai" \
+            ./dist/main/ \
+            c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/staging.kaihacks.ai/main/
