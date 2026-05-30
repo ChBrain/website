@@ -10,8 +10,8 @@ const mainNav = [
   { label: "services", href: "#services" },
 ];
 
-// §01 Services — domains (AIDE acrostic) × engagement.
-// AIDE: AI · ITSM · DevOps · Enterprise Architecture — first letter of each
+// §01 Services – domains (AIDE acrostic) × engagement.
+// AIDE: AI · ITSM · DevOps · Enterprise Architecture – first letter of each
 // is bricked at render time. Do not reorder or rename; breaks the acrostic.
 const domains = ["AI", "ITSM", "DevOps", "Enterprise Architecture"];
 const engage = [
@@ -20,7 +20,7 @@ const engage = [
   { t: "Workshops", g: "the method, taught to your teams" },
 ];
 
-// §02 Author — the range · AI → delivery → AI.
+// §02 Author – the range · AI → delivery → AI.
 // Bookends (2004 TU München, 2026 KAI HACKS AI) are flagged ai: true and
 // render with a brick dot. Order is canonical and asserted by tests.
 const arc = [
@@ -32,27 +32,27 @@ const arc = [
   { y: "2026", co: "KAI HACKS AI", role: "AI · worlds · cultures", ai: true },
 ];
 
-// §03 Method — the name reads itself. HACKS is bricked (the verbs).
+// §03 Method – the name reads itself. HACKS is bricked (the verbs).
 const movements = [
   { t: "KAI", sense: "the noun", gloss: "who builds · the architect", accent: false },
   { t: "HACKS", sense: "the verbs", gloss: "how it operates · the method", accent: true },
   { t: "AI", sense: "the verb", gloss: "how it runs · the optional layer", accent: false },
 ];
 
-// §04 Applications — what runs on the architecture.
+// §04 Applications – what runs on the architecture.
 const apps = [
   {
     hue: "tide",
     url: "cultures.kaihacks.ai",
     title: "Cultures",
-    note: "an application for culture trainers — and the culture-curious",
+    note: "an application for culture trainers – and the culture-curious",
     href: "#",
     state: "live",
     planned: false,
   },
   {
     hue: "rule",
-    url: "—",
+    url: "–",
     title: "More applications",
     note: "the architecture is built to spawn them",
     href: "#",
@@ -64,7 +64,7 @@ const apps = [
 
 <BaseLayout
   title="kaihacks.ai · KAI HACKS AI"
-  description="An enterprise architect’s method — applied across AI, ITSM, DevOps and enterprise architecture, with or without AI."
+  description="An enterprise architect’s method – applied across AI, ITSM, DevOps and enterprise architecture, with or without AI."
 >
   <div class="arch-page main-home">
     <SiteHeader domain="kaihacks" tld=".ai" basePath="./" nav={mainNav} />
@@ -79,7 +79,7 @@ const apps = [
         </h1>
         <div class="readout">Kais Artificial Intelligences</div>
         <p class="lede">
-          An enterprise architect’s method — applied across AI, ITSM, DevOps and enterprise
+          An enterprise architect’s method – applied across AI, ITSM, DevOps and enterprise
           architecture, with or without AI. The name is the method: it states who builds, how they
           operate, and how it runs.
         </p>
@@ -146,9 +146,9 @@ const apps = [
         </div>
 
         <p class="author-lede">
-          AI in 2004, AI in 2026 — and twenty-two years across enterprise IT in between:
+          AI in 2004, AI in 2026 – and twenty-two years across enterprise IT in between:
           architecture, ITSM, DevOps, infrastructure, operations. The arc is the proof the method is
-          earned — and the <span class="brick">range</span> it covers.
+          earned – and the <span class="brick">range</span> it covers.
         </p>
 
         <ol class="arc">
@@ -191,8 +191,8 @@ const apps = [
         </div>
 
         <p class="method-line">
-          One method, four disciplines — <strong>AI</strong>, <strong>ITSM</strong>,
-          <strong>DevOps</strong>, <strong>enterprise architecture</strong> — each delivered
+          One method, four disciplines – <strong>AI</strong>, <strong>ITSM</strong>,
+          <strong>DevOps</strong>, <strong>enterprise architecture</strong> – each delivered
           <em>with or without an AI layer</em>.
         </p>
 
@@ -210,7 +210,7 @@ const apps = [
             </div>
             <div class="architecture-card-title">Architecture</div>
             <p class="architecture-card-note">
-              A specification I built — the foundation its applications run on.
+              A specification I built – the foundation its applications run on.
             </p>
             <span class="architecture-card-cta">Read the full specification →</span>
           </div>
@@ -258,7 +258,7 @@ const apps = [
      * Mandatory y-axis snap with always-stop. Each .snap-panel takes a
      * viewport-height-minus-topbar minimum so chapters land aligned. The
      * SiteFooter lives OUTSIDE this container and scrolls naturally after
-     * the last panel. Snap is desktop-only — phones get the long-flow
+     * the last panel. Snap is desktop-only – phones get the long-flow
      * read, which suits a narrative pitch page better than mandatory snap.
      */
     .snap-scroll {
@@ -424,7 +424,7 @@ const apps = [
       text-transform: uppercase;
     }
 
-    /* ── §01 services — domains × engagement · the one brick CTA ────────── */
+    /* ── §01 services – domains × engagement · the one brick CTA ────────── */
     .services-card {
       margin-top: 24px;
       border: 1px solid var(--color-rule);
@@ -544,7 +544,7 @@ const apps = [
       }
     }
 
-    /* ── §02 author — the timeline ──────────────────────────────────────── */
+    /* ── §02 author – the timeline ──────────────────────────────────────── */
     .author-lede {
       margin: 18px 0 0;
       max-width: 700px;
@@ -749,7 +749,7 @@ const apps = [
       font-style: italic;
     }
 
-    /* sub-divider — folded under §03, not its own § */
+    /* sub-divider – folded under §03, not its own § */
     .architecture-sub {
       display: flex;
       align-items: center;
