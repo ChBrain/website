@@ -2,7 +2,6 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
-import JumpDiagram from "../../components/JumpDiagram.astro";
 
 const movements = [
   {
@@ -113,7 +112,29 @@ const movements = [
       </div>
     </section>
 
-    <JumpDiagram />
+    <section class="section playbook-cta">
+      <h2 class="section-heading">
+        <span class="section-no">§2</span>
+        <span class="section-title">Open the playbook</span>
+        <span class="section-note">the elements of how a world is moved</span>
+      </h2>
+
+      <a href="./playbook/" class="playbook-card">
+        <div class="playbook-card-hue" aria-hidden="true"></div>
+        <div class="playbook-card-body">
+          <div class="playbook-card-row">
+            <span class="playbook-card-url">architecture.kaihacks.ai/playbook</span>
+            <span class="playbook-card-state">live · the field manual</span>
+          </div>
+          <div class="playbook-card-title">Playbook</div>
+          <p class="playbook-card-note">
+            The bound specification – Plot, the five elements that Plot casts, and the two substrate
+            files everything rests on.
+          </p>
+          <span class="playbook-card-cta">Open the playbook →</span>
+        </div>
+      </a>
+    </section>
 
     <SiteFooter />
   </div>
@@ -133,9 +154,8 @@ const movements = [
      * room for the sticky topbar (top) and sticky footer (bottom) so
      * snap-aligned content doesn't end up underneath the chrome.
      *
-     * After the 3-jump migration the home has three top-level sections
-     * (masthead, reading, jump3). The model + types blocks were absorbed
-     * into the diagram. */
+     * Three top-level sections: masthead (§0), reading (§1) and the
+     * playbook CTA (§2). The book itself lives at /playbook/. */
     html:has(.arch-home) {
       scroll-snap-type: y mandatory;
       scroll-padding-top: 4rem;
@@ -172,9 +192,7 @@ const movements = [
       /* Every snapped section vertical-centers its content. Center-snap
        * is the site standard (matches main + CVI): content arrives at
        * eye-level rather than the viewer scanning downward for the
-       * heading. Short sections get breathing room evenly above and
-       * below; longer ones (the 3-jump reading) sit naturally in the
-       * vertical centre. */
+       * heading. */
       .arch-home > section {
         min-height: calc(100vh - 8rem);
         display: flex;
@@ -460,6 +478,100 @@ const movements = [
       color: var(--color-ink-soft);
       text-transform: uppercase;
       margin-right: 8px;
+    }
+
+    /* §2 playbook CTA card — mirrors the architecture-card on main:
+     * sea hue stripe, paper-warm fill, mono URL + state pill, display
+     * title, italic note, mono CTA. The card is the doorway into the
+     * book; the architecture surface stops here and the reading
+     * continues at /playbook/. */
+    .playbook-cta {
+      padding-top: 1.5rem;
+    }
+    .playbook-card {
+      display: block;
+      text-decoration: none;
+      color: var(--color-ink);
+      margin-top: 24px;
+      border: 1px solid var(--color-ink);
+      background: var(--color-paper-warm);
+      overflow: hidden;
+      transition:
+        transform 0.16s,
+        box-shadow 0.16s;
+    }
+    .playbook-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px -16px var(--color-ink);
+    }
+    .playbook-card-hue {
+      height: 6px;
+      background: var(--color-sea);
+    }
+    .playbook-card-body {
+      padding: 18px 20px 20px;
+    }
+    @media (min-width: 641px) {
+      .playbook-card-body {
+        padding: 26px 30px;
+      }
+    }
+    .playbook-card-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .playbook-card-url {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: -0.01em;
+      color: var(--color-ink);
+    }
+    .playbook-card-state {
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      letter-spacing: 0.18em;
+      color: var(--color-brick);
+      text-transform: uppercase;
+    }
+    .playbook-card-title {
+      font-family: var(--font-display);
+      font-size: 30px;
+      line-height: 1.06;
+      margin-top: 8px;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+    }
+    @media (min-width: 641px) {
+      .playbook-card-title {
+        font-size: 38px;
+      }
+    }
+    .playbook-card-note {
+      margin: 8px 0 0;
+      max-width: 640px;
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 15px;
+      color: var(--color-ink-soft);
+      line-height: 1.45;
+    }
+    @media (min-width: 641px) {
+      .playbook-card-note {
+        font-size: 16.5px;
+      }
+    }
+    .playbook-card-cta {
+      display: inline-block;
+      margin-top: 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--color-ink);
+      padding-bottom: 3px;
+      border-bottom: 1px solid var(--color-rule);
     }
 
     /* footer styles live in src/components/SiteFooter.astro */
