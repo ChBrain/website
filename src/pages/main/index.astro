@@ -10,6 +10,19 @@ const mainNav = [
   { label: "services", href: "#services" },
 ];
 
+// §01 Services – domains (AIDE acrostic) × engagement.
+// AIDE: AI · ITSM · DevOps · Enterprise Architecture – first letter of each
+// is bricked at render time. Do not reorder or rename; breaks the acrostic.
+const domains = ["AI", "ITSM", "DevOps", "Enterprise Architecture"];
+const engage = [
+  { t: "Advisory", g: "direction, review, architecture" },
+  { t: "Implementation", g: "hands on the build" },
+  { t: "Workshops", g: "the method, taught to your teams" },
+];
+
+// §02 Author – the range · AI → delivery → AI.
+// Bookends (2004 TU München, 2026 KAI HACKS AI) are flagged ai: true and
+// render with a brick dot. Order is canonical and asserted by tests.
 const arc = [
   { y: "2004", co: "TU München", role: "AI research", ai: true },
   { y: "2006–’12", co: "Telefónica", role: "Architecture · ITSM · EA", ai: false },
@@ -19,187 +32,221 @@ const arc = [
   { y: "2026", co: "KAI HACKS AI", role: "AI · worlds · cultures", ai: true },
 ];
 
+// §03 Method – the name reads itself. HACKS is bricked (the verbs).
 const movements = [
-  { t: "KAI", sense: "the noun", gloss: "who builds · and what", accent: false },
-  { t: "HACKS", sense: "the verbs", gloss: "how it operates", accent: true },
-  { t: "AI", sense: "the verb", gloss: "how it runs", accent: false },
+  { t: "KAI", sense: "the noun", gloss: "who builds · the architect", accent: false },
+  { t: "HACKS", sense: "the verbs", gloss: "how it operates · the method", accent: true },
+  { t: "AI", sense: "the verb", gloss: "how it runs · the optional layer", accent: false },
 ];
 
+// §04 Applications – what runs on the architecture.
 const apps = [
-  {
-    hue: "sea",
-    url: "architecture.kaihacks.ai",
-    title: "Architecture",
-    note: "the method, documented – the specification",
-    href: URLS.architecture,
-    state: "live",
-  },
   {
     hue: "tide",
     url: "cultures.kaihacks.ai",
     title: "Cultures",
-    note: "a runtime – the method implemented",
+    note: "an application for culture trainers – and the culture-curious",
     href: "#",
     state: "live",
+    planned: false,
   },
   {
-    hue: "amber",
-    url: "photo.kaihacks.ai",
-    title: "Photography",
-    note: "the author’s eye",
+    hue: "rule",
+    url: "–",
+    title: "More applications",
+    note: "the architecture is built to spawn them",
     href: "#",
-    state: "planned",
-  },
-  {
-    hue: "marsh",
-    url: "combinedcultures",
-    title: "Writing",
-    note: "the author’s voice",
-    href: "#",
-    state: "external ↗",
+    state: "in progress",
+    planned: true,
   },
 ];
 ---
 
 <BaseLayout
   title="kaihacks.ai · KAI HACKS AI"
-  description="A specification for runnable human-agent systems – and the practice that builds them."
+  description="An enterprise architect’s method – applied across AI, ITSM, DevOps and enterprise architecture, with or without AI."
 >
   <div class="arch-page main-home">
     <SiteHeader domain="kaihacks" tld=".ai" basePath="./" nav={mainNav} />
 
-    <section class="masthead">
-      <div class="overline">the company · est. 2026</div>
-      <h1 class="masthead-title" aria-label="KAI HACKS AI">
-        <span>KAI</span>
-        <span class="masthead-title-accent">HACKS</span>
-        <span>AI</span>
-      </h1>
-      <div class="readout">
-        Kais Artificial Intelligences ·
-        <span class="readout-soft">KI is German for AI</span>
-      </div>
-      <p class="lede">
-        A specification for runnable human-agent systems – and the practice that builds them. The
-        name is the method: it states who builds, how they operate, and how it runs.
-      </p>
-      <div class="draft-marker">
-        <span class="draft-dot" aria-hidden="true"></span>draft · authored by Kai – the positioning,
-        in your words
-      </div>
-    </section>
-
-    <section class="section section--method">
-      <div class="section-heading">
-        <div class="section-heading-lead">
-          <span class="section-no">§01</span>
-          <span class="section-title">The method</span>
-        </div>
-        <div class="section-note">the name reads itself</div>
-      </div>
-
-      <div class="movements">
-        {
-          movements.map((m, i) => (
-            <div class="movement">
-              <div class="movement-meta">
-                {String(i + 1).padStart(2, "0")} · {m.sense}
-              </div>
-              <div class={`movement-token ${m.accent ? "movement-token--accent" : ""}`}>{m.t}</div>
-              <div class="movement-gloss">{m.gloss}</div>
-            </div>
-          ))
-        }
-      </div>
-
-      <div class="method-cta">
-        <a href={URLS.architecture} class="method-cta-link">
-          <span>Read the full specification</span>
-          <span class="method-cta-arrow">architecture.kaihacks.ai →</span>
-        </a>
-      </div>
-    </section>
-
-    <section class="section section--author">
-      <div class="section-heading">
-        <div class="section-heading-lead">
-          <span class="section-no">§02</span>
-          <span class="section-title">The author</span>
-        </div>
-        <div class="section-note">the method is earned · AI → delivery → AI</div>
-      </div>
-
-      <p class="author-lede">
-        AI in 2004, AI in 2026 – twenty-two years of IT delivery in between. The arc is not the
-        story; it is the <span class="brick">proof</span> the method is earned.
-      </p>
-
-      <ol class="arc">
-        {
-          arc.map((a) => (
-            <li class={`arc-step ${a.ai ? "arc-step--ai" : ""}`}>
-              <span class="arc-dot" aria-hidden="true" />
-              <span class="arc-year">{a.y}</span>
-              <span class="arc-co">{a.co}</span>
-              <span class="arc-role">{a.role}</span>
-            </li>
-          ))
-        }
-      </ol>
-    </section>
-
-    <section class="section section--applications">
-      <div class="section-heading">
-        <div class="section-heading-lead">
-          <span class="section-no">§03</span>
-          <span class="section-title">The applications</span>
-        </div>
-        <div class="section-note">one method · several registers</div>
-      </div>
-
-      <div class="apps">
-        {
-          apps.map((a) => (
-            <a class={`app app--${a.hue} ${a.state === "planned" ? "app--dim" : ""}`} href={a.href}>
-              <div class={`app-hue app-hue--${a.hue}`} aria-hidden="true" />
-              <div class="app-body">
-                <div class="app-row">
-                  <span class="app-url">{a.url}</span>
-                  <span class={`app-state ${a.state === "live" ? "app-state--live" : ""}`}>
-                    {a.state}
-                  </span>
-                </div>
-                <div class="app-title">{a.title}</div>
-                <div class="app-note">{a.note}</div>
-              </div>
-            </a>
-          ))
-        }
-      </div>
-    </section>
-
-    <section class="section section--services" id="services">
-      <div class="section-heading">
-        <div class="section-heading-lead">
-          <span class="section-no">§04</span>
-          <span class="section-title">Services</span>
-        </div>
-        <div class="section-note">have the method built for you</div>
-      </div>
-
-      <div class="services-card">
-        <p class="services-lead">
-          The method, applied to your organisation’s domain, teams, and workflows.
+    <main class="snap-scroll">
+      <section class="snap-panel masthead">
+        <div class="overline">the company · enterprise architecture · est. 2026</div>
+        <h1 class="masthead-title" aria-label="KAI HACKS AI">
+          <span>KAI</span>
+          <span class="masthead-title-accent">HACKS</span>
+          <span>AI<span class="masthead-title-dot">.</span></span>
+        </h1>
+        <div class="readout">Kais Artificial Intelligences</div>
+        <p class="lede">
+          An enterprise architect’s method – applied across AI, ITSM, DevOps and enterprise
+          architecture, with or without AI. The name is the method: it states who builds, how they
+          operate, and how it runs.
         </p>
-        <div class="services-tags">
-          <span class="services-tag">Advisory</span>
-          <span class="services-tag">Implementation</span>
-          <span class="services-tag">Workshops</span>
-          <span class="services-tag services-tag--draft">draft · split pending</span>
+        <div class="draft-marker">
+          <span class="draft-dot" aria-hidden="true"></span>draft · authored by Kai – the
+          positioning, in your words
         </div>
-        <a href="#contact" class="services-cta">Start a conversation →</a>
-      </div>
-    </section>
+      </section>
+
+      <section id="services" class="snap-panel section section--services">
+        <div class="section-heading">
+          <div class="section-heading-lead">
+            <span class="section-no">§01</span>
+            <span class="section-title">Services</span>
+          </div>
+          <div class="section-note">have the method built for you</div>
+        </div>
+
+        <div class="services-card">
+          <p class="services-lead">
+            Enterprise architecture, applied to your organisation’s domain, teams and workflows.
+          </p>
+
+          <div class="services-grid">
+            <div class="services-col">
+              <div class="services-col-head">What we work in</div>
+              {
+                domains.map((d) => (
+                  <div class="services-domain">
+                    <span class="services-domain-name">
+                      <span class="services-domain-initial">{d.charAt(0)}</span>
+                      {d.slice(1)}
+                    </span>
+                  </div>
+                ))
+              }
+              <div class="services-domain services-domain--coda">…you name it</div>
+            </div>
+
+            <div class="services-col">
+              <div class="services-col-head">How we engage</div>
+              {
+                engage.map((e) => (
+                  <div class="services-engage">
+                    <div class="services-engage-name">{e.t}</div>
+                    <div class="services-engage-gloss">{e.g}</div>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+
+          <a href="#contact" class="services-cta">Start a conversation →</a>
+        </div>
+      </section>
+
+      <section id="author" class="snap-panel section section--author">
+        <div class="section-heading">
+          <div class="section-heading-lead">
+            <span class="section-no">§02</span>
+            <span class="section-title">The author</span>
+          </div>
+          <div class="section-note">the range · AI → delivery → AI</div>
+        </div>
+
+        <p class="author-lede">
+          AI in 2004, AI in 2026 – and twenty-two years across enterprise IT in between:
+          architecture, ITSM, DevOps, infrastructure, operations. The arc is the proof the method is
+          earned – and the <span class="brick">range</span> it covers.
+        </p>
+
+        <ol class="arc">
+          {
+            arc.map((a) => (
+              <li class={`arc-step ${a.ai ? "arc-step--ai" : ""}`}>
+                <span class="arc-dot" aria-hidden="true" />
+                <span class="arc-year">{a.y}</span>
+                <span class="arc-co">{a.co}</span>
+                <span class="arc-role">{a.role}</span>
+              </li>
+            ))
+          }
+        </ol>
+      </section>
+
+      <section id="method" class="snap-panel section section--method">
+        <div class="section-heading">
+          <div class="section-heading-lead">
+            <span class="section-no">§03</span>
+            <span class="section-title">Method &amp; architecture</span>
+          </div>
+          <div class="section-note">the name reads itself · and what it runs on</div>
+        </div>
+
+        <div class="movements">
+          {
+            movements.map((m, i) => (
+              <div class="movement">
+                <div class="movement-meta">
+                  {String(i + 1).padStart(2, "0")} · {m.sense}
+                </div>
+                <div class={`movement-token ${m.accent ? "movement-token--accent" : ""}`}>
+                  {m.t}
+                </div>
+                <div class="movement-gloss">{m.gloss}</div>
+              </div>
+            ))
+          }
+        </div>
+
+        <p class="method-line">
+          One method, four disciplines – <strong>AI</strong>, <strong>ITSM</strong>,
+          <strong>DevOps</strong>, <strong>enterprise architecture</strong> – each delivered
+          <em>with or without an AI layer</em>.
+        </p>
+
+        <div class="architecture-sub">
+          <span class="architecture-sub-label">Architecture · what the method runs on</span>
+          <span class="architecture-sub-rule" aria-hidden="true"></span>
+        </div>
+
+        <a href={URLS.architecture} class="architecture-card">
+          <div class="architecture-card-hue" aria-hidden="true"></div>
+          <div class="architecture-card-body">
+            <div class="architecture-card-row">
+              <span class="architecture-card-url">architecture.kaihacks.ai</span>
+              <span class="architecture-card-state">live · the foundation</span>
+            </div>
+            <div class="architecture-card-title">Architecture</div>
+            <p class="architecture-card-note">
+              A specification I built – the foundation its applications run on.
+            </p>
+            <span class="architecture-card-cta">Read the full specification →</span>
+          </div>
+        </a>
+      </section>
+
+      <section id="apps" class="snap-panel section section--applications">
+        <div class="section-heading">
+          <div class="section-heading-lead">
+            <span class="section-no">§04</span>
+            <span class="section-title">Applications</span>
+          </div>
+          <div class="section-note">what runs on the architecture</div>
+        </div>
+
+        <div class="apps">
+          {
+            apps.map((a) => (
+              <a class={`app app--${a.hue} ${a.planned ? "app--planned" : ""}`} href={a.href}>
+                {!a.planned && <div class={`app-hue app-hue--${a.hue}`} aria-hidden="true" />}
+                <div class="app-body">
+                  <div class="app-row">
+                    <span class="app-url">{a.url}</span>
+                    <span class={`app-state ${a.state === "live" ? "app-state--live" : ""}`}>
+                      {a.state}
+                    </span>
+                  </div>
+                  <div class="app-title">{a.title}</div>
+                  <div class="app-note">{a.note}</div>
+                </div>
+              </a>
+            ))
+          }
+        </div>
+      </section>
+    </main>
 
     <SiteFooter siteLabel="kaihacks.ai · the company" />
   </div>
@@ -207,12 +254,39 @@ const apps = [
   <style>
     /* topbar + footer styles live in SiteHeader.astro + SiteFooter.astro */
 
+    /* ── snap chassis (CVI parity) ──────────────────────────────────────────
+     * Mandatory y-axis snap with always-stop. Each .snap-panel takes a
+     * viewport-height-minus-topbar minimum so chapters land aligned. The
+     * SiteFooter lives OUTSIDE this container and scrolls naturally after
+     * the last panel. Snap is desktop-only – phones get the long-flow
+     * read, which suits a narrative pitch page better than mandatory snap.
+     */
+    .snap-scroll {
+      display: block;
+    }
+    @media (min-width: 641px) {
+      .snap-scroll {
+        scroll-snap-type: y mandatory;
+      }
+      .snap-panel {
+        scroll-snap-align: start;
+        scroll-snap-stop: always;
+        min-height: calc(100vh - 8rem);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding-top: 2.25rem;
+        padding-bottom: 2.25rem;
+      }
+    }
+
     /* ── masthead ───────────────────────────────────────────────────────── */
     .masthead {
       padding: 1.875rem 0 1.75rem;
     }
     @media (min-width: 641px) {
       .masthead {
+        /* snap-panel handles vertical centring; reset the legacy top/bottom */
         padding: 4.375rem 0 2.75rem;
       }
     }
@@ -248,6 +322,9 @@ const apps = [
     .masthead-title-accent {
       color: var(--color-brick);
     }
+    .masthead-title-dot {
+      color: var(--color-ink-soft);
+    }
     .readout {
       margin-top: 12px;
       font-family: var(--font-mono);
@@ -261,19 +338,13 @@ const apps = [
         font-size: 11px;
       }
     }
-    .readout-soft {
-      color: var(--color-brick);
-      text-transform: none;
-      letter-spacing: 0.02em;
-      font-style: italic;
-    }
     .lede {
       margin: 22px 0 0;
-      max-width: 720px;
+      max-width: 730px;
       font-family: var(--font-prose);
       font-style: italic;
       font-size: 18px;
-      line-height: 1.38;
+      line-height: 1.4;
       color: var(--color-ink-soft);
       text-wrap: pretty;
     }
@@ -304,11 +375,6 @@ const apps = [
     /* ── sections shared ────────────────────────────────────────────────── */
     .section {
       padding: 8px 0 12px;
-    }
-    .section--author,
-    .section--applications,
-    .section--services {
-      padding-top: 40px;
     }
     .section-heading {
       display: flex;
@@ -358,93 +424,130 @@ const apps = [
       text-transform: uppercase;
     }
 
-    /* ── §01 method ─────────────────────────────────────────────────────── */
-    .movements {
-      margin-top: 22px;
+    /* ── §01 services – domains × engagement · the one brick CTA ────────── */
+    .services-card {
+      margin-top: 24px;
+      border: 1px solid var(--color-rule);
+      border-top: 4px solid var(--color-brick);
+      background: var(--color-paper-warm);
+      padding: 26px 22px;
+    }
+    @media (min-width: 641px) {
+      .services-card {
+        padding: 38px 40px;
+      }
+    }
+    .services-lead {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 350;
+      line-height: 1.12;
+      letter-spacing: -0.01em;
+      max-width: 760px;
+      text-wrap: pretty;
+    }
+    @media (min-width: 641px) {
+      .services-lead {
+        font-size: 36px;
+      }
+    }
+    .services-grid {
+      margin-top: 26px;
       display: grid;
       grid-template-columns: 1fr;
-      gap: 0;
+      gap: 26px;
     }
     @media (min-width: 641px) {
-      .movements {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 28px;
+      .services-grid {
+        grid-template-columns: 1.15fr 1fr;
+        gap: 44px;
+        margin-top: 30px;
       }
     }
-    .movement {
-      padding: 18px 0;
-      border-top: 1px solid var(--color-rule);
-    }
-    @media (min-width: 641px) {
-      .movement {
-        padding: 4px 0;
-        border-top: none;
-      }
-    }
-    .movement-meta {
+    .services-col-head {
       font-family: var(--font-mono);
       font-size: 10px;
-      letter-spacing: 0.2em;
+      letter-spacing: 0.18em;
       color: var(--color-ink-mute);
       text-transform: uppercase;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--color-rule);
     }
-    .movement-token {
+    .services-domain {
+      padding: 9px 0;
+      border-bottom: 1px solid var(--color-rule-soft);
       font-family: var(--font-display);
-      font-size: 34px;
+      font-size: 22px;
       font-weight: 400;
       letter-spacing: -0.01em;
-      margin-top: 6px;
       color: var(--color-ink);
     }
     @media (min-width: 641px) {
-      .movement-token {
-        font-size: 40px;
+      .services-domain {
+        font-size: 26px;
       }
     }
-    .movement-token--accent {
+    .services-domain-initial {
       color: var(--color-brick);
     }
-    .movement-gloss {
-      margin-top: 4px;
+    .services-domain--coda {
       font-family: var(--font-prose);
       font-style: italic;
       font-size: 15px;
-      color: var(--color-ink-soft);
+      color: var(--color-ink-mute);
+      border-bottom: none;
     }
-    .method-cta {
-      margin-top: 22px;
-      border-top: 1px solid var(--color-ink);
-      padding-top: 16px;
+    .services-engage {
+      padding: 11px 0;
+      border-bottom: 1px solid var(--color-rule-soft);
     }
-    .method-cta-link {
-      display: inline-flex;
-      align-items: baseline;
-      gap: 12px;
-      text-decoration: none;
-      color: var(--color-ink);
+    .services-engage-name {
       font-family: var(--font-display);
-      font-size: 20px;
-      font-weight: 400;
-      letter-spacing: -0.01em;
-      border-bottom: 2px solid var(--color-brick);
-      padding-bottom: 4px;
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--color-ink);
+      letter-spacing: -0.005em;
     }
     @media (min-width: 641px) {
-      .method-cta-link {
-        font-size: 24px;
+      .services-engage-name {
+        font-size: 19px;
       }
     }
-    .method-cta-arrow {
+    .services-engage-gloss {
+      margin-top: 2px;
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 13.5px;
+      color: var(--color-ink-soft);
+    }
+    .services-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 26px;
       font-family: var(--font-mono);
       font-size: 12px;
-      letter-spacing: 0.1em;
-      color: var(--color-brick);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--color-paper);
+      background: var(--color-brick);
+      padding: 15px 26px;
+      text-decoration: none;
+    }
+    .services-cta:hover {
+      background: var(--color-accent-hover);
+    }
+    @media (min-width: 641px) {
+      .services-cta {
+        margin-top: 32px;
+      }
     }
 
-    /* ── §02 author ─────────────────────────────────────────────────────── */
+    /* ── §02 author – the timeline ──────────────────────────────────────── */
     .author-lede {
       margin: 18px 0 0;
-      max-width: 680px;
+      max-width: 700px;
       font-family: var(--font-prose);
       font-size: 16px;
       line-height: 1.55;
@@ -569,7 +672,189 @@ const apps = [
       }
     }
 
-    /* ── §03 applications ───────────────────────────────────────────────── */
+    /* ── §03 method & architecture ──────────────────────────────────────── */
+    .movements {
+      margin-top: 22px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+    @media (min-width: 641px) {
+      .movements {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 28px;
+      }
+    }
+    .movement {
+      padding: 18px 0;
+      border-top: 1px solid var(--color-rule);
+    }
+    @media (min-width: 641px) {
+      .movement {
+        padding: 4px 0;
+        border-top: none;
+      }
+    }
+    .movement-meta {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--color-ink-mute);
+      text-transform: uppercase;
+    }
+    .movement-token {
+      font-family: var(--font-display);
+      font-size: 34px;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      margin-top: 6px;
+      color: var(--color-ink);
+    }
+    @media (min-width: 641px) {
+      .movement-token {
+        font-size: 40px;
+      }
+    }
+    .movement-token--accent {
+      color: var(--color-brick);
+    }
+    .movement-gloss {
+      margin-top: 4px;
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 15px;
+      color: var(--color-ink-soft);
+    }
+    .method-line {
+      margin: 22px 0 0;
+      border-top: 1px solid var(--color-ink);
+      padding-top: 16px;
+      max-width: 760px;
+      font-family: var(--font-prose);
+      font-size: 17px;
+      line-height: 1.5;
+      color: var(--color-ink);
+      text-wrap: pretty;
+    }
+    @media (min-width: 641px) {
+      .method-line {
+        font-size: 19px;
+      }
+    }
+    .method-line strong {
+      font-weight: 600;
+      color: var(--color-ink);
+    }
+    .method-line em {
+      font-style: italic;
+    }
+
+    /* sub-divider – folded under §03, not its own § */
+    .architecture-sub {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 30px 0 4px;
+    }
+    .architecture-sub-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      color: var(--color-ink-mute);
+      text-transform: uppercase;
+    }
+    .architecture-sub-rule {
+      flex: 1;
+      height: 1px;
+      background: var(--color-rule-soft);
+    }
+    .architecture-card {
+      display: block;
+      text-decoration: none;
+      color: var(--color-ink);
+      margin-top: 24px;
+      border: 1px solid var(--color-ink);
+      background: var(--color-paper-warm);
+      overflow: hidden;
+      transition:
+        transform 0.16s,
+        box-shadow 0.16s;
+    }
+    .architecture-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px -16px var(--color-ink);
+    }
+    .architecture-card-hue {
+      height: 6px;
+      background: var(--color-sea);
+    }
+    .architecture-card-body {
+      padding: 18px 20px 20px;
+    }
+    @media (min-width: 641px) {
+      .architecture-card-body {
+        padding: 26px 30px;
+      }
+    }
+    .architecture-card-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .architecture-card-url {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: -0.01em;
+      color: var(--color-ink);
+    }
+    .architecture-card-state {
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      letter-spacing: 0.18em;
+      color: var(--color-brick);
+      text-transform: uppercase;
+    }
+    .architecture-card-title {
+      font-family: var(--font-display);
+      font-size: 30px;
+      line-height: 1.06;
+      margin-top: 8px;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+    }
+    @media (min-width: 641px) {
+      .architecture-card-title {
+        font-size: 38px;
+      }
+    }
+    .architecture-card-note {
+      margin: 8px 0 0;
+      max-width: 640px;
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 15px;
+      color: var(--color-ink-soft);
+      line-height: 1.45;
+    }
+    @media (min-width: 641px) {
+      .architecture-card-note {
+        font-size: 16.5px;
+      }
+    }
+    .architecture-card-cta {
+      display: inline-block;
+      margin-top: 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--color-ink);
+      padding-bottom: 3px;
+      border-bottom: 1px solid var(--color-rule);
+    }
+
+    /* ── §04 applications ───────────────────────────────────────────────── */
     .apps {
       margin-top: 24px;
       display: grid;
@@ -588,24 +873,31 @@ const apps = [
       border: 1px solid var(--color-ink);
       background: var(--color-paper-warm);
       overflow: hidden;
+      transition:
+        transform 0.16s,
+        box-shadow 0.16s;
     }
-    .app--dim {
-      opacity: 0.6;
+    .app:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px -16px var(--color-ink);
+    }
+    .app--planned {
+      border: 1px dashed var(--color-rule);
+      background: transparent;
+      opacity: 0.72;
+    }
+    .app--planned:hover {
+      transform: none;
+      box-shadow: none;
     }
     .app-hue {
       height: 6px;
     }
-    .app-hue--sea {
-      background: var(--color-sea);
-    }
     .app-hue--tide {
       background: var(--color-tide);
     }
-    .app-hue--amber {
-      background: var(--color-amber);
-    }
-    .app-hue--marsh {
-      background: var(--color-marsh);
+    .app-hue--rule {
+      background: var(--color-rule);
     }
     .app-body {
       padding: 16px 18px;
@@ -621,6 +913,9 @@ const apps = [
       font-size: 12px;
       letter-spacing: -0.01em;
       color: var(--color-ink);
+    }
+    .app--planned .app-url {
+      color: var(--color-ink-mute);
     }
     .app-state {
       font-family: var(--font-mono);
@@ -647,80 +942,6 @@ const apps = [
       color: var(--color-ink-soft);
       margin-top: 4px;
       line-height: 1.4;
-    }
-
-    /* ── §04 services ───────────────────────────────────────────────────── */
-    .services-card {
-      margin-top: 24px;
-      border: 1px solid var(--color-rule);
-      border-left: 4px solid var(--color-brick);
-      background: var(--color-paper-warm);
-      padding: 24px 22px;
-    }
-    @media (min-width: 641px) {
-      .services-card {
-        padding: 32px 36px;
-      }
-    }
-    .services-lead {
-      margin: 0;
-      font-family: var(--font-display);
-      font-size: 26px;
-      font-weight: 350;
-      line-height: 1.12;
-      letter-spacing: -0.01em;
-      max-width: 720px;
-      text-wrap: pretty;
-    }
-    @media (min-width: 641px) {
-      .services-lead {
-        font-size: 34px;
-      }
-    }
-    .services-tags {
-      margin-top: 16px;
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-    @media (min-width: 641px) {
-      .services-tags {
-        gap: 16px;
-      }
-    }
-    .services-tag {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      letter-spacing: 0.14em;
-      color: var(--color-ink-soft);
-      text-transform: uppercase;
-      border: 1px solid var(--color-rule);
-      padding: 6px 12px;
-    }
-    .services-tag--draft {
-      border: none;
-      padding: 0;
-      font-size: 9px;
-      letter-spacing: 0.18em;
-      color: var(--color-amber);
-    }
-    .services-cta {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 22px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--color-paper);
-      background: var(--color-brick);
-      padding: 12px 20px;
-      text-decoration: none;
-    }
-    .services-cta:hover {
-      background: var(--color-accent-hover);
     }
   </style>
 </BaseLayout>
