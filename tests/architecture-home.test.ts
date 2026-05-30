@@ -98,123 +98,96 @@ describe("architecture home - design contract", () => {
     });
   });
 
-  describe("the 3-jump diagram", () => {
-    it("has a jump3 section", () => {
+  describe("§2 the types - descent", () => {
+    const expectedTypes = [
+      { order: "00", name: "Plot", badge: "system" },
+      { order: "01", name: "Process", badge: "draft" },
+      { order: "02", name: "Position", badge: "draft" },
+      { order: "03", name: "Piece", badge: "draft" },
+      { order: "04", name: "Place", badge: "draft" },
+      { order: "05", name: "Persona", badge: "draft" },
+    ];
+
+    it("has 6 type rows in the descent", () => {
       const dom = new JSDOM(home!.html);
-      const section = dom.window.document.querySelector(".jump3");
-      expect(section).not.toBeNull();
+      const rows = dom.window.document.querySelectorAll(".type-row");
+      expect(rows.length).toBe(6);
     });
 
-    it("has 3 rail jump buttons (one per tier)", () => {
+    for (const [i, t] of expectedTypes.entries()) {
+      it(`type row ${i} is ${t.order} ${t.name} (${t.badge})`, () => {
+        const dom = new JSDOM(home!.html);
+        const rows = dom.window.document.querySelectorAll(".type-row");
+        const row = rows[i];
+        expect(row.querySelector(".type-row-order")!.textContent?.trim()).toBe(t.order);
+        expect(row.querySelector(".type-row-name")!.textContent?.trim()).toBe(t.name);
+        expect(row.querySelector(".type-row-badge")!.textContent?.trim()).toBe(t.badge);
+      });
+    }
+
+    it("Plot is the only type-row--system row", () => {
       const dom = new JSDOM(home!.html);
-      const jumps = dom.window.document.querySelectorAll(".jump3-jump");
-      expect(jumps.length).toBe(3);
+      const systemRows = dom.window.document.querySelectorAll(".type-row--system");
+      expect(systemRows.length).toBe(1);
+      expect(systemRows[0].querySelector(".type-row-name")!.textContent?.trim()).toBe("Plot");
     });
 
-    describe("tier 1 - Plot", () => {
-      it("renders the Plot card linking to ./plot/", () => {
-        const dom = new JSDOM(home!.html);
-        const plot = dom.window.document.querySelector(".jump3-plot");
-        expect(plot).not.toBeNull();
-        expect(plot!.getAttribute("href")).toBe("./plot/");
-      });
+    it("has the 'Read the types' CTA", () => {
+      const dom = new JSDOM(home!.html);
+      const cta = dom.window.document.querySelector(".types-readmore-link");
+      expect(cta).not.toBeNull();
+      expect(cta!.textContent).toContain("Read the types");
+    });
+  });
 
-      it("Plot name reads 'Plot' with a trailing dot", () => {
-        const dom = new JSDOM(home!.html);
-        const name = dom.window.document.querySelector(".jump3-plot-name");
-        expect(name).not.toBeNull();
-        expect(name!.textContent).toContain("Plot");
-        const dot = name!.querySelector(".jump3-plot-dot");
-        expect(dot).not.toBeNull();
-        expect(dot!.textContent).toBe(".");
-      });
-
-      it("Plot role is '00 · the system'", () => {
-        const dom = new JSDOM(home!.html);
-        const role = dom.window.document.querySelector(".jump3-plot-role");
-        expect(role).not.toBeNull();
-        expect(role!.textContent?.trim()).toBe("00 · the system");
-      });
-
-      it("Plot tag references the casting of forces", () => {
-        const dom = new JSDOM(home!.html);
-        const tag = dom.window.document.querySelector(".jump3-plot-tag");
-        expect(tag).not.toBeNull();
-        expect(tag!.textContent?.toLowerCase()).toContain("casting of forces");
-      });
+  describe("§3 the model - tree + infrastructure", () => {
+    it("has the Play container row", () => {
+      const dom = new JSDOM(home!.html);
+      const container = dom.window.document.querySelector(".tree-row--container .tree-name");
+      expect(container).not.toBeNull();
+      expect(container!.textContent?.trim()).toBe("Play");
     });
 
-    describe("tier 2 - the five elements slider", () => {
-      const expectedFive = [
-        { order: "01", name: "Process" },
-        { order: "02", name: "Position" },
-        { order: "03", name: "Piece" },
-        { order: "04", name: "Place" },
-        { order: "05", name: "Persona" },
-      ];
-
-      it("has 5 element items in the slider", () => {
-        const dom = new JSDOM(home!.html);
-        const items = dom.window.document.querySelectorAll(".jump3-item");
-        expect(items.length).toBe(5);
-      });
-
-      for (const [i, t] of expectedFive.entries()) {
-        it(`item ${i} is ${t.order} ${t.name} (element, draft)`, () => {
-          const dom = new JSDOM(home!.html);
-          const items = dom.window.document.querySelectorAll(".jump3-item");
-          const item = items[i];
-          const ord = item.querySelector(".jump3-item-ord")!.textContent ?? "";
-          expect(ord).toContain(t.order);
-          expect(ord).toContain("element");
-          expect(ord).toContain("draft");
-          const name = item.querySelector(".jump3-item-name")!.textContent ?? "";
-          expect(name).toContain(t.name);
-        });
-      }
-
-      it("has 5 dots in the slider pagination", () => {
-        const dom = new JSDOM(home!.html);
-        const dots = dom.window.document.querySelectorAll(".jump3-dot");
-        expect(dots.length).toBe(5);
-      });
-
-      it("has prev and next arrow buttons", () => {
-        const dom = new JSDOM(home!.html);
-        const prev = dom.window.document.querySelector(".jump3-arrow--prev");
-        const next = dom.window.document.querySelector(".jump3-arrow--next");
-        expect(prev).not.toBeNull();
-        expect(next).not.toBeNull();
-      });
+    it("has the Plot system row with 0..n cardinality", () => {
+      const dom = new JSDOM(home!.html);
+      const system = dom.window.document.querySelector(".tree-row--system");
+      expect(system).not.toBeNull();
+      expect(system!.querySelector(".tree-card")!.textContent?.trim()).toBe("0..n");
+      expect(system!.querySelector(".tree-name")!.textContent?.trim()).toBe("Plot");
     });
 
-    describe("tier 3 - the two source files", () => {
-      it("has architecture.md and instructions.md as mono file cards", () => {
-        const dom = new JSDOM(home!.html);
-        const fns = Array.from(dom.window.document.querySelectorAll(".jump3-fn")).map((f) =>
-          f.textContent?.replace(/\s+/g, "").trim(),
-        );
-        expect(fns.length).toBe(2);
-        expect(fns[0]).toBe("architecture.md");
-        expect(fns[1]).toBe("instructions.md");
-      });
+    it("has 5 element rows under Plot", () => {
+      const dom = new JSDOM(home!.html);
+      const elements = dom.window.document.querySelectorAll(".tree-row--element");
+      expect(elements.length).toBe(5);
+    });
 
-      it("substrate caption is present", () => {
-        const dom = new JSDOM(home!.html);
-        const substrate = dom.window.document.querySelector(".jump3-substrate");
-        expect(substrate).not.toBeNull();
-        expect(substrate!.textContent?.toLowerCase()).toContain("substrate");
-      });
+    it("infrastructure relations are: sits on, based on, primed by (in that order)", () => {
+      const dom = new JSDOM(home!.html);
+      const labels = Array.from(dom.window.document.querySelectorAll(".relation-label")).map((l) =>
+        l.textContent?.trim(),
+      );
+      expect(labels).toEqual(["sits on", "based on", "primed by"]);
+    });
+
+    it("infrastructure tags are: Claude.ai, Perplexity, Self-Hosted", () => {
+      const dom = new JSDOM(home!.html);
+      const tags = Array.from(dom.window.document.querySelectorAll(".infra-tag")).map((t) =>
+        t.textContent?.trim(),
+      );
+      expect(tags).toEqual(["Claude.ai", "Perplexity", "Self-Hosted"]);
     });
   });
 
   describe("section structure", () => {
-    it("§1 is present on the home; §2 and §3 were absorbed into the 3-jump diagram", () => {
+    it("all section numbers (§1 §2 §3) are present", () => {
       const dom = new JSDOM(home!.html);
       const nos = Array.from(dom.window.document.querySelectorAll(".section-no")).map((n) =>
         n.textContent?.trim(),
       );
       expect(nos).toContain("§1");
+      expect(nos).toContain("§2");
+      expect(nos).toContain("§3");
     });
   });
 });
