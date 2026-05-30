@@ -1,13 +1,16 @@
 name: deploy-staging
 
-# Runs after CI green on push to main. Builds the site and rsyncs two
-# surfaces from dist/:
+# Runs after CI green on push to main. Builds the site with
+# DEPLOY_ENV=staging so the URLS helper switches cross-surface links
+# from production (kaihacks.ai/...) to staging (staging.kaihacks.ai/...).
+# Rsyncs three surfaces from dist/:
 #   - dist/architecture/ -> staging.kaihacks.ai/architecture/
 #   - dist/main/         -> staging.kaihacks.ai/main/
-# The staging URLs are https://staging.kaihacks.ai/architecture/ and
-# https://staging.kaihacks.ai/main/. The apex staging.kaihacks.ai/
-# root is intentionally not deployed from this workflow; it is owned
-# by the placeholder in chbrain/kaihacks.
+#   - dist/privacy/      -> staging.kaihacks.ai/privacy/
+# The staging URLs are https://staging.kaihacks.ai/architecture/,
+# https://staging.kaihacks.ai/main/ and https://staging.kaihacks.ai/privacy/.
+# The apex staging.kaihacks.ai/ root is intentionally not deployed from
+# this workflow; it is owned by the placeholder in chbrain/kaihacks.
 
 on:
   workflow_run:
@@ -34,8 +37,10 @@ jobs:
         run: npm install
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: build
+      - name: build (staging URLs)
         run: npm run build
+        env:
+          DEPLOY_ENV: staging
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
