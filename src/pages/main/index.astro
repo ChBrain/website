@@ -1,5 +1,13 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
+
+const mainNav = [
+  { label: "architecture", href: "https://architecture.kaihacks.ai/" },
+  { label: "cultures", href: "#" },
+  { label: "services", href: "#services" },
+];
 
 const arc = [
   { y: "2004", co: "TU München", role: "AI research", ai: true },
@@ -57,16 +65,7 @@ const apps = [
   description="A specification for runnable human-agent systems – and the practice that builds them."
 >
   <div class="arch-page main-home">
-    <header class="m-topbar">
-      <a href="./" class="m-topbar-domain">
-        kaihacks<span class="m-topbar-tld">.ai</span>
-      </a>
-      <nav class="m-topbar-nav" aria-label="Primary">
-        <a href="https://architecture.kaihacks.ai/">architecture</a>
-        <a href="#">cultures</a>
-        <a href="#services">services</a>
-      </nav>
-    </header>
+    <SiteHeader domain="kaihacks" tld=".ai" basePath="./" nav={mainNav} />
 
     <section class="masthead">
       <div class="overline">the company · est. 2026</div>
@@ -201,72 +200,11 @@ const apps = [
       </div>
     </section>
 
-    <footer class="m-foot">
-      <div class="m-foot-row">
-        <span>kaihacks.ai</span>
-        <a href="./cvi/" class="m-foot-link">Colophon →</a>
-      </div>
-    </footer>
+    <SiteFooter siteLabel="kaihacks.ai · the company" />
   </div>
 
   <style>
-    /* ── top bar ────────────────────────────────────────────────────────── */
-    .m-topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      flex-direction: column;
-      gap: 10px;
-      padding: 4px 0 14px;
-      border-bottom: 1px solid var(--color-ink);
-    }
-    @media (min-width: 641px) {
-      .m-topbar {
-        flex-direction: row;
-        align-items: baseline;
-        gap: 0;
-        padding: 22px 0 16px;
-      }
-    }
-    .m-topbar-domain {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      letter-spacing: 0.24em;
-      color: var(--color-ink);
-      text-transform: uppercase;
-      text-decoration: none;
-    }
-    @media (min-width: 641px) {
-      .m-topbar-domain {
-        font-size: 11px;
-      }
-    }
-    .m-topbar-tld {
-      color: var(--color-brick);
-    }
-    .m-topbar-nav {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    @media (min-width: 641px) {
-      .m-topbar-nav {
-        gap: 22px;
-      }
-    }
-    .m-topbar-nav a {
-      font-family: var(--font-mono);
-      font-size: 9.5px;
-      letter-spacing: 0.18em;
-      color: var(--color-ink-soft);
-      text-transform: uppercase;
-      text-decoration: none;
-      border-bottom: 1px solid var(--color-rule);
-      padding-bottom: 2px;
-    }
-    .m-topbar-nav a:hover {
-      color: var(--color-ink);
-    }
+    /* topbar + footer styles live in SiteHeader.astro + SiteFooter.astro */
 
     /* ── masthead ───────────────────────────────────────────────────────── */
     .masthead {
@@ -782,34 +720,6 @@ const apps = [
     }
     .services-cta:hover {
       background: var(--color-accent-hover);
-    }
-
-    /* ── footer ─────────────────────────────────────────────────────────── */
-    .m-foot {
-      padding: 32px 0 40px;
-      margin-top: 32px;
-      border-top: 1px solid var(--color-ink);
-    }
-    .m-foot-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      flex-wrap: wrap;
-      gap: 10px;
-      font-family: var(--font-mono);
-      font-size: 9.5px;
-      letter-spacing: 0.18em;
-      color: var(--color-ink-mute);
-      text-transform: uppercase;
-    }
-    .m-foot-link {
-      color: var(--color-ink-mute);
-      text-decoration: none;
-      border-bottom: 1px solid var(--color-rule);
-      padding-bottom: 2px;
-    }
-    .m-foot-link:hover {
-      color: var(--color-ink);
     }
   </style>
 </BaseLayout>

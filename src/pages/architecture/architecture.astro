@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import Topbar from "../../components/Topbar.astro";
-import Footer from "../../components/Footer.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
 import { loadArchitecture } from "../../lib/load-specs";
 import MarkdownIt from "markdown-it";
 
@@ -15,11 +15,14 @@ const html = architecture ? md.render(architecture.text) : "<p>No architecture d
   description="The kaihacks architecture: KAI HACKS AI canon, model, type definitions."
 >
   <div class="arch-page">
-    <Topbar basePath="../" />
+    <SiteHeader domain="architecture" tld=".kaihacks.ai" basePath="../" version="v0.0.2" />
 
     <article class="doc" set:html={html} />
 
-    <Footer />
+    <SiteFooter
+      siteLabel="architecture.kaihacks.ai · the specification"
+      tagline="one application · cultures.kaihacks.ai, focused on cultures"
+    />
   </div>
 
   <style>
