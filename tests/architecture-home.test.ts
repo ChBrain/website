@@ -98,14 +98,118 @@ describe("architecture home - design contract", () => {
     });
   });
 
-  // §2 the types - descent + §3 the model - tree + infrastructure are
-  // absorbed into the 3-jump diagram (replaces the per-type table and
-  // the containment tree with a single holistic three-tier read). The
-  // contract for that diagram is added in a follow-up test PR after
-  // the source PR lands; this PR drops the now-obsolete assertions.
+  describe("the 3-jump diagram", () => {
+    it("has a jump3 section", () => {
+      const dom = new JSDOM(home!.html);
+      const section = dom.window.document.querySelector(".jump3");
+      expect(section).not.toBeNull();
+    });
+
+    it("has 3 rail jump buttons (one per tier)", () => {
+      const dom = new JSDOM(home!.html);
+      const jumps = dom.window.document.querySelectorAll(".jump3-jump");
+      expect(jumps.length).toBe(3);
+    });
+
+    describe("tier 1 - Plot", () => {
+      it("renders the Plot card linking to ./plot/", () => {
+        const dom = new JSDOM(home!.html);
+        const plot = dom.window.document.querySelector(".jump3-plot");
+        expect(plot).not.toBeNull();
+        expect(plot!.getAttribute("href")).toBe("./plot/");
+      });
+
+      it("Plot name reads 'Plot' with a trailing dot", () => {
+        const dom = new JSDOM(home!.html);
+        const name = dom.window.document.querySelector(".jump3-plot-name");
+        expect(name).not.toBeNull();
+        expect(name!.textContent).toContain("Plot");
+        const dot = name!.querySelector(".jump3-plot-dot");
+        expect(dot).not.toBeNull();
+        expect(dot!.textContent).toBe(".");
+      });
+
+      it("Plot role is '00 · the system'", () => {
+        const dom = new JSDOM(home!.html);
+        const role = dom.window.document.querySelector(".jump3-plot-role");
+        expect(role).not.toBeNull();
+        expect(role!.textContent?.trim()).toBe("00 · the system");
+      });
+
+      it("Plot tag references the casting of forces", () => {
+        const dom = new JSDOM(home!.html);
+        const tag = dom.window.document.querySelector(".jump3-plot-tag");
+        expect(tag).not.toBeNull();
+        expect(tag!.textContent?.toLowerCase()).toContain("casting of forces");
+      });
+    });
+
+    describe("tier 2 - the five elements slider", () => {
+      const expectedFive = [
+        { order: "01", name: "Process" },
+        { order: "02", name: "Position" },
+        { order: "03", name: "Piece" },
+        { order: "04", name: "Place" },
+        { order: "05", name: "Persona" },
+      ];
+
+      it("has 5 element items in the slider", () => {
+        const dom = new JSDOM(home!.html);
+        const items = dom.window.document.querySelectorAll(".jump3-item");
+        expect(items.length).toBe(5);
+      });
+
+      for (const [i, t] of expectedFive.entries()) {
+        it(`item ${i} is ${t.order} ${t.name} (element, draft)`, () => {
+          const dom = new JSDOM(home!.html);
+          const items = dom.window.document.querySelectorAll(".jump3-item");
+          const item = items[i];
+          const ord = item.querySelector(".jump3-item-ord")!.textContent ?? "";
+          expect(ord).toContain(t.order);
+          expect(ord).toContain("element");
+          expect(ord).toContain("draft");
+          const name = item.querySelector(".jump3-item-name")!.textContent ?? "";
+          expect(name).toContain(t.name);
+        });
+      }
+
+      it("has 5 dots in the slider pagination", () => {
+        const dom = new JSDOM(home!.html);
+        const dots = dom.window.document.querySelectorAll(".jump3-dot");
+        expect(dots.length).toBe(5);
+      });
+
+      it("has prev and next arrow buttons", () => {
+        const dom = new JSDOM(home!.html);
+        const prev = dom.window.document.querySelector(".jump3-arrow--prev");
+        const next = dom.window.document.querySelector(".jump3-arrow--next");
+        expect(prev).not.toBeNull();
+        expect(next).not.toBeNull();
+      });
+    });
+
+    describe("tier 3 - the two source files", () => {
+      it("has architecture.md and instructions.md as mono file cards", () => {
+        const dom = new JSDOM(home!.html);
+        const fns = Array.from(dom.window.document.querySelectorAll(".jump3-fn")).map((f) =>
+          f.textContent?.replace(/\s+/g, "").trim(),
+        );
+        expect(fns.length).toBe(2);
+        expect(fns[0]).toBe("architecture.md");
+        expect(fns[1]).toBe("instructions.md");
+      });
+
+      it("substrate caption is present", () => {
+        const dom = new JSDOM(home!.html);
+        const substrate = dom.window.document.querySelector(".jump3-substrate");
+        expect(substrate).not.toBeNull();
+        expect(substrate!.textContent?.toLowerCase()).toContain("substrate");
+      });
+    });
+  });
 
   describe("section structure", () => {
-    it("§1 is present on the home; §2 and §3 are absorbed into the 3-jump diagram", () => {
+    it("§1 is present on the home; §2 and §3 were absorbed into the 3-jump diagram", () => {
       const dom = new JSDOM(home!.html);
       const nos = Array.from(dom.window.document.querySelectorAll(".section-no")).map((n) =>
         n.textContent?.trim(),
