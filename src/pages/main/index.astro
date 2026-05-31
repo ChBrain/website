@@ -155,8 +155,8 @@ const apps = [
         </div>
 
         <p class="author-lede">
-          AI in 2004, AI in 2026 and more than twenty years of enterprise IT in between.<br />
-          The method carries what was learned in architecture, ITSM, DevOps, infrastructure and operations.
+          AI in 2004, AI in 2026 and more than twenty years of Enterprise IT in between.<br />
+          The method carries what was learned in Architecture, ITSM, DevOps, Infrastructure and Operations.
         </p>
 
         <ol class="arc">
@@ -212,8 +212,9 @@ const apps = [
             </div>
             <div class="architecture-card-title">KAI HACKS AI Architecture</div>
             <p class="architecture-card-note">
-              Kais Architecture Instructions · Human Agent Collaboration Knowledge System · Agent
-              Implemented
+              Kais Architecture Instructions<br />
+              Human Agent Collaboration Knowledge System<br />
+              Agent Implemented
             </p>
             <span class="architecture-card-cta">Read the full specification →</span>
           </div>
@@ -355,8 +356,14 @@ const apps = [
       color: var(--color-brick);
       font-style: normal;
     }
+    /* The masthead lede sits under the .masthead-title flex row (which
+     * left-aligns by flex default). Capping max-width + auto inline
+     * margins keeps the two-line "Driving outcomes, from Architecture
+     * to Delivery." block visually centred under the title rather than
+     * stretching the full container width with just text-align. */
     .lede {
-      margin: 22px 0 0;
+      margin: 22px auto 0;
+      max-width: 22em;
       font-family: var(--font-prose);
       font-style: italic;
       font-size: 18px;
@@ -536,6 +543,7 @@ const apps = [
       color: var(--color-ink-mute);
       border-bottom: none;
       padding: 9px 0;
+      text-align: center;
     }
     .services-engage {
       padding: 11px 0;
