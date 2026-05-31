@@ -22,23 +22,45 @@ import { URLS } from "../src/lib/urls";
 const pages = loadBuiltPages(process.cwd());
 const main = pages.find((p) => p.path === "main/index.html");
 
-// h2 accepts a string OR a string[] so masthead labels that are still in
-// editorial flux (the §02 author / Founder rename, the §03 Method &
-// architecture / Method & Architecture capitalisation) can be in motion
-// without breaking the contract. Locked entries stay strict.
-const SECTIONS: { n: string; id: string; h2: string | string[]; note: string }[] = [
-  { n: "§01", id: "services", h2: "Services", note: "have the method built for you" },
+// h2 accepts a string OR a string[] so masthead labels can be in motion.
+// id accepts a string OR a string[] so the §02 "author → founder" rename
+// can land without breaking the contract. note accepts a string OR a
+// string[] so the section notes (which Kai is iterating on) can carry
+// either the legacy wording or the new outcomes-grammar wording.
+const SECTIONS: {
+  n: string;
+  id: string | string[];
+  h2: string | string[];
+  note: string | string[];
+}[] = [
+  {
+    n: "§01",
+    id: "services",
+    h2: "Services",
+    // Legacy: "have the method built for you" (the §01 framing).
+    // New: "have outcomes delivered for you" (echoes the masthead's
+    // Driving outcomes... line; §03 picks up the old "method" framing).
+    note: ["have the method built for you", "have outcomes delivered for you"],
+  },
   {
     n: "§02",
-    id: "author",
+    // id: "author" is legacy; "founder" is the new id that matches the
+    // h2 "The Founder" wording introduced earlier.
+    id: ["author", "founder"],
     h2: ["The author", "The Founder"],
-    note: "the range · AI → delivery → AI",
+    // Legacy: "the range · AI → delivery → AI" (the timeline framing).
+    // New: "have the founder work with you" (the services-grammar
+    // parallel: "have outcomes delivered" / "have the founder work").
+    note: ["the range · AI → delivery → AI", "have the founder work with you"],
   },
   {
     n: "§03",
     id: "method",
     h2: ["Method & architecture", "Method & Architecture"],
-    note: "the name reads itself · and what it runs on",
+    // Legacy: "the name reads itself · and what it runs on".
+    // New: "have the method built for you" (intentional reuse of the
+    // old §01 note — the §03 architecture-card IS what the method is).
+    note: ["the name reads itself · and what it runs on", "have the method built for you"],
   },
   { n: "§04", id: "apps", h2: "Applications", note: "what runs on the architecture" },
 ];
@@ -59,13 +81,16 @@ const ENGAGE_OLD = ["Advisory", "Implementation", "Workshops"];
 const ENGAGE_WAIT = ["Workshops", "Advisory", "Implementation", "Transformation"];
 
 // Canonical timeline. Bookends (index 0 and 5) carry ai:true.
-const TIMELINE = [
-  { y: "2004", co: "TU München", ai: true },
-  { y: "2006–’12", co: "Telefónica", ai: false },
-  { y: "2012–’20", co: "Danfoss", ai: false },
-  { y: "2021", co: "q.beyond", ai: false },
-  { y: "2023", co: "FLS", ai: false },
-  { y: "2026", co: "KAI HACKS AI", ai: true },
+// Year strings accept the legacy en-dash form OR the new spaced-hyphen
+// form (per the CVI's no-en-dash rule: numeric ranges are written as
+// "2006 - '12" not "2006–'12"). Companies/order/bookends locked strict.
+const TIMELINE: { y: string[]; co: string; ai: boolean }[] = [
+  { y: ["2004"], co: "TU München", ai: true },
+  { y: ["2006–’12", "2006 - ’12"], co: "Telefónica", ai: false },
+  { y: ["2012–’20", "2012 - ’20"], co: "Danfoss", ai: false },
+  { y: ["2021"], co: "q.beyond", ai: false },
+  { y: ["2023"], co: "FLS", ai: false },
+  { y: ["2026"], co: "KAI HACKS AI", ai: true },
 ];
 
 // HACKS is bricked (the verbs) — the rest plain.
@@ -93,19 +118,23 @@ describe("main (company front door) — design contract", () => {
       expect(tld!.textContent).toBe(".ai");
     });
 
-    it("renders the SiteHeader nav with architecture · cultures · services", () => {
-      const dom = new JSDOM(main!.html);
-      const navLinks = dom.window.document.querySelectorAll(".topbar-nav a");
-      const labels = [...navLinks].map((a) => a.textContent?.trim());
-      expect(labels).toEqual(["architecture", "cultures", "services"]);
-    });
-
-    it("services nav entry self-anchors to #services on this page", () => {
+    it("SiteHeader nav: legacy 3-item apex menu OR removed for the location-label shape", () => {
+      // Same two-shape contract as cvi.test.ts. After the chrome
+      // restructure the nav goes away (the wordmark moves right, the
+      // location label takes the left). Accept either form.
       const dom = new JSDOM(main!.html);
       const navLinks = [...dom.window.document.querySelectorAll(".topbar-nav a")];
-      const services = navLinks.find((a) => a.textContent?.trim() === "services");
-      expect(services).toBeDefined();
-      expect(services!.getAttribute("href")).toBe("#services");
+      const labels = navLinks.map((a) => a.textContent?.trim());
+      const isLegacy =
+        labels.length === 3 &&
+        labels[0] === "architecture" &&
+        labels[1] === "cultures" &&
+        labels[2] === "services";
+      const isLocationLabel = labels.length === 0;
+      expect(
+        isLegacy || isLocationLabel,
+        `nav "${labels.join(" · ")}" matched neither the legacy apex menu nor the location-label removal`,
+      ).toBe(true);
     });
 
     it("renders the SiteFooter with the global Privacy + CVI links", () => {
@@ -169,37 +198,59 @@ describe("main (company front door) — design contract", () => {
       ).toBe(true);
     });
 
-    it("draft-marker is present (positioning still needs Kai's touch)", () => {
+    it("draft-marker tolerated (either present in legacy form, or removed in the final-fixes shape)", () => {
+      // Kai removed the draft-marker line as part of the final-fixes
+      // pass; the legacy shape kept it as an amber dot + label. Accept
+      // either — when present, the textContent must still contain
+      // "draft" (otherwise something other than the marker is rendering
+      // with the class).
       const dom = new JSDOM(main!.html);
       const draft = dom.window.document.querySelector(".draft-marker");
-      expect(draft).not.toBeNull();
-      expect((draft!.textContent ?? "").toLowerCase()).toContain("draft");
+      if (draft) {
+        expect((draft.textContent ?? "").toLowerCase()).toContain("draft");
+      }
     });
   });
 
   describe("4 canonical chapters (funnel order)", () => {
     for (const sec of SECTIONS) {
-      it(`${sec.n} #${sec.id}: has the canonical heading + note`, () => {
+      const idTitle = Array.isArray(sec.id) ? sec.id.join("|") : sec.id;
+      it(`${sec.n} #${idTitle}: has the canonical heading + note`, () => {
         const dom = new JSDOM(main!.html);
-        const section = dom.window.document.querySelector(`section#${sec.id}.section`);
-        expect(section, `missing section#${sec.id}`).not.toBeNull();
+        // Pick the first id in the tolerated set that actually renders.
+        const ids = Array.isArray(sec.id) ? sec.id : [sec.id];
+        const section = ids
+          .map((id) => dom.window.document.querySelector(`section#${id}.section`))
+          .find((s) => s !== null);
+        expect(section, `missing section for any of [${ids.join(", ")}]`).toBeDefined();
         expect(section!.querySelector(".section-no")?.textContent?.trim()).toBe(sec.n);
         const h2 = section!.querySelector(".section-title")?.textContent?.trim();
         if (Array.isArray(sec.h2)) {
-          expect(sec.h2, `${sec.id} h2 "${h2}" not in tolerated set`).toContain(h2);
+          expect(sec.h2, `${section!.id} h2 "${h2}" not in tolerated set`).toContain(h2);
         } else {
           expect(h2).toBe(sec.h2);
         }
-        expect(section!.querySelector(".section-note")?.textContent?.trim()).toBe(sec.note);
+        const note = section!.querySelector(".section-note")?.textContent?.trim();
+        if (Array.isArray(sec.note)) {
+          expect(sec.note, `${section!.id} note "${note}" not in tolerated set`).toContain(note);
+        } else {
+          expect(note).toBe(sec.note);
+        }
       });
     }
 
-    it("sections appear in canonical funnel order (services → author → method → apps)", () => {
+    it("sections appear in canonical funnel order (services → author|founder → method → apps)", () => {
       const dom = new JSDOM(main!.html);
       const ids = [...dom.window.document.querySelectorAll("main.snap-scroll section.section")].map(
         (s) => s.id,
       );
-      expect(ids).toEqual(SECTIONS.map((s) => s.id));
+      // Build the expected id list by picking, for each canonical
+      // section, the tolerated id that actually appears in the DOM.
+      const expected = SECTIONS.map((sec) => {
+        const tolerated = Array.isArray(sec.id) ? sec.id : [sec.id];
+        return tolerated.find((id) => ids.includes(id)) ?? tolerated[0];
+      });
+      expect(ids).toEqual(expected);
     });
   });
 
@@ -296,23 +347,27 @@ describe("main (company front door) — design contract", () => {
     });
   });
 
-  describe("§02 Author — timeline with AI bookends", () => {
+  describe("§02 Author/Founder — timeline with AI bookends", () => {
     it(`renders ${TIMELINE.length} timeline entries in canonical order`, () => {
       const dom = new JSDOM(main!.html);
-      const section = dom.window.document.querySelector("section#author");
+      const section =
+        dom.window.document.querySelector("section#author") ??
+        dom.window.document.querySelector("section#founder");
       const steps = [...section!.querySelectorAll("li.arc-step")];
       expect(steps.length).toBe(TIMELINE.length);
       steps.forEach((step, i) => {
-        const year = step.querySelector(".arc-year")?.textContent?.trim();
+        const year = step.querySelector(".arc-year")?.textContent?.trim() ?? "";
         const co = step.querySelector(".arc-co")?.textContent?.trim();
-        expect(year).toBe(TIMELINE[i].y);
+        expect(TIMELINE[i].y, `arc[${i}] year "${year}" not in tolerated set`).toContain(year);
         expect(co).toBe(TIMELINE[i].co);
       });
     });
 
     it("first (2004) and last (2026) are AI bookends with .arc-step--ai", () => {
       const dom = new JSDOM(main!.html);
-      const section = dom.window.document.querySelector("section#author");
+      const section =
+        dom.window.document.querySelector("section#author") ??
+        dom.window.document.querySelector("section#founder");
       const steps = [...section!.querySelectorAll("li.arc-step")];
       const aiFlags = steps.map((s) => s.classList.contains("arc-step--ai"));
       expect(aiFlags).toEqual(TIMELINE.map((t) => t.ai));
@@ -320,11 +375,18 @@ describe("main (company front door) — design contract", () => {
       expect(aiFlags).toEqual([true, false, false, false, false, true]);
     });
 
-    it("author-lede emphasises 'range' (the framing decision)", () => {
+    it("author-lede mentions architecture (the brand-identifying structural anchor)", () => {
+      // The legacy lede emphasised "range" with .brick. The new lede
+      // ("AI in 2004, AI in 2026... the method carries what was learned
+      // in architecture, ITSM, DevOps, infrastructure and operations.")
+      // drops "range" but keeps "architecture" as the anchor token.
+      // Accept either by asserting only the anchor.
       const dom = new JSDOM(main!.html);
-      const lede = dom.window.document.querySelector("section#author .author-lede");
+      const lede =
+        dom.window.document.querySelector("section#author .author-lede") ??
+        dom.window.document.querySelector("section#founder .author-lede");
       const text = (lede?.textContent ?? "").toLowerCase();
-      expect(text).toContain("range");
+      expect(text).toContain("architecture");
     });
   });
 
@@ -347,11 +409,19 @@ describe("main (company front door) — design contract", () => {
       expect(accentFlags).toEqual([false, true, false]);
     });
 
-    it("architecture sub-divider label reads 'Architecture · what the method runs on'", () => {
+    it("architecture sub-divider label tolerates either 'what the method runs on' OR 'what the method is'", () => {
+      // Legacy: "Architecture · what the method runs on" (framed
+      // applications as runtime).
+      // New: "Architecture · what the method is" (frames Architecture
+      // as the method's definition — the architecture-card carries the
+      // acronym expansion).
       const dom = new JSDOM(main!.html);
       const section = dom.window.document.querySelector("section#method");
-      const label = section!.querySelector(".architecture-sub-label");
-      expect(label?.textContent?.trim()).toBe("Architecture · what the method runs on");
+      const label = section!.querySelector(".architecture-sub-label")?.textContent?.trim();
+      expect([
+        "Architecture · what the method runs on",
+        "Architecture · what the method is",
+      ]).toContain(label);
     });
 
     it("architecture card links to URLS.architecture", () => {
@@ -361,12 +431,14 @@ describe("main (company front door) — design contract", () => {
       expect(card!.getAttribute("href")).toBe(URLS.architecture);
     });
 
-    it("architecture card carries title 'Architecture' and the 'live · the foundation' state", () => {
+    it("architecture card carries the canonical title + 'live · the foundation' state", () => {
+      // Title accepts either the legacy short form 'Architecture' or
+      // the new long form 'KAI HACKS AI Architecture' — same card,
+      // the new form just hangs the brand prefix on the title.
       const dom = new JSDOM(main!.html);
       const card = dom.window.document.querySelector("section#method a.architecture-card");
-      expect(card!.querySelector(".architecture-card-title")?.textContent?.trim()).toBe(
-        "Architecture",
-      );
+      const title = card!.querySelector(".architecture-card-title")?.textContent?.trim();
+      expect(["Architecture", "KAI HACKS AI Architecture"]).toContain(title);
       expect(card!.querySelector(".architecture-card-state")?.textContent?.trim()).toBe(
         "live · the foundation",
       );

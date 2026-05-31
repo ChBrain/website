@@ -49,11 +49,15 @@ const ALLOWED_RENDERER_WORDS = new Set([
   "instructions",
   "khai",
   // shared SiteFooter component (src/components/SiteFooter.astro):
-  // "KAI HACKS AI · CVR 41768274 · info@kaihacks.ai · © 2026 · Privacy · CVI"
+  // "KAI HACKS AI · CVR 41768274 · Contact · Privacy · CVI · © 2026"
+  // "contact" is the new center-column link added in the chrome
+  // restructure; it cascades to every surface (including spec pages)
+  // and is legitimate chrome, not source content.
   "kai",
   "hacks",
   "cvr",
   "info",
+  "contact",
   "privacy",
   "cvi",
   // SiteHeader nav link label (cultures surface placeholder).
