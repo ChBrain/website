@@ -207,15 +207,30 @@ describe("CVI - design contract", () => {
   });
 
   describe("table of contents", () => {
-    it("has the canonical TOC entries in canonical order (legacy 8 or new 9)", () => {
+    it("has the canonical TOC entries in canonical order (legacy 8 / new 9 / overlay shape)", () => {
+      // Two structural shapes accepted (same chapters in either):
+      // - LEGACY FLAT: <nav class="cvi-toc"><a><span class="cvi-tn">…<span class="cvi-tt">…
+      // - OVERLAY:     <nav class="cvi-toc"><div class="cvi-toc-group"><a class="cvi-toc-link">
+      //                  <span class="cvi-toc-n">…<span class="cvi-toc-name">…
+      //   The overlay shape is the playbook chassis port — same chapter
+      //   data, wrapped inside a dialog with editorial role groups. The
+      //   strip + overlay is the navigation UI; tests only gate the
+      //   chapter contract (count, hrefs, numbers, titles).
       const dom = new JSDOM(cvi!.html);
       const expected = pickToc(cvi!);
-      const entries = [...dom.window.document.querySelectorAll(".cvi-toc > a")];
+      const overlayEntries = [
+        ...dom.window.document.querySelectorAll(".cvi-toc-link"),
+      ] as Element[];
+      const legacyEntries = [...dom.window.document.querySelectorAll(".cvi-toc > a")] as Element[];
+      const isOverlay = overlayEntries.length > 0;
+      const entries = isOverlay ? overlayEntries : legacyEntries;
+      const nSel = isOverlay ? ".cvi-toc-n" : ".cvi-tn";
+      const tSel = isOverlay ? ".cvi-toc-name" : ".cvi-tt";
       expect(entries.length).toBe(expected.length);
       entries.forEach((a, i) => {
         expect(a.getAttribute("href")).toBe(expected[i].href);
-        expect(a.querySelector(".cvi-tn")?.textContent?.trim()).toBe(expected[i].n);
-        expect(a.querySelector(".cvi-tt")?.textContent?.trim()).toBe(expected[i].title);
+        expect(a.querySelector(nSel)?.textContent?.trim()).toBe(expected[i].n);
+        expect(a.querySelector(tSel)?.textContent?.trim()).toBe(expected[i].title);
       });
     });
   });
