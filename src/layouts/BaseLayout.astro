@@ -1,4 +1,17 @@
 ---
+// Self-hosted brand type, bundled by Astro from npm. Replaces the
+// previous Google Fonts <link> in <head> — drops the two third-party
+// preconnects (fonts.googleapis.com, fonts.gstatic.com) so no visitor
+// request reaches Google; the WOFF2 files ship from the site origin
+// alongside the page. Variable axes preserve the 300-700 weight range
+// the design system uses (Newsreader display, Source Serif 4 body).
+// IBM Plex Mono ships as static weights — only 400 and 500 are imported
+// (the only two weights the system uses; matches the original Google
+// Fonts request).
+import "@fontsource-variable/newsreader";
+import "@fontsource-variable/source-serif-4";
+import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource/ibm-plex-mono/500.css";
 import "../styles/tokens.css";
 
 interface Props {
@@ -33,12 +46,6 @@ const toSurfaceRoot = "../".repeat(Math.max(0, segments.length - 1)) || "./";
     <link rel="icon" href={`${toSurfaceRoot}favicon.svg`} type="image/svg+xml" />
     <link rel="apple-touch-icon" href={`${toSurfaceRoot}apple-touch-icon.png`} />
     <link rel="manifest" href={`${toSurfaceRoot}site.webmanifest`} />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,300..700&family=Source+Serif+4:opsz,wght@8..60,300..700&display=swap"
-      rel="stylesheet"
-    />
   </head>
   <body>
     <main>
