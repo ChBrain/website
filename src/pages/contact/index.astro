@@ -50,10 +50,11 @@ import SiteFooter from "../../components/SiteFooter.astro";
 
   <style>
     /* Flex column + full-viewport min-height so the sticky SiteFooter
-     * pins to the bottom of the viewport on short content (the contact
-     * page is a single card — without this the footer would float
-     * mid-page). Matches the chrome rhythm of the snap surfaces while
-     * staying a non-snap page. */
+     * pins to the bottom of the viewport on short content. <main>
+     * grows to fill the gap between header and footer, AND vertical-
+     * centers its content (masthead + card) — without justify-content:
+     * center the content top-aligned inside the grown main, which read
+     * as the page floating off-balance on tall viewports. */
     .contact-page {
       max-width: 820px;
       display: flex;
@@ -62,13 +63,16 @@ import SiteFooter from "../../components/SiteFooter.astro";
     }
     .contact-page main {
       flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
     /* ── masthead ─────────────────────────────────────────────────────── */
     /* Centered axis: overline + h1 + lede all read on a single vertical
      * line, matching the main masthead pattern. The card rows below
-     * also centre so the whole page reads as a focused editorial
-     * statement rather than a left-edge form. */
+     * stay left-aligned (the data is more legible flush-left); only the
+     * masthead is centred. */
     .ct-mast {
       padding: 56px 0 38px;
       border-bottom: 1px solid var(--color-rule);
@@ -132,14 +136,12 @@ import SiteFooter from "../../components/SiteFooter.astro";
         padding: 36px 38px;
       }
     }
-    /* justify-content: center brings the [key · value] pair into the
-     * card's horizontal centre so the rows balance under the centred
-     * masthead axis. The key column keeps its fixed 70px width — the
-     * pair just shifts as a unit. */
+    /* Card rows are left-aligned — the key column at fixed 70px gives
+     * the data a tidy edge. (The masthead is centred; the card stays
+     * left-aligned for legibility.) */
     .ct-row {
       display: flex;
       align-items: baseline;
-      justify-content: center;
       gap: 18px;
       padding: 10px 0;
       border-bottom: 1px solid var(--color-rule-soft);
