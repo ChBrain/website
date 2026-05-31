@@ -1,0 +1,195 @@
+---
+// Contact – the dedicated destination for the §01 Services CTA on main.
+//
+// Scaffold v1: masthead + a single brick-bordered card with the mailto,
+// CVR and a one-line note. No form. Kai iterates copy + adds depth as
+// the conversation requires (working hours, the brief shape, etc.).
+//
+// Same chrome (SiteHeader + SiteFooter) as every other surface so the
+// page reads as part of the company front door, not a one-off.
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
+import { URLS } from "../../lib/urls";
+
+const apexNav = [
+  { label: "company", href: URLS.main },
+  { label: "architecture", href: URLS.architecture },
+  { label: "cultures", href: URLS.cultures },
+];
+---
+
+<BaseLayout
+  title="KAI HACKS AI · Contact"
+  description="Start a conversation. The direct line for engagement enquiries – workshops, advisory, implementation, transformation."
+>
+  <div class="arch-page contact-page">
+    <SiteHeader domain="kaihacks" tld=".ai" basePath={URLS.main} nav={apexNav} />
+
+    <main>
+      <header class="ct-mast">
+        <div class="ct-overline">the direct line · for the brief</div>
+        <h1 class="ct-h1">Contact<em>.</em></h1>
+        <p class="ct-lede">
+          Tell me what you're working on – the shape of the team, the question, the constraint. I'll
+          come back with what I see and what I'd do next.
+        </p>
+        <div class="ct-draft">
+          <span class="ct-draft-dot" aria-hidden="true"></span>draft · the call to start, in your
+          words
+        </div>
+      </header>
+
+      <section class="ct-card">
+        <div class="ct-row">
+          <div class="ct-k">Email</div>
+          <a class="ct-v ct-mail" href="mailto:info@kaihacks.ai">info@kaihacks.ai</a>
+        </div>
+        <div class="ct-row">
+          <div class="ct-k">CVR</div>
+          <div class="ct-v">41768274</div>
+        </div>
+        <p class="ct-note">
+          I read every brief. If it fits, you'll hear back the same week with a first read and the
+          shape of an engagement.
+        </p>
+      </section>
+    </main>
+
+    <SiteFooter />
+  </div>
+
+  <style>
+    .contact-page {
+      max-width: 820px;
+    }
+
+    /* ── masthead ─────────────────────────────────────────────────────── */
+    .ct-mast {
+      padding: 56px 0 38px;
+      border-bottom: 1px solid var(--color-rule);
+    }
+    .ct-overline {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.26em;
+      color: var(--color-ink-soft);
+      text-transform: uppercase;
+    }
+    @media (min-width: 641px) {
+      .ct-overline {
+        font-size: 11px;
+      }
+    }
+    .ct-h1 {
+      margin: 14px 0 18px;
+      font-family: var(--font-display);
+      font-weight: 350;
+      font-size: 52px;
+      line-height: 0.94;
+      letter-spacing: -0.03em;
+      color: var(--color-ink);
+    }
+    @media (min-width: 641px) {
+      .ct-h1 {
+        font-size: 96px;
+      }
+    }
+    .ct-h1 em {
+      font-style: normal;
+      color: var(--color-brick);
+    }
+    .ct-lede {
+      margin: 0 0 16px;
+      max-width: 640px;
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 18px;
+      line-height: 1.45;
+      color: var(--color-ink-soft);
+      text-wrap: pretty;
+    }
+    @media (min-width: 641px) {
+      .ct-lede {
+        font-size: 21px;
+      }
+    }
+    .ct-draft {
+      margin-top: 14px;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.2em;
+      color: var(--color-amber);
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ct-draft-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: var(--color-amber);
+    }
+
+    /* ── the one card ─────────────────────────────────────────────────── */
+    .ct-card {
+      margin: 38px 0;
+      border: 1px solid var(--color-rule);
+      border-top: 4px solid var(--color-brick);
+      background: var(--color-paper-warm);
+      padding: 26px 22px;
+    }
+    @media (min-width: 641px) {
+      .ct-card {
+        padding: 36px 38px;
+      }
+    }
+    .ct-row {
+      display: flex;
+      align-items: baseline;
+      gap: 18px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--color-rule-soft);
+    }
+    .ct-row:last-of-type {
+      border-bottom: none;
+    }
+    .ct-k {
+      flex: 0 0 70px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      color: var(--color-ink-mute);
+      text-transform: uppercase;
+    }
+    .ct-v {
+      font-family: var(--font-display);
+      font-size: 22px;
+      color: var(--color-ink);
+      letter-spacing: -0.005em;
+    }
+    @media (min-width: 641px) {
+      .ct-v {
+        font-size: 26px;
+      }
+    }
+    .ct-mail {
+      color: var(--color-brick);
+      text-decoration: none;
+      border-bottom: 1px solid var(--color-rule);
+    }
+    .ct-mail:hover {
+      border-bottom-color: var(--color-brick);
+    }
+    .ct-note {
+      margin: 18px 0 0;
+      max-width: 620px;
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--color-ink-soft);
+    }
+  </style>
+</BaseLayout>
