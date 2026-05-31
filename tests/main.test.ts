@@ -46,7 +46,12 @@ const SECTIONS: { n: string; id: string; h2: string | string[]; note: string }[]
 // AIDE acrostic — first letter of each domain is bricked.
 const DOMAINS = ["AI", "ITSM", "DevOps", "Enterprise Architecture"];
 
-const ENGAGE = ["Advisory", "Implementation", "Workshops"];
+// Engage names are in editorial flux: the current 3 (Advisory / Implementation /
+// Workshops) is being lifted to a 4-item WAIT acrostic (Workshops / Advisory /
+// Implementation / Transformation) so both columns are acrostics. We accept
+// either set so the source lift can land without breaking this contract.
+const ENGAGE_OLD = ["Advisory", "Implementation", "Workshops"];
+const ENGAGE_WAIT = ["Workshops", "Advisory", "Implementation", "Transformation"];
 
 // Canonical timeline. Bookends (index 0 and 5) carry ai:true.
 const TIMELINE = [
@@ -243,20 +248,29 @@ describe("main (company front door) — design contract", () => {
       expect(coda?.textContent?.trim()).toBe("…you name it");
     });
 
-    it("renders 3 engagement modes in canonical order", () => {
+    it("renders the engagement modes in canonical order (3 legacy or 4 WAIT)", () => {
       const dom = new JSDOM(main!.html);
       const section = dom.window.document.querySelector("section#services");
-      const engageNames = [...section!.querySelectorAll(".services-engage-name")].map((n) =>
-        n.textContent?.trim(),
+      const engageNames = [...section!.querySelectorAll(".services-engage-name")].map(
+        (n) => n.textContent?.trim() ?? "",
       );
-      expect(engageNames).toEqual(ENGAGE);
+      // Strip any bricked-initial whitespace artefact so "W orkshops" matches
+      // "Workshops" once the WAIT lift wraps the first letter in its own span.
+      const normalised = engageNames.map((t) => {
+        const s = t.replace(/\s+/g, " ").trim();
+        return s.length > 1 && s[1] === " " ? s[0] + s.slice(2) : s;
+      });
+      expect([ENGAGE_OLD, ENGAGE_WAIT]).toContainEqual(normalised);
     });
 
-    it("brick CTA 'Start a conversation →' points to #contact", () => {
+    it("brick CTA 'Start a conversation →' points to the contact destination", () => {
       const dom = new JSDOM(main!.html);
       const cta = dom.window.document.querySelector("section#services a.services-cta");
       expect(cta).not.toBeNull();
-      expect(cta!.getAttribute("href")).toBe("#contact");
+      // Accept the legacy in-page anchor (#contact) or the new dedicated
+      // contact surface (URLS.contact / /contact/) once the page lands.
+      const href = cta!.getAttribute("href") ?? "";
+      expect(href === "#contact" || /\/contact\/?$/.test(href)).toBe(true);
       expect(cta!.textContent?.trim()).toContain("Start a conversation");
     });
   });
