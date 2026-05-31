@@ -65,9 +65,14 @@ import SiteFooter from "../../components/SiteFooter.astro";
     }
 
     /* ── masthead ─────────────────────────────────────────────────────── */
+    /* Centered axis: overline + h1 + lede all read on a single vertical
+     * line, matching the main masthead pattern. The card rows below
+     * also centre so the whole page reads as a focused editorial
+     * statement rather than a left-edge form. */
     .ct-mast {
       padding: 56px 0 38px;
       border-bottom: 1px solid var(--color-rule);
+      text-align: center;
     }
     .ct-overline {
       font-family: var(--font-mono);
@@ -100,7 +105,7 @@ import SiteFooter from "../../components/SiteFooter.astro";
       color: var(--color-brick);
     }
     .ct-lede {
-      margin: 0 0 16px;
+      margin: 0 auto 16px;
       max-width: 640px;
       font-family: var(--font-prose);
       font-style: italic;
@@ -127,9 +132,14 @@ import SiteFooter from "../../components/SiteFooter.astro";
         padding: 36px 38px;
       }
     }
+    /* justify-content: center brings the [key · value] pair into the
+     * card's horizontal centre so the rows balance under the centred
+     * masthead axis. The key column keeps its fixed 70px width — the
+     * pair just shifts as a unit. */
     .ct-row {
       display: flex;
       align-items: baseline;
+      justify-content: center;
       gap: 18px;
       padding: 10px 0;
       border-bottom: 1px solid var(--color-rule-soft);
