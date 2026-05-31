@@ -1,0 +1,576 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import SiteFooter from "../../components/SiteFooter.astro";
+import { URLS } from "../../lib/urls";
+
+const apexNav = [
+  { label: "company", href: URLS.main },
+  { label: "architecture", href: URLS.architecture },
+  { label: "services", href: `${URLS.main}#services` },
+];
+
+// §01 Services — two engagement modes.
+// Lifted verbatim from the legacy cultures landing
+// (chbrain/kaihacks · kaihacks.ai/cultures/public_html/index.html).
+const services = [
+  {
+    label: "Workshops",
+    title: "Enable AI Workshops",
+    body: "I run customer-tailored workshops with you, physical or virtual. Code Camps, Hackathons, Trainings. The AI holds the cultural positions. You expose the work to them.",
+    cta: "Get in touch →",
+    href: "mailto:kai@kaihacks.ai?subject=Workshops",
+  },
+  {
+    label: "Custom",
+    title: "Create Custom Cultures",
+    body: "I build the world. You deploy it without me. Specific organisations, sectors, or combinations, built to the same standard as the library. You run it on your own.",
+    cta: "Get in touch →",
+    href: "mailto:kai@kaihacks.ai?subject=Custom+cultures",
+  },
+];
+
+// §02 The example — three columns showing what cultures DO.
+// Lifted from the legacy compare section. Apostrophes/em-dashes
+// normalised to brand-book conventions; HTML entity-encoded names
+// kept exact.
+const example = [
+  {
+    head: "Claude.ai native",
+    sub: "imagined",
+    body: [
+      { role: "Fleur", text: "Is that a brand system? Or more personal?" },
+      {
+        role: "Maja",
+        text: "Both, I think. I never really separate them. It's for a client but it started as something I was drawing at home.",
+      },
+      {
+        role: "Hanna",
+        text: "That's interesting. In Germany – or at least in the firms I've worked with – there's usually a very clear line. Strategy first, aesthetics follow. You don't let the personal in.",
+      },
+      {
+        role: "Fleur",
+        text: "The Dutch approach is more… pragmatic? We ask what works, and if something personal works, fine. But we don't romanticise it.",
+      },
+      {
+        role: "Maja",
+        text: "Here we'd just call it hygge and move on. But seriously – I think the personal is the strategy. Clients feel it when something comes from somewhere real.",
+      },
+    ],
+  },
+  {
+    head: "Library on Claude.ai",
+    sub: "embodied",
+    body: [
+      {
+        role: "Lene",
+        text: "So. You wanted to talk about working together. – She says it lightly, but as an opener, not as a question. The meeting was Marieke's idea. The idea now belongs to all of them equally.",
+      },
+      {
+        role: "Marieke",
+        text: "I did. I've been thinking about what we each bring and whether there's something at the intersection. Hanna, you're building curriculum materials. I'm translating across audiences. Lene, you're designing spaces for people to work in. There's a shared object there. The question is what we do with it.",
+      },
+      {
+        role: "Hanna",
+        text: "– She has been watching the canal. She turns. – What you're describing is a service. I'm not against that. But I want to know first what problem we're actually solving. Otherwise we build something that holds together structurally and means nothing.",
+      },
+    ],
+  },
+  {
+    head: "Library on NotebookLM",
+    sub: "dissected",
+    body: [
+      {
+        text: "The alignment between these three women would be a high-speed negotiation between three different versions of “directness” and “equality”.",
+      },
+      { text: "Establishing the flat floor – the absence of rank, though for different reasons." },
+      {
+        text: "The Danish woman assumes flat ground where no one is above or below the work. She operates under the Law of Jante: one should not think they are better than the collective.",
+      },
+      {
+        text: "The Dutch woman aligns immediately. She views hierarchy as overhead that costs too much time and money. She isn't pursuing equality for moral reasons – but for efficiency.",
+      },
+      {
+        text: "The German woman accepts the flat structure because her cultural operating system dictates that truth and precision are owed regardless of title.",
+      },
+    ],
+  },
+];
+---
+
+<BaseLayout
+  title="Cultures · KAI HACKS AI"
+  description="AI infrastructure for cross-cultural trainers. 198 cultural positions – each one running, each one holding what it holds."
+>
+  <div class="arch-page cultures">
+    <SiteHeader domain="cultures" tld=".kaihacks.ai" basePath="./" nav={apexNav} />
+
+    <header class="cu-mast">
+      <div class="cu-overline">an application · running on the architecture</div>
+      <h1 class="cu-h1">
+        Cultures<em>.</em>
+      </h1>
+      <p class="cu-lede">The cultural position is already in the room.</p>
+      <p class="cu-sub">
+        AI infrastructure for cross-cultural trainers. 198 cultural positions – each one running,
+        each one holding what it holds.
+      </p>
+    </header>
+
+    <section id="services" class="cu-section">
+      <div class="cu-seclabel">
+        <span class="cu-n">§01</span>
+        <div class="cu-seclabel-body">
+          <h2 class="cu-h2">Services</h2>
+          <p class="cu-secnote">two ways to bring this into your room</p>
+        </div>
+      </div>
+
+      <div class="cu-services">
+        {
+          services.map((s) => (
+            <article class="cu-service">
+              <span class="cu-service-label">{s.label}</span>
+              <h3 class="cu-service-title">{s.title}</h3>
+              <p class="cu-service-body">{s.body}</p>
+              <a href={s.href} class="cu-service-cta">
+                {s.cta}
+              </a>
+            </article>
+          ))
+        }
+      </div>
+    </section>
+
+    <section id="example" class="cu-section">
+      <div class="cu-seclabel">
+        <span class="cu-n">§02</span>
+        <div class="cu-seclabel-body">
+          <h2 class="cu-h2">The same prompt</h2>
+          <p class="cu-secnote">what changes when the cultures are in the room</p>
+        </div>
+      </div>
+
+      <div class="cu-compare">
+        {
+          example.map((col) => (
+            <article class="cu-compare-col">
+              <header class="cu-compare-head">
+                <span class="cu-compare-head-label">{col.head}</span>
+                <span class="cu-compare-head-sub">{col.sub}</span>
+              </header>
+              <div class="cu-compare-body">
+                {col.body.map((line) => (
+                  <p>
+                    {line.role && <strong>{line.role}:</strong>} {line.text}
+                  </p>
+                ))}
+              </div>
+            </article>
+          ))
+        }
+      </div>
+
+      <p class="cu-compare-coda">The same prompt. The difference is what's in the room.</p>
+    </section>
+
+    <section id="map" class="cu-section">
+      <div class="cu-seclabel">
+        <span class="cu-n">§03</span>
+        <div class="cu-seclabel-body">
+          <h2 class="cu-h2">The library</h2>
+          <p class="cu-secnote">198 cultural positions, by region</p>
+        </div>
+      </div>
+
+      <a href="https://cultures.kaihacks.ai/map/" class="cu-map-card">
+        <div class="cu-map-card-hue" aria-hidden="true"></div>
+        <div class="cu-map-card-body">
+          <div class="cu-map-card-row">
+            <span class="cu-map-card-url">cultures.kaihacks.ai/map</span>
+            <span class="cu-map-card-state">live · the world map</span>
+          </div>
+          <div class="cu-map-card-title">World Map</div>
+          <p class="cu-map-card-note">
+            An interactive world map of the library. Pick a country to download its culture package,
+            take a whole region, or grab the lot. More countries arrive with each release.
+          </p>
+          <span class="cu-map-card-cta">Open the map →</span>
+        </div>
+      </a>
+
+      <div class="cu-library-links">
+        <a href="https://github.com/ChBrain/Cultures" class="cu-library-link">Library on GitHub ↗</a
+        >
+        <a href="https://github.com/ChBrain/Cultures/releases" class="cu-library-link">Releases ↗</a
+        >
+        <a href="https://combinedcultures.substack.com/" class="cu-library-link">Newsletter ↗</a>
+      </div>
+    </section>
+
+    <SiteFooter />
+  </div>
+
+  <style>
+    /* Cultures landing — brand-book aligned. Lifts the editorial
+     * pattern from CVI/main/privacy: paper ground, ink voice, brick
+     * dot accents, mono labels in caps. Three sections (services,
+     * example, library) under one masthead. */
+
+    /* ── masthead ───────────────────────────────────────────────────────── */
+    .cu-mast {
+      padding: 56px 0 38px;
+      border-bottom: 1px solid var(--color-rule);
+    }
+    @media (min-width: 641px) {
+      .cu-mast {
+        padding: 80px 0 48px;
+      }
+    }
+    .cu-overline {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.26em;
+      color: var(--color-ink-soft);
+      text-transform: uppercase;
+    }
+    @media (min-width: 641px) {
+      .cu-overline {
+        font-size: 11px;
+      }
+    }
+    .cu-h1 {
+      margin: 16px 0 0;
+      font-family: var(--font-display);
+      font-weight: 380;
+      font-size: 64px;
+      line-height: 0.96;
+      letter-spacing: -0.025em;
+      color: var(--color-ink);
+    }
+    @media (min-width: 641px) {
+      .cu-h1 {
+        font-size: 124px;
+      }
+    }
+    .cu-h1 em {
+      color: var(--color-brick);
+      font-style: normal;
+    }
+    .cu-lede {
+      margin: 26px 0 0;
+      max-width: 760px;
+      font-family: var(--font-display);
+      font-weight: 350;
+      font-size: 26px;
+      line-height: 1.18;
+      letter-spacing: -0.01em;
+      color: var(--color-ink);
+      text-wrap: pretty;
+    }
+    @media (min-width: 641px) {
+      .cu-lede {
+        font-size: 36px;
+      }
+    }
+    .cu-sub {
+      margin: 14px 0 0;
+      max-width: 720px;
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 17px;
+      line-height: 1.45;
+      color: var(--color-ink-soft);
+      text-wrap: pretty;
+    }
+    @media (min-width: 641px) {
+      .cu-sub {
+        font-size: 19px;
+      }
+    }
+
+    /* ── sections shared ────────────────────────────────────────────────── */
+    .cu-section {
+      padding: 56px 0;
+      border-bottom: 1px solid var(--color-rule-soft);
+    }
+    .cu-section:last-of-type {
+      border-bottom: none;
+    }
+    .cu-seclabel {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+    .cu-n {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--color-brick);
+      text-transform: uppercase;
+      flex: 0 0 auto;
+    }
+    .cu-seclabel-body {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      min-width: 280px;
+    }
+    .cu-h2 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-weight: 420;
+      font-size: 27px;
+      letter-spacing: -0.01em;
+      color: var(--color-ink);
+    }
+    @media (min-width: 641px) {
+      .cu-h2 {
+        font-size: 31px;
+      }
+    }
+    .cu-secnote {
+      margin: 0;
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 15px;
+      color: var(--color-ink-soft);
+    }
+
+    /* ── §01 services ───────────────────────────────────────────────────── */
+    .cu-services {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    @media (min-width: 641px) {
+      .cu-services {
+        grid-template-columns: 1fr 1fr;
+        gap: 22px;
+      }
+    }
+    .cu-service {
+      background: var(--color-paper-warm);
+      border: 1px solid var(--color-rule);
+      border-top: 4px solid var(--color-brick);
+      padding: 24px 26px 26px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .cu-service-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      color: var(--color-ink-mute);
+      text-transform: uppercase;
+    }
+    .cu-service-title {
+      margin: 0;
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 26px;
+      letter-spacing: -0.01em;
+      color: var(--color-ink);
+    }
+    .cu-service-body {
+      margin: 0;
+      font-family: var(--font-prose);
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--color-ink-soft);
+      text-wrap: pretty;
+    }
+    .cu-service-cta {
+      align-self: flex-start;
+      margin-top: 6px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      color: var(--color-ink);
+      text-transform: uppercase;
+      text-decoration: none;
+      border-bottom: 1px solid var(--color-brick);
+      padding-bottom: 3px;
+    }
+    .cu-service-cta:hover {
+      color: var(--color-brick);
+    }
+
+    /* ── §02 compare ────────────────────────────────────────────────────── */
+    .cu-compare {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 22px;
+    }
+    @media (min-width: 880px) {
+      .cu-compare {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+    }
+    .cu-compare-col {
+      background: var(--color-paper-warm);
+      border: 1px solid var(--color-rule-soft);
+      padding: 22px 24px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .cu-compare-head {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--color-rule-soft);
+    }
+    .cu-compare-head-label {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: 0.18em;
+      color: var(--color-ink);
+      text-transform: uppercase;
+    }
+    .cu-compare-head-sub {
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 13px;
+      color: var(--color-ink-mute);
+    }
+    .cu-compare-body p {
+      margin: 0 0 12px;
+      font-family: var(--font-prose);
+      font-size: 14.5px;
+      line-height: 1.5;
+      color: var(--color-ink-soft);
+      text-wrap: pretty;
+    }
+    .cu-compare-body strong {
+      font-weight: 600;
+      color: var(--color-ink);
+    }
+    .cu-compare-coda {
+      margin: 28px 0 0;
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 19px;
+      letter-spacing: -0.005em;
+      color: var(--color-ink);
+      text-align: center;
+      text-wrap: balance;
+    }
+    @media (min-width: 641px) {
+      .cu-compare-coda {
+        font-size: 23px;
+      }
+    }
+
+    /* ── §03 map + library ─────────────────────────────────────────────── */
+    /* The map card mirrors the architecture-card pattern on main +
+     * the playbook-card on /architecture/: sea-stripe + paper-warm +
+     * mono URL + brick state pill + display title + italic note +
+     * mono CTA. Same shape, different doorway. */
+    .cu-map-card {
+      display: block;
+      text-decoration: none;
+      color: var(--color-ink);
+      border: 1px solid var(--color-ink);
+      background: var(--color-paper-warm);
+      overflow: hidden;
+      transition:
+        transform 0.16s,
+        box-shadow 0.16s;
+    }
+    .cu-map-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px -16px var(--color-ink);
+    }
+    .cu-map-card-hue {
+      height: 6px;
+      background: var(--color-sea);
+    }
+    .cu-map-card-body {
+      padding: 18px 20px 20px;
+    }
+    @media (min-width: 641px) {
+      .cu-map-card-body {
+        padding: 26px 30px;
+      }
+    }
+    .cu-map-card-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .cu-map-card-url {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: -0.01em;
+      color: var(--color-ink);
+    }
+    .cu-map-card-state {
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      letter-spacing: 0.18em;
+      color: var(--color-brick);
+      text-transform: uppercase;
+    }
+    .cu-map-card-title {
+      font-family: var(--font-display);
+      font-size: 30px;
+      line-height: 1.06;
+      margin-top: 8px;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+    }
+    @media (min-width: 641px) {
+      .cu-map-card-title {
+        font-size: 38px;
+      }
+    }
+    .cu-map-card-note {
+      margin: 8px 0 0;
+      max-width: 640px;
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 15px;
+      color: var(--color-ink-soft);
+      line-height: 1.45;
+    }
+    .cu-map-card-cta {
+      display: inline-block;
+      margin-top: 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--color-ink);
+      padding-bottom: 3px;
+      border-bottom: 1px solid var(--color-rule);
+    }
+
+    .cu-library-links {
+      margin-top: 28px;
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .cu-library-link {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      color: var(--color-ink-soft);
+      text-transform: uppercase;
+      text-decoration: none;
+      border-bottom: 1px solid var(--color-rule);
+      padding-bottom: 2px;
+    }
+    .cu-library-link:hover {
+      color: var(--color-brick);
+      border-bottom-color: var(--color-brick);
+    }
+  </style>
+</BaseLayout>
