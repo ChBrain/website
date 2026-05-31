@@ -100,13 +100,22 @@ const { hideContact = false } = Astro.props;
     }
   }
 
+  /* Pin each child to its own grid column so the layout stays
+   * symmetrical even when the center Contact link is suppressed via
+   * hideContact (the /contact/ page). Without the explicit columns,
+   * auto-flow places identity in column 1 and legal in column 2 —
+   * which makes the legal links appear centered instead of right-edge
+   * aligned. */
   .footfed-identity {
+    grid-column: 1;
     text-align: left;
   }
   .footfed-contact {
+    grid-column: 2;
     text-align: center;
   }
   .footfed-legal {
+    grid-column: 3;
     text-align: right;
   }
 
@@ -136,9 +145,12 @@ const { hideContact = false } = Astro.props;
       row-gap: 8px;
       justify-items: center;
     }
+    /* Reset the explicit grid-column pins so children stack into the
+     * single mobile column instead of forcing implicit columns 2/3. */
     .footfed-identity,
     .footfed-contact,
     .footfed-legal {
+      grid-column: 1;
       text-align: center;
     }
   }

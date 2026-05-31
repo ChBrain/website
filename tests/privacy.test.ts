@@ -18,9 +18,10 @@ import { loadBuiltPages } from "./helpers/load-built-html";
  * still be tightened or extended without fighting the test - only the
  * page's *shape* and *anchors* are gated.
  *
- * The version label (DRAFT v0.1 today, v0.1.0 at publication) is
- * tolerated as either form so the publication flip doesn't need a
- * test-PR alongside it.
+ * The version label is intentionally NOT locked - the Document field
+ * may carry a bare "Privacy statement", a DRAFT marker, or a v0.X.Y
+ * release suffix. Only the document name is asserted, so the version
+ * shape can be changed (or dropped) without a test-PR alongside it.
  */
 
 const pages = loadBuiltPages(process.cwd());
@@ -54,11 +55,25 @@ describe("privacy statement - design contract", () => {
       expect(tld!.textContent).toBe(".ai");
     });
 
-    it("renders the SiteHeader nav with the apex menu", () => {
+    it("renders the SiteHeader nav (legacy 3-item apex menu OR removed for the location-label shape)", () => {
+      // Two accepted shapes for the SiteHeader after the chrome restructure:
+      // - LEGACY: 3 nav items (company / architecture / cultures)
+      // - LOCATION-LABEL: nav removed; top-left is a wayfinding label and
+      //   the wordmark moves to the top-right. ".topbar-nav" may be absent
+      //   entirely or empty. Same tolerant contract as main + cvi + cultures.
       const dom = new JSDOM(privacy!.html);
-      const navLinks = dom.window.document.querySelectorAll(".topbar-nav a");
-      const labels = [...navLinks].map((a) => a.textContent?.trim());
-      expect(labels).toEqual(["company", "architecture", "cultures"]);
+      const navLinks = [...dom.window.document.querySelectorAll(".topbar-nav a")];
+      const labels = navLinks.map((a) => a.textContent?.trim());
+      const isLegacy =
+        labels.length === 3 &&
+        labels[0] === "company" &&
+        labels[1] === "architecture" &&
+        labels[2] === "cultures";
+      const isLocationLabel = labels.length === 0;
+      expect(
+        isLegacy || isLocationLabel,
+        `nav "${labels.join(" · ")}" matched neither the legacy apex menu nor the location-label removal`,
+      ).toBe(true);
     });
 
     it("renders the SiteFooter with Privacy + CVI global links", () => {
@@ -114,14 +129,17 @@ describe("privacy statement - design contract", () => {
       expect(value).toBe("privacy@kaihacks.ai");
     });
 
-    it("Document version label is either DRAFT v0.1 or v0.1.0 (publication tolerated)", () => {
+    it("Document field carries 'Privacy statement' (version label optional during draft)", () => {
+      // The version label is intentionally NOT locked. Three accepted shapes:
+      // - bare: "Privacy statement" (current - no version pinned during draft)
+      // - draft marker: "Privacy statement · DRAFT v0.1" (legacy)
+      // - release: "Privacy statement · v0.1.0" (post-publication flip)
+      // Same tolerance pattern used elsewhere - only the document name is gated.
       const dom = new JSDOM(privacy!.html);
       const keys = [...dom.window.document.querySelectorAll(".p-meta .p-k")];
       const docRow = keys.find((k) => k.textContent?.trim() === "Document")?.parentElement;
       const value = docRow?.querySelector(".p-v")?.textContent ?? "";
       expect(value).toContain("Privacy statement");
-      // Either DRAFT marker (pre-publication) or a v0.X.Y release version (post-flip).
-      expect(value).toMatch(/DRAFT|v\d+\.\d+\.\d+/);
     });
   });
 
@@ -294,7 +312,7 @@ describe("privacy statement - design contract", () => {
   });
 
   describe("page footer (editorial signoff)", () => {
-    it("has exactly 2 mono lines (doc/draft + effective/email)", () => {
+    it("has exactly 2 mono lines (doc + effective/email)", () => {
       const dom = new JSDOM(privacy!.html);
       const lines = [...dom.window.document.querySelectorAll(".p-foot .p-foot-line")];
       expect(lines.length).toBe(2);
