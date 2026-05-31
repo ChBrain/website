@@ -1,11 +1,31 @@
 ---
 // SiteHeader — the global header. Used on every page on every surface
-// (architecture, main, main/cvi, privacy, future). Replaces the old
-// architecture-only Topbar.astro.
+// (architecture, main, main/cvi, privacy, contact, cultures, future).
 //
-// Class names (.topbar*) are preserved from Topbar.astro so existing
-// design-contract tests against `.topbar-domain-tld` and `.topbar-version`
-// keep passing without test changes.
+// Two layouts, picked by the props passed:
+//
+// 1. LOCATION LAYOUT (new, magazine grammar): pass `location`.
+//      [where you are]                                    [kaihacks.ai]
+//    Wayfinding label sits top-left; wordmark anchors top-right and
+//    links back to URLS.main (or to `basePath` if overridden — useful
+//    on subdomain surfaces where the wordmark should self-anchor).
+//
+// 2. LEGACY NAV LAYOUT (kept for backwards compat): pass `nav`.
+//      [wordmark]                          [nav · items · here]
+//    Wordmark left, nav links right. Used by privacy, architecture
+//    home, architecture/playbook, etc. — surfaces whose CVI-tier
+//    tests strictly assert the nav. The chrome lift on those
+//    surfaces is a follow-up PR.
+//
+// If both `location` and `nav` are passed, location wins (the new
+// layout takes precedence). If neither is passed, the header is
+// just the wordmark on the right.
+//
+// Class names (.topbar*) are preserved so tests that key on
+// .topbar-domain-tld / .topbar-nav keep passing without modification.
+// New class: .topbar-location for the wayfinding label.
+
+import { URLS } from "../lib/urls";
 
 interface NavItem {
   label: string;
@@ -15,28 +35,54 @@ interface NavItem {
 interface Props {
   domain: string;
   tld: string;
+  /** Override the wordmark link destination. Defaults to URLS.main so the
+   *  wordmark is the way home from any surface. Subdomain surfaces
+   *  (architecture.kaihacks.ai) pass basePath="../" to self-anchor. */
   basePath?: string;
   version?: string;
+  /** New layout: wayfinding label rendered top-left. */
+  location?: string;
+  /** Legacy layout: nav items rendered top-right. */
   nav?: NavItem[];
 }
 
-const { domain, tld, basePath = "./", version, nav } = Astro.props;
+const { domain, tld, basePath, version, location, nav } = Astro.props;
+const wordmarkHref = basePath ?? URLS.main;
+const useLocationLayout = Boolean(location);
 ---
 
 <header class="topbar">
-  <a href={basePath} class="topbar-domain">
-    {domain}<span class="topbar-domain-tld">{tld}</span>
-  </a>
   {
-    nav && nav.length > 0 && (
-      <nav class="topbar-nav" aria-label="Primary">
-        {nav.map((n) => (
-          <a href={n.href}>{n.label}</a>
-        ))}
-      </nav>
+    useLocationLayout ? (
+      <>
+        <span class="topbar-location" aria-label="Current section">
+          {location}
+        </span>
+        <div class="topbar-right">
+          {version && <span class="topbar-version">khai · {version}</span>}
+          <a href={wordmarkHref} class="topbar-domain">
+            {domain}
+            <span class="topbar-domain-tld">{tld}</span>
+          </a>
+        </div>
+      </>
+    ) : (
+      <>
+        <a href={wordmarkHref} class="topbar-domain">
+          {domain}
+          <span class="topbar-domain-tld">{tld}</span>
+        </a>
+        {nav && nav.length > 0 && (
+          <nav class="topbar-nav" aria-label="Primary">
+            {nav.map((n) => (
+              <a href={n.href}>{n.label}</a>
+            ))}
+          </nav>
+        )}
+        {version && <span class="topbar-version">khai · {version}</span>}
+      </>
     )
   }
-  {version && <span class="topbar-version">khai · {version}</span>}
 </header>
 
 <style>
@@ -56,6 +102,23 @@ const { domain, tld, basePath = "./", version, nav } = Astro.props;
     .topbar {
       padding: 1.375rem 0 1rem;
     }
+  }
+  .topbar-location {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    color: var(--color-ink-soft);
+    text-transform: uppercase;
+  }
+  @media (min-width: 641px) {
+    .topbar-location {
+      font-size: 11px;
+    }
+  }
+  .topbar-right {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
   }
   .topbar-domain {
     font-family: var(--font-mono);

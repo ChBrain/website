@@ -1,36 +1,51 @@
 ---
 // SiteFooter — the one global colophon for every surface.
 //
-// One editorial line, used identically on every page:
+// Three-column rhythm (chrome restructure):
 //
-//   KAI HACKS AI · CVR 41768274 · info@kaihacks.ai      © 2026 · Privacy · CVI
+//   KAI HACKS AI · CVR 41768274        Contact        Privacy · CVI · © 2026
 //
-// Identity + contact float left; year + legal links float right. Mono,
-// ink-mute, uppercase, letter-spaced — same restraint as CVI's bottom
-// block. No props: every page is the same brand entity, so the old
-// per-page siteLabel / endLabel / tagline knobs are gone.
+// - Left: identity (wordmark linking to URLS.main + CVR). The mailto
+//   that used to sit here moves to the dedicated /contact/ surface, so
+//   the footer doesn't duplicate it.
+// - Center: a single Contact link → URLS.contact. Suppressed on the
+//   /contact/ page itself via the hideContact prop (prevents the
+//   self-reference).
+// - Right: Privacy · CVI · © 2026 (reordered so the legal links lead
+//   and the year sits at the closing position).
 //
-// "KAI HACKS AI" links back to the front page (URLS.main) — the company
-// wordmark is the way home from any surface. Privacy + CVI hrefs also
-// go through URLS so a staging build keeps the links inside
-// staging.kaihacks.ai rather than jumping out to prod. Class names
-// (.footfed, .footfed-row, .footfed-legal-link) are preserved so the
-// design-contract tests (privacy, cvi, main) keep passing without
-// modification.
+// Class names (.footfed, .footfed-row, .footfed-legal-link) are
+// preserved so the design-contract tests (privacy, cvi, main) keep
+// passing without modification. New class: .footfed-contact for the
+// centered Contact slot.
 
 import { URLS } from "../lib/urls";
+
+interface Props {
+  /** True on the /contact/ page itself — suppresses the center Contact link to avoid self-reference. */
+  hideContact?: boolean;
+}
+
+const { hideContact = false } = Astro.props;
 ---
 
 <footer class="footfed">
   <div class="footfed-row">
     <div class="footfed-identity">
-      <a href={URLS.main}>KAI HACKS AI</a> · CVR 41768274 ·
-      <a href="mailto:info@kaihacks.ai">info@kaihacks.ai</a>
+      <a href={URLS.main}>KAI HACKS AI</a> · CVR 41768274
     </div>
+    {
+      !hideContact && (
+        <div class="footfed-contact">
+          <a class="footfed-contact-link" href={URLS.contact}>
+            Contact
+          </a>
+        </div>
+      )
+    }
     <nav class="footfed-legal" aria-label="Site">
-      © 2026 ·
       <a class="footfed-legal-link" href={URLS.privacy}>Privacy</a> ·
-      <a class="footfed-legal-link" href={URLS.cvi}>CVI</a>
+      <a class="footfed-legal-link" href={URLS.cvi}>CVI</a> · © 2026
     </nav>
   </div>
 </footer>
@@ -61,13 +76,14 @@ import { URLS } from "../lib/urls";
     padding: 1rem 0 1.25rem;
     border-top: 1px solid var(--color-ink);
   }
+  /* Three-column rhythm: identity left, contact centered, legal right.
+   * Grid (vs flex space-between) so the center column lands at the
+   * visual midpoint independent of the left/right column widths. */
   .footfed-row {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: baseline;
-    flex-wrap: wrap;
-    column-gap: 24px;
-    row-gap: 6px;
+    gap: 24px;
     font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.18em;
@@ -80,30 +96,46 @@ import { URLS } from "../lib/urls";
     }
   }
 
-  .footfed-identity,
+  .footfed-identity {
+    text-align: left;
+  }
+  .footfed-contact {
+    text-align: center;
+  }
   .footfed-legal {
-    display: inline;
+    text-align: right;
   }
 
   .footfed-identity a,
+  .footfed-contact-link,
   .footfed-legal-link {
     color: var(--color-ink-mute);
     text-decoration: none;
     border-bottom: 1px solid var(--color-rule);
   }
   .footfed-identity a:hover,
+  .footfed-contact-link:hover,
   .footfed-legal-link:hover {
     color: var(--color-ink);
   }
 
-  /* Mobile: drop sticky behaviour. Sticky chrome on small viewports
-   * eats too much of the reading area; on mobile the footer lives
-   * inline at the end of the page. The topbar stays sticky as the
-   * always-on "where am I" anchor. */
+  /* Mobile: collapse the three-column grid into a stack (identity,
+   * contact, legal — top to bottom). The center column would otherwise
+   * be too squeezed on narrow viewports. */
   @media (max-width: 640px) {
     .footfed {
       position: static;
       padding: 0.75rem 0 1rem;
+    }
+    .footfed-row {
+      grid-template-columns: 1fr;
+      row-gap: 8px;
+      justify-items: center;
+    }
+    .footfed-identity,
+    .footfed-contact,
+    .footfed-legal {
+      text-align: center;
     }
   }
 </style>

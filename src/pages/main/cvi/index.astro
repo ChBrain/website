@@ -4,13 +4,6 @@ import SiteHeader from "../../../components/SiteHeader.astro";
 import SiteFooter from "../../../components/SiteFooter.astro";
 import KhaiMark from "../../../components/KhaiMark.astro";
 import { BRAND } from "../../../lib/brand";
-import { URLS } from "../../../lib/urls";
-
-const mainNav = [
-  { label: "architecture", href: URLS.architecture },
-  { label: "cultures", href: "#" },
-  { label: "services", href: `${URLS.main}#services` },
-];
 
 const tocLinks = [
   { n: "01", t: "The mark", href: "#mark" },
@@ -18,9 +11,29 @@ const tocLinks = [
   { n: "03", t: "Space & size", href: "#space" },
   { n: "04", t: "Colour", href: "#color" },
   { n: "05", t: "Typography", href: "#type" },
-  { n: "06", t: "Icon & favicon", href: "#icon" },
-  { n: "07", t: "Applications", href: "#apply" },
-  { n: "08", t: "In one breath", href: "#voice" },
+  // §06 Writing: voice & punctuation — promoted from a tucked-under-
+  // Typography sub-panel to its own top-level chapter. Bumps Icon /
+  // Applications / In one breath to 07 / 08 / 09.
+  { n: "06", t: "Writing", href: "#writing" },
+  { n: "07", t: "Icon & favicon", href: "#icon" },
+  { n: "08", t: "Applications", href: "#apply" },
+  { n: "09", t: "In one breath", href: "#voice" },
+];
+
+// §06 Writing rules. Two lists: punctuation we use, and punctuation we
+// don't. Drives the no-en-dash policy across every surface; the
+// en-dash sweep PR removes the U+2013 from the source tree and adds a
+// tests/en-dash.test.ts guard.
+const writingDo = [
+  "Commas, semicolons, colons and parentheses; they carry every aside and pause.",
+  "Hyphen with spaces for numeric ranges (400 - 500, 2006 - '12).",
+  "Full stops over flourishes; two short sentences beat one long one.",
+];
+const writingDont = [
+  "The em dash. It is not in the voice; reach for a comma, colon or parentheses.",
+  "The en dash. Never as a sentence break, never in numeric ranges; use the spaced hyphen instead.",
+  "Square brackets [] or braces {} in prose; they belong to code and variables.",
+  'Supplicant phrasing ("I help you..."); state plainly what is done.',
 ];
 
 // The four authorised variants of the lockup. Only the dot moves
@@ -123,7 +136,7 @@ const donts = [
   description="The canonical visual reference for the kaihacks.ai brand: mark, palette, type, and the rules that hold them together."
 >
   <div class="arch-page cvi">
-    <SiteHeader domain="kaihacks" tld=".ai" basePath="../" nav={mainNav} />
+    <SiteHeader domain="kaihacks" tld=".ai" basePath="../" location="cvi" />
 
     <header class="cvi-mast">
       <div class="cvi-mast-grid">
@@ -516,9 +529,48 @@ const donts = [
       </div>
     </section>
 
-    <section id="icon" class="cvi-section">
+    <section id="writing" class="cvi-section">
       <div class="cvi-seclabel">
         <span class="cvi-n">06</span>
+        <div class="cvi-seclabel-body">
+          <div class="cvi-sectop"><h2 class="cvi-h2">Writing: voice & punctuation</h2></div>
+          <p>
+            The copy carries the same restraint as the type: editorial, calm, exact. First person
+            for the practice (<em>I</em>, not <em>we</em>); confident, never supplicant; say less
+            and let the paper breathe.
+          </p>
+        </div>
+      </div>
+
+      <div class="cvi-do-dont">
+        <ul class="cvi-dlist cvi-dlist--ok">
+          <li class="cvi-dhead">Punctuate with</li>
+          {
+            writingDo.map((d) => (
+              <li>
+                <span class="cvi-dm">✓</span>
+                <span>{d}</span>
+              </li>
+            ))
+          }
+        </ul>
+        <ul class="cvi-dlist cvi-dlist--no">
+          <li class="cvi-dhead">Never</li>
+          {
+            writingDont.map((d) => (
+              <li>
+                <span class="cvi-dm">✕</span>
+                <span>{d}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </section>
+
+    <section id="icon" class="cvi-section">
+      <div class="cvi-seclabel">
+        <span class="cvi-n">07</span>
         <div class="cvi-seclabel-body">
           <div class="cvi-sectop"><h2 class="cvi-h2">Icon & favicon</h2></div>
           <p>
@@ -582,7 +634,7 @@ const donts = [
 
     <section id="apply" class="cvi-section">
       <div class="cvi-seclabel">
-        <span class="cvi-n">07</span>
+        <span class="cvi-n">08</span>
         <div class="cvi-seclabel-body">
           <div class="cvi-sectop"><h2 class="cvi-h2">Applications & misuse</h2></div>
           <p>
@@ -619,7 +671,7 @@ const donts = [
 
     <section id="voice" class="cvi-section cvi-section--last">
       <div class="cvi-seclabel">
-        <span class="cvi-n">08</span>
+        <span class="cvi-n">09</span>
         <div class="cvi-seclabel-body">
           <div class="cvi-sectop"><h2 class="cvi-h2">In one breath</h2></div>
         </div>

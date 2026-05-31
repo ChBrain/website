@@ -1,5 +1,5 @@
 ---
-// Contact – the dedicated destination for the §01 Services CTA on main.
+// Contact: the dedicated destination for the §01 Services CTA on main.
 //
 // Scaffold v1: masthead + a single brick-bordered card with the mailto,
 // CVR and a one-line note. No form. Kai iterates copy + adds depth as
@@ -10,28 +10,21 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
-import { URLS } from "../../lib/urls";
-
-const apexNav = [
-  { label: "company", href: URLS.main },
-  { label: "architecture", href: URLS.architecture },
-  { label: "cultures", href: URLS.cultures },
-];
 ---
 
 <BaseLayout
   title="KAI HACKS AI · Contact"
-  description="Start a conversation. The direct line for engagement enquiries – workshops, advisory, implementation, transformation."
+  description="Start a conversation. The direct line for engagement enquiries: workshops, advisory, implementation, transformation."
 >
   <div class="arch-page contact-page">
-    <SiteHeader domain="kaihacks" tld=".ai" basePath={URLS.main} nav={apexNav} />
+    <SiteHeader domain="kaihacks" tld=".ai" location="contact" />
 
     <main>
       <header class="ct-mast">
         <div class="ct-overline">the direct line · for the brief</div>
         <h1 class="ct-h1">Contact<em>.</em></h1>
         <p class="ct-lede">
-          Tell me what you're working on – the shape of the team, the question, the constraint. I'll
+          Tell me what you're working on: the shape of the team, the question, the constraint. I'll
           come back with what I see and what I'd do next.
         </p>
         <div class="ct-draft">
@@ -56,7 +49,7 @@ const apexNav = [
       </section>
     </main>
 
-    <SiteFooter />
+    <SiteFooter hideContact />
   </div>
 
   <style>
