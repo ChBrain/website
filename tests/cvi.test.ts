@@ -61,38 +61,47 @@ interface ChapterSpec {
   id: string;
   /** Exact .cvi-n text - .cvi-n must equal this. */
   n: string;
-  /** Exact .cvi-h2 text - .cvi-h2 must equal this. */
-  h2: string;
+  /**
+   * Accepted .cvi-h2 text. An array so we can tolerate the legacy
+   * en-dash form ("Colour – ground & voice") AND the new no-en-dash
+   * form ("Colour: ground & voice") that the en-dash sweep PR
+   * introduces. Single-string form still works via toContain.
+   */
+  h2: string[];
 }
 
 // Two accepted SECTIONS shapes — LEGACY (Icon=06, Apply=07, Voice=08)
 // or NEW (Writing=06 inserted, Icon/Apply/Voice bump to 07/08/09).
 // The asserted IDs and headings change with the bump.
+// h2 values are arrays so the assertion accepts either the legacy
+// en-dash form ("Colour – ground & voice") or the new no-en-dash form
+// ("Colour: ground & voice") that the en-dash sweep PR introduces.
+// Sections without dashes carry a single-entry array.
 const SECTIONS_LEGACY: ChapterSpec[] = [
-  { id: "mark", n: "01", h2: "The mark" },
-  { id: "set", n: "02", h2: "The set – which to use when" },
-  { id: "space", n: "03", h2: "Clear space & minimum size" },
+  { id: "mark", n: "01", h2: ["The mark"] },
+  { id: "set", n: "02", h2: ["The set – which to use when", "The set: which to use when"] },
+  { id: "space", n: "03", h2: ["Clear space & minimum size"] },
   // §04 colour is split into 3 sub-panels; #color is panel i.
   // Panels ii (#color-accents) and iii (#color-rules) are asserted
   // separately in SUB_PANELS below.
-  { id: "color", n: "04 · i", h2: "Colour – ground & voice" },
+  { id: "color", n: "04 · i", h2: ["Colour – ground & voice", "Colour: ground & voice"] },
   // §05 typography is split into 2 sub-panels; #type is panel i.
   // Panel ii (#type-scale) is asserted separately in SUB_PANELS below.
-  { id: "type", n: "05 · i", h2: "Typography – the families" },
-  { id: "icon", n: "06", h2: "Icon & favicon" },
-  { id: "apply", n: "07", h2: "Applications & misuse" },
-  { id: "voice", n: "08", h2: "In one breath" },
+  { id: "type", n: "05 · i", h2: ["Typography – the families", "Typography: the families"] },
+  { id: "icon", n: "06", h2: ["Icon & favicon"] },
+  { id: "apply", n: "07", h2: ["Applications & misuse"] },
+  { id: "voice", n: "08", h2: ["In one breath"] },
 ];
 const SECTIONS_NEW: ChapterSpec[] = [
-  { id: "mark", n: "01", h2: "The mark" },
-  { id: "set", n: "02", h2: "The set – which to use when" },
-  { id: "space", n: "03", h2: "Clear space & minimum size" },
-  { id: "color", n: "04 · i", h2: "Colour – ground & voice" },
-  { id: "type", n: "05 · i", h2: "Typography – the families" },
-  { id: "writing", n: "06", h2: "Writing: voice & punctuation" },
-  { id: "icon", n: "07", h2: "Icon & favicon" },
-  { id: "apply", n: "08", h2: "Applications & misuse" },
-  { id: "voice", n: "09", h2: "In one breath" },
+  { id: "mark", n: "01", h2: ["The mark"] },
+  { id: "set", n: "02", h2: ["The set – which to use when", "The set: which to use when"] },
+  { id: "space", n: "03", h2: ["Clear space & minimum size"] },
+  { id: "color", n: "04 · i", h2: ["Colour – ground & voice", "Colour: ground & voice"] },
+  { id: "type", n: "05 · i", h2: ["Typography – the families", "Typography: the families"] },
+  { id: "writing", n: "06", h2: ["Writing: voice & punctuation"] },
+  { id: "icon", n: "07", h2: ["Icon & favicon"] },
+  { id: "apply", n: "08", h2: ["Applications & misuse"] },
+  { id: "voice", n: "09", h2: ["In one breath"] },
 ];
 // Resolved at test time per build — picks the matching shape from #voice's n
 // label (08 = legacy, 09 = new). Lets the same test file pass on both
@@ -109,9 +118,13 @@ function pickToc(cvi: { html: string }) {
 }
 
 const SUB_PANELS: ChapterSpec[] = [
-  { id: "color-accents", n: "04 · ii", h2: "Colour – the accents" },
-  { id: "color-rules", n: "04 · iii", h2: "Colour – rules & tokens" },
-  { id: "type-scale", n: "05 · ii", h2: "Typography – the scale" },
+  { id: "color-accents", n: "04 · ii", h2: ["Colour – the accents", "Colour: the accents"] },
+  {
+    id: "color-rules",
+    n: "04 · iii",
+    h2: ["Colour – rules & tokens", "Colour: rules & tokens"],
+  },
+  { id: "type-scale", n: "05 · ii", h2: ["Typography – the scale", "Typography: the scale"] },
 ];
 
 const LOCKUP_VARIANTS = [
@@ -215,7 +228,8 @@ describe("CVI - design contract", () => {
         const section = dom.window.document.querySelector(`section#${sec.id}.cvi-section`);
         expect(section, `missing section#${sec.id}`).not.toBeNull();
         expect(section!.querySelector(".cvi-n")?.textContent?.trim()).toBe(sec.n);
-        expect(section!.querySelector(".cvi-h2")?.textContent?.trim()).toBe(sec.h2);
+        const h2 = section!.querySelector(".cvi-h2")?.textContent?.trim() ?? "";
+        expect(sec.h2, `#${sec.id} h2 "${h2}" not in tolerated set`).toContain(h2);
       }
     });
 
@@ -241,7 +255,8 @@ describe("CVI - design contract", () => {
         const section = dom.window.document.querySelector(`section#${sub.id}.cvi-section`);
         expect(section, `missing sub-panel section#${sub.id}`).not.toBeNull();
         expect(section!.querySelector(".cvi-n")?.textContent?.trim()).toBe(sub.n);
-        expect(section!.querySelector(".cvi-h2")?.textContent?.trim()).toBe(sub.h2);
+        const h2 = section!.querySelector(".cvi-h2")?.textContent?.trim() ?? "";
+        expect(sub.h2, `#${sub.id} h2 "${h2}" not in tolerated set`).toContain(h2);
       });
     }
 
@@ -314,16 +329,32 @@ describe("CVI - design contract", () => {
     });
 
     it("displays the 4 canonical group labels in canonical order", () => {
+      // Labels accept either the legacy en-dash form or the new colon
+      // form per the CVI Writing rule (no en-dashes). The label prefix
+      // (Surfaces / Ink / Rules / Accents) is the structural anchor —
+      // lock that strict; tolerate the punctuation that follows.
       const dom = new JSDOM(cvi!.html);
       const labels = [
         ...dom.window.document.querySelectorAll('section[id^="color"].cvi-section .cvi-grouplabel'),
-      ].map((g) => g.textContent?.trim());
-      expect(labels).toEqual([
-        "Surfaces – the ground",
-        "Ink – text",
-        "Rules – hairlines",
-        "Accents – the regional hues",
-      ]);
+      ].map((g) => g.textContent?.trim() ?? "");
+      const canonical: { prefix: string; tolerated: string[] }[] = [
+        { prefix: "Surfaces", tolerated: ["Surfaces – the ground", "Surfaces: the ground"] },
+        { prefix: "Ink", tolerated: ["Ink – text", "Ink: text"] },
+        { prefix: "Rules", tolerated: ["Rules – hairlines", "Rules: hairlines"] },
+        {
+          prefix: "Accents",
+          tolerated: ["Accents – the regional hues", "Accents: the regional hues"],
+        },
+      ];
+      expect(labels.length).toBe(canonical.length);
+      labels.forEach((label, i) => {
+        expect(label.startsWith(canonical[i].prefix), `label[${i}] "${label}" wrong prefix`).toBe(
+          true,
+        );
+        expect(canonical[i].tolerated, `label[${i}] "${label}" not in tolerated set`).toContain(
+          label,
+        );
+      });
     });
   });
 
