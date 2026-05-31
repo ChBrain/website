@@ -308,8 +308,14 @@ const apps = [
     }
 
     /* ── masthead ───────────────────────────────────────────────────────── */
+    /* Centered masthead: overline + title + lede share a single vertical
+     * axis. Until now the title flex row hung left while the lede sat
+     * centered — the two read as misaligned. text-align: center on the
+     * masthead handles overline + lede automatically; the title needs
+     * justify-content: center on its flex row to follow suit. */
     .masthead {
       padding: 1.875rem 0 1.75rem;
+      text-align: center;
     }
     @media (min-width: 641px) {
       .masthead {
@@ -339,6 +345,7 @@ const apps = [
       display: flex;
       flex-wrap: wrap;
       align-items: baseline;
+      justify-content: center;
       column-gap: 0.26em;
     }
     @media (min-width: 641px) {
@@ -761,9 +768,14 @@ const apps = [
         gap: 28px;
       }
     }
+    /* The 3 movement columns (KAI · HACKS · AI) read as an editorial
+     * triptych — meta / token / gloss centered within each column so
+     * the three columns balance against each other and against the
+     * centred page rhythm. */
     .movement {
       padding: 18px 0;
       border-top: 1px solid var(--color-rule);
+      text-align: center;
     }
     @media (min-width: 641px) {
       .movement {
