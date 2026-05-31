@@ -38,9 +38,11 @@ const ALLOWLIST = {
     "src/styles/tokens.css",
     "src/pages/main/cvi/index.astro",
   ]),
-  // tokens.css owns the font stacks. BaseLayout loads them via Google
-  // Fonts in <head>. KhaiMark embeds Newsreader in an inline SVG style
-  // attribute (CSS vars can't reach the SVG text element).
+  // tokens.css owns the font stacks. BaseLayout self-hosts the WOFF2
+  // files via @fontsource(-variable) imports in its frontmatter (no
+  // third-party Google Fonts request). KhaiMark embeds Newsreader in
+  // an inline SVG style attribute (CSS vars can't reach the SVG text
+  // element).
   fontFamily: new Set<string>([
     "src/styles/tokens.css",
     "src/layouts/BaseLayout.astro",
