@@ -3,14 +3,16 @@ name: deploy-staging
 # Runs after CI green on push to main. Builds the site with
 # DEPLOY_ENV=staging so the URLS helper switches cross-surface links
 # from production (kaihacks.ai/...) to staging (staging.kaihacks.ai/...).
-# Rsyncs three surfaces from dist/:
+# Rsyncs four surfaces from dist/:
 #   - dist/architecture/ -> staging.kaihacks.ai/architecture/
 #   - dist/main/         -> staging.kaihacks.ai/main/
 #   - dist/privacy/      -> staging.kaihacks.ai/privacy/
+#   - dist/cultures/     -> staging.kaihacks.ai/cultures/
 # The staging URLs are https://staging.kaihacks.ai/architecture/,
-# https://staging.kaihacks.ai/main/ and https://staging.kaihacks.ai/privacy/.
-# The apex staging.kaihacks.ai/ root is intentionally not deployed from
-# this workflow; it is owned by the placeholder in chbrain/kaihacks.
+# https://staging.kaihacks.ai/main/, https://staging.kaihacks.ai/privacy/
+# and https://staging.kaihacks.ai/cultures/. The apex staging.kaihacks.ai/
+# root is intentionally not deployed from this workflow; it is owned by
+# the placeholder in chbrain/kaihacks.
 
 on:
   workflow_run:
@@ -77,3 +79,14 @@ jobs:
             -e "ssh -i ~/.ssh/kaihacksai" \
             ./dist/privacy/ \
             c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/staging.kaihacks.ai/privacy/
+      - name: Deploy cultures surface via rsync
+        run: |
+          # Rsync dist/cultures/ to staging.kaihacks.ai/cultures/. Lands as
+          # /cultures/index.html - the brand-book landing for the cultures
+          # application. The legacy live cultures.kaihacks.ai (served from
+          # chbrain/kaihacks) is unaffected; this staging deploy is for
+          # eyeballing the brand-aligned lift before production cutover.
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/kaihacksai" \
+            ./dist/cultures/ \
+            c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/staging.kaihacks.ai/cultures/
