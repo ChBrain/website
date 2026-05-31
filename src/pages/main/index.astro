@@ -90,7 +90,7 @@ const apps = [
 
 <BaseLayout
   title="kaihacks.ai · KAI HACKS AI"
-  description="An enterprise architect’s method – applied across AI, ITSM, DevOps and enterprise architecture, with or without AI."
+  description="Driving outcomes, from architecture to delivery. AI, ITSM, DevOps and enterprise architecture engagements – workshops, advisory, implementation, transformation."
 >
   <div class="arch-page main-home">
     <SiteHeader domain="kaihacks" tld=".ai" basePath="./" nav={mainNav} />
@@ -101,13 +101,9 @@ const apps = [
         <h1 class="masthead-title" aria-label="KAI HACKS AI">
           <span>KAI</span>
           <span class="masthead-title-accent">HACKS</span>
-          <span>AI</span>
+          <span>AI<em class="masthead-title-period">.</em></span>
         </h1>
-        <p class="lede">
-          An enterprise architect’s method – applied across AI, ITSM, DevOps and enterprise
-          architecture, with or without AI. The name is the method: it states who builds, how they
-          operate, and how it runs.
-        </p>
+        <p class="lede">Driving outcomes,<br />from Architecture to Delivery.</p>
         <div class="draft-marker">
           <span class="draft-dot" aria-hidden="true"></span>draft · authored by Kai – the
           positioning, in your words
@@ -124,7 +120,7 @@ const apps = [
         </div>
 
         <div class="services-card">
-          <p class="services-lead">I work with you from architecture to delivery.</p>
+          <p class="services-lead">I work with you on</p>
 
           <div class="services-grid">
             <div class="services-col">
@@ -370,15 +366,22 @@ const apps = [
     .masthead-title-accent {
       color: var(--color-brick);
     }
+    /* The closing period on the masthead title — same brand grammar as the
+     * Cultures., Playbook., Contact. wordmarks across the rest of the site.
+     * Brick, upright (em is plain), kerned tight against AI. */
+    .masthead-title-period {
+      color: var(--color-brick);
+      font-style: normal;
+    }
     .lede {
       margin: 22px 0 0;
-      max-width: 730px;
       font-family: var(--font-prose);
       font-style: italic;
       font-size: 18px;
       line-height: 1.4;
       color: var(--color-ink-soft);
       text-wrap: pretty;
+      text-align: center;
     }
     @media (min-width: 641px) {
       .lede {
