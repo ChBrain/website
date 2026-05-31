@@ -2,13 +2,6 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
-import { URLS } from "../../lib/urls";
-
-const apexNav = [
-  { label: "company", href: URLS.main },
-  { label: "architecture", href: URLS.architecture },
-  { label: "services", href: `${URLS.main}#services` },
-];
 
 // §01 Services — two engagement modes.
 // Lifted verbatim from the legacy cultures landing
@@ -103,7 +96,7 @@ const example = [
   description="AI infrastructure for cross-cultural trainers. 198 cultural positions; each one running, each one holding what it holds."
 >
   <div class="arch-page cultures">
-    <SiteHeader domain="cultures" tld=".kaihacks.ai" basePath="./" nav={apexNav} />
+    <SiteHeader domain="kaihacks" tld=".ai" location="cultures" />
 
     <header class="cu-mast">
       <div class="cu-overline">an application · running on the architecture</div>
