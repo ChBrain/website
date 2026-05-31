@@ -4,9 +4,9 @@ import SiteHeader from "../../components/SiteHeader.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
 import { URLS } from "../../lib/urls";
 
-// §01 Services – two acrostics, side by side.
-// Left column: AIDE – AI · ITSM · DevOps · EA (what I work in).
-// Right column: WAIT – Workshops · Advisory · Implementation · Transformation (how I engage).
+// §01 Services - two acrostics, side by side.
+// Left column: AIDE = AI · ITSM · DevOps · EA (what I work in).
+// Right column: WAIT = Workshops · Advisory · Implementation · Transformation (how I engage).
 // First letter of each row is bricked at render time. Do not reorder
 // or rename either column; breaks the acrostic.
 // Gloss on the left column is the expansion of the abbreviation (artificial
@@ -18,13 +18,13 @@ const domains = [
   { t: "EA", g: "enterprise architecture" },
 ];
 const engage = [
-  { t: "Workshops", g: "hackathons, code camps – tailored to the need" },
+  { t: "Workshops", g: "hackathons, code camps; tailored to the need" },
   { t: "Advisory", g: "direction, review, architecture" },
   { t: "Implementation", g: "hands on the build" },
   { t: "Transformation", g: "architecture-, project- and programme-level change" },
 ];
 
-// §02 Founder – the timeline.
+// §02 Founder - the timeline.
 // Bookends (2004 TU München, 2026 KAI HACKS AI) are flagged ai: true and
 // render with a brick dot. Order is canonical and asserted by tests.
 // Year ranges use the spaced-hyphen form per the CVI Writing rules
@@ -38,7 +38,7 @@ const arc = [
   { y: "2026", co: "KAI HACKS AI", role: "AI enablement", ai: true },
 ];
 
-// §03 Method – the name reads itself, now framed as a Who/What/How triptych.
+// §03 Method - the name reads itself, now framed as a Who/What/How triptych.
 // The acronym expansion moves down into the architecture-card note line
 // where it does its real work; here the meta becomes a single noun
 // (Who/What/How) and the gloss becomes a single noun phrase (The
@@ -49,20 +49,20 @@ const movements = [
   { t: "AI", meta: "How", gloss: "The Implementation", accent: false },
 ];
 
-// §04 Applications – what runs on the architecture.
+// §04 Applications - what runs on the architecture.
 const apps = [
   {
     hue: "tide",
     url: "cultures.kaihacks.ai",
     title: "Cultures",
-    note: "an application for culture trainers – and the culture-curious",
+    note: "an application for culture trainers, and the culture-curious",
     href: "#",
     state: "live",
     planned: false,
   },
   {
     hue: "rule",
-    url: "–",
+    url: "-",
     title: "More applications",
     note: "the architecture is built to spawn them",
     href: "#",
@@ -74,7 +74,7 @@ const apps = [
 
 <BaseLayout
   title="kaihacks.ai · KAI HACKS AI"
-  description="Driving outcomes, from architecture to delivery. AI, ITSM, DevOps and enterprise architecture engagements – workshops, advisory, implementation, transformation."
+  description="Driving outcomes, from architecture to delivery. AI, ITSM, DevOps and enterprise architecture engagements: workshops, advisory, implementation, transformation."
 >
   <div class="arch-page main-home">
     <SiteHeader domain="kaihacks" tld=".ai" location="company" />
@@ -260,7 +260,7 @@ const apps = [
      * page so other surfaces (privacy, architecture) keep free scrolling.
      * scroll-padding-top/bottom match the sticky SiteHeader + SiteFooter
      * heights so snapped chapters land below the topbar rather than
-     * under it. Disabled on narrow viewports – snap is friction on
+     * under it. Disabled on narrow viewports; snap is friction on
      * phones, and a pitch page reads better as one long scroll there. */
     html:has(.main-home) {
       scroll-snap-type: y mandatory;
@@ -439,7 +439,7 @@ const apps = [
       text-transform: uppercase;
     }
 
-    /* ── §01 services – two acrostics × the one brick CTA ─────────────────
+    /* ── §01 services: two acrostics × the one brick CTA ─────────────────
      * Left column = AIDE (what I work in). Right column = WAIT (how I
      * engage). Each row carries a .services-(domain|engage)-name with
      * the first letter wrapped in .services-(domain|engage)-initial
@@ -551,12 +551,12 @@ const apps = [
         font-size: 26px;
       }
     }
-    /* §01 caption – the editorial bridge between the 2×4 grid and the CTA.
+    /* §01 caption: the editorial bridge between the 2×4 grid and the CTA.
      * Centered. Mono uppercase ink-mute. The pipe sits exactly between the
      * two acrostics (7·4|4·8 letter balance) so the eye reads them as
      * equal weights.
      *
-     * Hover/punch hook (scaffold only – Kai tunes):
+     * Hover/punch hook (scaffold only; Kai tunes):
      * Hovering the card lights AIDE then WAIT in turn via a chained
      * brick pulse. `prefers-reduced-motion: reduce` skips the animation. */
     .services-caption {
@@ -609,7 +609,7 @@ const apps = [
       }
     }
 
-    /* ── §02 author – the timeline ──────────────────────────────────────── */
+    /* ── §02 author: the timeline ───────────────────────────────────────── */
     .author-lede {
       margin: 18px auto 0;
       max-width: 760px;
@@ -791,7 +791,7 @@ const apps = [
       font-size: 15px;
       color: var(--color-ink-soft);
     }
-    /* sub-divider – folded under §03, not its own § */
+    /* sub-divider: folded under §03, not its own § */
     .architecture-sub {
       display: flex;
       align-items: center;
