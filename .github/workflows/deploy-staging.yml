@@ -3,14 +3,16 @@ name: deploy-staging
 # Runs after CI green on push to main. Builds the site with
 # DEPLOY_ENV=staging so the URLS helper switches cross-surface links
 # from production (kaihacks.ai/...) to staging (staging.kaihacks.ai/...).
-# Rsyncs four surfaces from dist/:
+# Rsyncs five surfaces from dist/:
 #   - dist/architecture/ -> staging.kaihacks.ai/architecture/
 #   - dist/main/         -> staging.kaihacks.ai/main/
 #   - dist/privacy/      -> staging.kaihacks.ai/privacy/
 #   - dist/cultures/     -> staging.kaihacks.ai/cultures/
+#   - dist/contact/      -> staging.kaihacks.ai/contact/
 # The staging URLs are https://staging.kaihacks.ai/architecture/,
-# https://staging.kaihacks.ai/main/, https://staging.kaihacks.ai/privacy/
-# and https://staging.kaihacks.ai/cultures/. The apex staging.kaihacks.ai/
+# https://staging.kaihacks.ai/main/, https://staging.kaihacks.ai/privacy/,
+# https://staging.kaihacks.ai/cultures/ and
+# https://staging.kaihacks.ai/contact/. The apex staging.kaihacks.ai/
 # root is intentionally not deployed from this workflow; it is owned by
 # the placeholder in chbrain/kaihacks.
 
@@ -90,3 +92,13 @@ jobs:
             -e "ssh -i ~/.ssh/kaihacksai" \
             ./dist/cultures/ \
             c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/staging.kaihacks.ai/cultures/
+      - name: Deploy contact surface via rsync
+        run: |
+          # Rsync dist/contact/ to staging.kaihacks.ai/contact/. Lands as
+          # /contact/index.html - the dedicated destination for the §01
+          # Services CTA on main. Same chrome (SiteHeader + SiteFooter)
+          # as every other surface.
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/kaihacksai" \
+            ./dist/contact/ \
+            c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/staging.kaihacks.ai/contact/
