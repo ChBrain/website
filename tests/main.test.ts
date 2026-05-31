@@ -81,13 +81,16 @@ const ENGAGE_OLD = ["Advisory", "Implementation", "Workshops"];
 const ENGAGE_WAIT = ["Workshops", "Advisory", "Implementation", "Transformation"];
 
 // Canonical timeline. Bookends (index 0 and 5) carry ai:true.
-// Year strings accept the legacy en-dash form OR the new spaced-hyphen
-// form (per the CVI's no-en-dash rule: numeric ranges are written as
-// "2006 - '12" not "2006–'12"). Companies/order/bookends locked strict.
+// Year strings accept the legacy en-dash range form, the spaced-hyphen
+// range form, AND the single-year form (the latter is the new mobile-
+// friendly shape — the timeline arc already implies duration via the
+// gap between rows, so the range numerals are redundant typography
+// that broke the left-edge alignment on narrow viewports).
+// Companies/order/bookends locked strict.
 const TIMELINE: { y: string[]; co: string; ai: boolean }[] = [
   { y: ["2004"], co: "TU München", ai: true },
-  { y: ["2006–’12", "2006 - ’12"], co: "Telefónica", ai: false },
-  { y: ["2012–’20", "2012 - ’20"], co: "Danfoss", ai: false },
+  { y: ["2006–’12", "2006 - ’12", "2006"], co: "Telefónica", ai: false },
+  { y: ["2012–’20", "2012 - ’20", "2012"], co: "Danfoss", ai: false },
   { y: ["2021"], co: "q.beyond", ai: false },
   { y: ["2023"], co: "FLS", ai: false },
   { y: ["2026"], co: "KAI HACKS AI", ai: true },
