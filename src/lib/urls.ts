@@ -21,6 +21,7 @@ export interface SurfaceUrls {
   cvi: string;
   privacy: string;
   cultures: string;
+  contact: string;
 }
 
 const PRODUCTION: SurfaceUrls = {
@@ -29,6 +30,7 @@ const PRODUCTION: SurfaceUrls = {
   cvi: "https://kaihacks.ai/main/cvi/",
   privacy: "https://kaihacks.ai/privacy/",
   cultures: "https://cultures.kaihacks.ai/",
+  contact: "https://kaihacks.ai/contact/",
 };
 
 const STAGING_BASE = "https://staging.kaihacks.ai";
@@ -39,6 +41,7 @@ const STAGING: SurfaceUrls = {
   cvi: `${STAGING_BASE}/main/cvi/`,
   privacy: `${STAGING_BASE}/privacy/`,
   cultures: `${STAGING_BASE}/cultures/`,
+  contact: `${STAGING_BASE}/contact/`,
 };
 
 export const URLS: SurfaceUrls = process.env.DEPLOY_ENV === "staging" ? STAGING : PRODUCTION;

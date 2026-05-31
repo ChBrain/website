@@ -10,14 +10,24 @@ const mainNav = [
   { label: "services", href: "#services" },
 ];
 
-// §01 Services – domains (AIDE acrostic) × engagement.
-// AIDE: AI · ITSM · DevOps · Enterprise Architecture – first letter of each
-// is bricked at render time. Do not reorder or rename; breaks the acrostic.
-const domains = ["AI", "ITSM", "DevOps", "Enterprise Architecture"];
+// §01 Services – two acrostics, side by side.
+// Left column: AIDE – AI · ITSM · DevOps · EA (what I work in).
+// Right column: WAIT – Workshops · Advisory · Implementation · Transformation (how I engage).
+// First letter of each row is bricked at render time. Do not reorder
+// or rename either column; breaks the acrostic.
+// Gloss on the left column is the expansion of the abbreviation (artificial
+// intelligence, IT service management…); on the right it's the engagement gloss.
+const domains = [
+  { t: "AI", g: "artificial intelligence" },
+  { t: "ITSM", g: "IT service management" },
+  { t: "DevOps", g: "development & operations" },
+  { t: "EA", g: "enterprise architecture" },
+];
 const engage = [
+  { t: "Workshops", g: "hackathons, code camps – tailored to the need" },
   { t: "Advisory", g: "direction, review, architecture" },
   { t: "Implementation", g: "hands on the build" },
-  { t: "Workshops", g: "the method, taught to your teams" },
+  { t: "Transformation", g: "architecture-, project- and programme-level change" },
 ];
 
 // §02 Author – the range · AI → delivery → AI.
@@ -114,28 +124,30 @@ const apps = [
         </div>
 
         <div class="services-card">
-          <p class="services-lead">
-            Enterprise architecture, applied to your organisation’s domain, teams and workflows.
-          </p>
+          <p class="services-lead">I work with you from architecture to delivery.</p>
 
           <div class="services-grid">
             <div class="services-col">
-              <div class="services-col-head">What we work in</div>
+              <div class="services-col-head">What I work in</div>
               {
-                domains.map((d) =>
-                  // prettier-ignore
-                  <div class="services-domain"><span class="services-domain-initial">{d.charAt(0)}</span>{d.slice(1)}</div>,
-                )
+                domains.map((d) => (
+                  <div class="services-domain">
+                    {/* prettier-ignore */}
+                    <div class="services-domain-name"><span class="services-domain-initial">{d.t.charAt(0)}</span>{d.t.slice(1)}</div>
+                    <div class="services-domain-gloss">{d.g}</div>
+                  </div>
+                ))
               }
               <div class="services-domain services-domain--coda">…you name it</div>
             </div>
 
             <div class="services-col">
-              <div class="services-col-head">How we engage</div>
+              <div class="services-col-head">How I engage</div>
               {
                 engage.map((e) => (
                   <div class="services-engage">
-                    <div class="services-engage-name">{e.t}</div>
+                    {/* prettier-ignore */}
+                    <div class="services-engage-name"><span class="services-engage-initial">{e.t.charAt(0)}</span>{e.t.slice(1)}</div>
                     <div class="services-engage-gloss">{e.g}</div>
                   </div>
                 ))
@@ -143,7 +155,15 @@ const apps = [
             </div>
           </div>
 
-          <a href="#contact" class="services-cta">Start a conversation →</a>
+          <div class="services-caption" aria-hidden="true">
+            driving <span class="services-caption-aide">AIDE</span> | <span
+              class="services-caption-wait">WAIT</span
+            > delivery
+          </div>
+
+          <div class="services-cta-row">
+            <a href={URLS.contact} class="services-cta">Start a conversation →</a>
+          </div>
         </div>
       </section>
 
@@ -436,7 +456,16 @@ const apps = [
       text-transform: uppercase;
     }
 
-    /* ── §01 services – domains × engagement · the one brick CTA ────────── */
+    /* ── §01 services – two acrostics × the one brick CTA ─────────────────
+     * Left column = AIDE (what I work in). Right column = WAIT (how I
+     * engage). Each row carries a .services-(domain|engage)-name with
+     * the first letter wrapped in .services-(domain|engage)-initial
+     * (brick), and a sibling .services-(domain|engage)-gloss line with
+     * the expansion in mono uppercase ink-mute.
+     *
+     * The card has a centered lede, a centered editorial caption sitting
+     * between the grid and the CTA ("driving AIDE | WAIT delivery"), and
+     * a centered brick CTA pointing at URLS.contact. */
     .services-card {
       margin-top: 24px;
       border: 1px solid var(--color-rule);
@@ -456,8 +485,8 @@ const apps = [
       font-weight: 350;
       line-height: 1.12;
       letter-spacing: -0.01em;
-      max-width: 760px;
       text-wrap: pretty;
+      text-align: center;
     }
     @media (min-width: 641px) {
       .services-lead {
@@ -487,8 +516,10 @@ const apps = [
       border-bottom: 1px solid var(--color-rule);
     }
     .services-domain {
-      padding: 9px 0;
+      padding: 11px 0;
       border-bottom: 1px solid var(--color-rule-soft);
+    }
+    .services-domain-name {
       font-family: var(--font-display);
       font-size: 22px;
       font-weight: 400;
@@ -496,12 +527,22 @@ const apps = [
       color: var(--color-ink);
     }
     @media (min-width: 641px) {
-      .services-domain {
+      .services-domain-name {
         font-size: 26px;
       }
     }
-    .services-domain-initial {
+    .services-domain-initial,
+    .services-engage-initial {
       color: var(--color-brick);
+    }
+    .services-domain-gloss,
+    .services-engage-gloss {
+      margin-top: 2px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      color: var(--color-ink-mute);
+      text-transform: uppercase;
     }
     .services-domain--coda {
       font-family: var(--font-prose);
@@ -509,6 +550,7 @@ const apps = [
       font-size: 15px;
       color: var(--color-ink-mute);
       border-bottom: none;
+      padding: 9px 0;
     }
     .services-engage {
       padding: 11px 0;
@@ -516,28 +558,56 @@ const apps = [
     }
     .services-engage-name {
       font-family: var(--font-display);
-      font-size: 18px;
-      font-weight: 500;
+      font-size: 22px;
+      font-weight: 400;
       color: var(--color-ink);
-      letter-spacing: -0.005em;
+      letter-spacing: -0.01em;
     }
     @media (min-width: 641px) {
       .services-engage-name {
-        font-size: 19px;
+        font-size: 26px;
       }
     }
-    .services-engage-gloss {
-      margin-top: 2px;
-      font-family: var(--font-prose);
-      font-style: italic;
-      font-size: 13.5px;
-      color: var(--color-ink-soft);
+    /* §01 caption – the editorial bridge between the 2×4 grid and the CTA.
+     * Centered. Mono uppercase ink-mute. The pipe sits exactly between the
+     * two acrostics (7·4|4·8 letter balance) so the eye reads them as
+     * equal weights.
+     *
+     * Hover/punch hook (scaffold only – Kai tunes):
+     * Hovering the card lights AIDE then WAIT in turn via a chained
+     * brick pulse. `prefers-reduced-motion: reduce` skips the animation. */
+    .services-caption {
+      margin: 24px 0 0;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      color: var(--color-ink-mute);
+      text-transform: uppercase;
+    }
+    .services-caption-aide,
+    .services-caption-wait {
+      color: var(--color-ink);
+      transition: color 0.24s ease-out;
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .services-card:hover .services-caption-aide,
+      .services-card:hover .services-caption-wait {
+        color: var(--color-brick);
+      }
+      .services-card:hover .services-caption-wait {
+        transition-delay: 0.16s;
+      }
+    }
+    .services-cta-row {
+      display: flex;
+      justify-content: center;
+      margin-top: 18px;
     }
     .services-cta {
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      margin-top: 26px;
       font-family: var(--font-mono);
       font-size: 12px;
       letter-spacing: 0.16em;
@@ -551,8 +621,8 @@ const apps = [
       background: var(--color-accent-hover);
     }
     @media (min-width: 641px) {
-      .services-cta {
-        margin-top: 32px;
+      .services-cta-row {
+        margin-top: 22px;
       }
     }
 
