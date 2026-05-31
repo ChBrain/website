@@ -5,20 +5,54 @@ import SiteFooter from "../../../components/SiteFooter.astro";
 import KhaiMark from "../../../components/KhaiMark.astro";
 import { BRAND } from "../../../lib/brand";
 
-const tocLinks = [
-  { n: "01", t: "The mark", href: "#mark" },
-  { n: "02", t: "The set", href: "#set" },
-  { n: "03", t: "Space & size", href: "#space" },
-  { n: "04", t: "Colour", href: "#color" },
-  { n: "05", t: "Typography", href: "#type" },
-  // §06 Writing: voice & punctuation — promoted from a tucked-under-
-  // Typography sub-panel to its own top-level chapter. Bumps Icon /
-  // Applications / In one breath to 07 / 08 / 09.
-  { n: "06", t: "Writing", href: "#writing" },
-  { n: "07", t: "Icon & favicon", href: "#icon" },
-  { n: "08", t: "Applications", href: "#apply" },
-  { n: "09", t: "In one breath", href: "#voice" },
+// Nine canonical chapters in three editorial groups (the mark, the
+// system, the application). Each chapter exposes the list of section
+// IDs it owns — Colour and Typography each fan out into sub-panels
+// (04·i/ii/iii, 05·i/ii) that all light the same chapter bar in the
+// strip when scrolled into view. Order is the design contract.
+const tocGroups = [
+  {
+    label: "the mark",
+    items: [
+      { n: "01", t: "The mark", href: "#mark", sections: ["mark"] },
+      { n: "02", t: "The set", href: "#set", sections: ["set"] },
+      { n: "03", t: "Space & size", href: "#space", sections: ["space"] },
+    ],
+  },
+  {
+    label: "the system",
+    items: [
+      {
+        n: "04",
+        t: "Colour",
+        href: "#color",
+        sections: ["color", "color-accents", "color-rules"],
+      },
+      { n: "05", t: "Typography", href: "#type", sections: ["type", "type-scale"] },
+      // §06 Writing: voice & punctuation — promoted from a tucked-under-
+      // Typography sub-panel to its own top-level chapter. Bumps Icon /
+      // Applications / In one breath to 07 / 08 / 09.
+      { n: "06", t: "Writing", href: "#writing", sections: ["writing"] },
+    ],
+  },
+  {
+    label: "the application",
+    items: [
+      { n: "07", t: "Icon & favicon", href: "#icon", sections: ["icon"] },
+      { n: "08", t: "Applications", href: "#apply", sections: ["apply"] },
+      { n: "09", t: "In one breath", href: "#voice", sections: ["voice"] },
+    ],
+  },
 ];
+
+const allChapters = tocGroups.flatMap((g) => g.items);
+const total = allChapters.length;
+
+// section-id → chapter-index lookup; emitted into the client script so
+// the IntersectionObserver can light the right bar when sub-panels
+// (04·ii, 05·ii) scroll into view.
+const sectionToChapter: Record<string, number> = {};
+allChapters.forEach((c, i) => c.sections.forEach((s) => (sectionToChapter[s] = i)));
 
 // §06 Writing rules. Two lists: punctuation we use, and punctuation we
 // don't. Drives the no-en-dash policy across every surface; the
@@ -152,16 +186,57 @@ const donts = [
       </div>
     </header>
 
-    <nav class="cvi-toc" aria-label="Contents">
-      {
-        tocLinks.map((l) => (
-          <a href={l.href}>
-            <span class="cvi-tn">{l.n}</span>
-            <span class="cvi-tt">{l.t}</span>
-          </a>
-        ))
-      }
-    </nav>
+    {
+      /* Collapsed-strip indicator on the left edge — click to open the
+        rail overlay. One bar per chapter (9 total); the brick one is
+        the current. Hidden on narrow viewports where the long-scroll
+        is the navigation. Mirrors the playbook chassis pattern. */
+    }
+    <button class="cvi-strip" type="button" aria-label="Open contents" aria-expanded="false">
+      <span class="cvi-strip-pos"
+        ><span class="cvi-strip-cur">00</span>/{String(total).padStart(2, "0")}</span
+      >
+      <span class="cvi-strip-bars" aria-hidden="true">
+        {allChapters.map((_, i) => <span class="cvi-strip-bar" data-idx={i} />)}
+      </span>
+      <span class="cvi-strip-label">Contents</span>
+    </button>
+
+    {
+      /* Rail overlay (TOC). Hidden by default; opens via the strip
+        click. Esc closes. Three editorial groups (the mark / the
+        system / the application) match the brand's arc through the
+        chapters. */
+    }
+    <div class="cvi-overlay" role="dialog" aria-modal="true" aria-label="CVI contents" hidden>
+      <div class="cvi-overlay-card">
+        <div class="cvi-overlay-head">
+          <span class="cvi-overlay-eyebrow">Corporate Visual Identity</span>
+          <button class="cvi-overlay-close" type="button" aria-label="Close contents">×</button>
+        </div>
+        <nav class="cvi-toc" aria-label="Chapters">
+          {
+            tocGroups.map((g) => (
+              <div class="cvi-toc-group">
+                <div class="cvi-toc-grouplabel">{g.label}</div>
+                {g.items.map((c, i) => {
+                  const idx =
+                    tocGroups
+                      .slice(0, tocGroups.indexOf(g))
+                      .reduce((a, gr) => a + gr.items.length, 0) + i;
+                  return (
+                    <a href={c.href} class="cvi-toc-link" data-idx={idx}>
+                      <span class="cvi-toc-n">{c.n}</span>
+                      <span class="cvi-toc-name">{c.t}</span>
+                    </a>
+                  );
+                })}
+              </div>
+            ))
+          }
+        </nav>
+      </div>
+    </div>
 
     <section id="mark" class="cvi-section">
       <div class="cvi-seclabel">
@@ -686,6 +761,10 @@ const donts = [
         scroll-snap-type: none;
       }
     }
+    /* Lock background scroll when the overlay TOC is open. */
+    body:has(.cvi-overlay:not([hidden])) {
+      overflow: hidden;
+    }
   </style>
 
   <style>
@@ -847,44 +926,158 @@ const donts = [
       color: var(--color-ink);
     }
 
-    /* ── toc ────────────────────────────────────────────────────────────── */
-    .cvi-toc {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0;
-      border-bottom: 1px solid var(--color-rule);
+    /* ── strip indicator (left edge, always visible on desktop) ────────────
+     * Ported from src/pages/architecture/playbook/index.astro. One bar
+     * per chapter (9 total). Click opens the overlay TOC. Hidden on
+     * narrow viewports — the long-scroll is the navigation. */
+    .cvi-strip {
+      position: fixed;
+      top: 50%;
+      left: 14px;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      background: transparent;
+      border: none;
+      padding: 14px 4px;
+      cursor: pointer;
+      z-index: 40;
+      font-family: var(--font-mono);
+      color: var(--color-ink-mute);
     }
-    @media (max-width: 760px) {
-      .cvi-toc {
-        grid-template-columns: repeat(2, 1fr);
-      }
+    .cvi-strip:focus-visible {
+      outline: 2px solid var(--color-brick);
+      outline-offset: 4px;
     }
-    .cvi-toc a {
+    .cvi-strip-pos {
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+    .cvi-strip-cur {
+      color: var(--color-brick);
+      font-weight: 600;
+    }
+    .cvi-strip-bars {
       display: flex;
       flex-direction: column;
       gap: 6px;
-      padding: 24px 0;
-      color: var(--color-ink);
-      border-right: 1px solid var(--color-rule-soft);
     }
-    .cvi-toc a:last-child {
-      border-right: none;
+    .cvi-strip-bar {
+      width: 18px;
+      height: 2px;
+      background: var(--color-rule);
+      transition: background 0.16s;
     }
-    .cvi-tn {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      color: var(--color-brick);
+    .cvi-strip-bar.is-current {
+      background: var(--color-brick);
     }
-    .cvi-tt {
-      font-family: var(--font-display);
-      font-size: 19px;
+    .cvi-strip-label {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-size: 9.5px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      margin-top: 6px;
     }
     @media (max-width: 760px) {
-      .cvi-toc a {
-        border-right: none;
-        border-bottom: 1px solid var(--color-rule-soft);
-        padding: 18px 0;
+      .cvi-strip {
+        display: none;
       }
+    }
+
+    /* ── overlay (TOC) ───────────────────────────────────────────────────
+     * Mirror of the playbook overlay. Hidden by default; opens via the
+     * strip click. Esc + backdrop click close. Three editorial groups
+     * (the mark / the system / the application). */
+    .cvi-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(22, 19, 15, 0.32);
+      z-index: 50;
+      display: flex;
+      align-items: stretch;
+    }
+    .cvi-overlay[hidden] {
+      display: none;
+    }
+    .cvi-overlay-card {
+      background: var(--color-paper);
+      border-right: 1px solid var(--color-ink);
+      width: min(420px, 86vw);
+      padding: 28px 32px 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+    .cvi-overlay-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+    .cvi-overlay-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--color-brick);
+    }
+    .cvi-overlay-close {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: var(--color-ink);
+      font-size: 24px;
+      line-height: 1;
+      padding: 0 4px;
+    }
+    .cvi-toc {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+    .cvi-toc-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .cvi-toc-grouplabel {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--color-ink-mute);
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--color-rule-soft);
+      margin-bottom: 4px;
+    }
+    .cvi-toc-link {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+      padding: 6px 0;
+      text-decoration: none;
+      color: var(--color-ink);
+      font-family: var(--font-display);
+      font-size: 22px;
+      letter-spacing: -0.005em;
+      transition: color 0.12s;
+    }
+    .cvi-toc-link:hover {
+      color: var(--color-brick);
+    }
+    .cvi-toc-n {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      color: var(--color-ink-mute);
+      flex: 0 0 30px;
+    }
+    .cvi-toc-link.is-current .cvi-toc-name {
+      font-weight: 500;
+      color: var(--color-brick);
     }
 
     /* ── sections ───────────────────────────────────────────────────────── */
@@ -1371,4 +1564,108 @@ const donts = [
       color: var(--color-ink-mute);
     }
   </style>
+
+  <script is:inline define:vars={{ sectionToChapter, total }}>
+    // Navigation: strip-click opens overlay, ESC + backdrop click close.
+    // IntersectionObserver tracks the most-visible section and lights
+    // its parent chapter bar. Arrow keys step section-by-section.
+    (function () {
+      const strip = document.querySelector(".cvi-strip");
+      const overlay = document.querySelector(".cvi-overlay");
+      const closeBtn = document.querySelector(".cvi-overlay-close");
+      const bars = Array.from(document.querySelectorAll(".cvi-strip-bar"));
+      const tocLinks = Array.from(document.querySelectorAll(".cvi-toc-link"));
+      const curEl = document.querySelector(".cvi-strip-cur");
+      const mast = document.querySelector(".cvi-mast");
+      const sections = Array.from(document.querySelectorAll(".cvi-section"));
+
+      // Stops in document order: masthead first (chapter "00"), then
+      // every numbered section (each maps to its chapter via the lookup).
+      const stops = mast ? [mast, ...sections] : sections.slice();
+      let curIdx = 0;
+
+      function chapterOf(stop) {
+        if (stop === mast) return -1;
+        const sid = stop.id;
+        const c = sectionToChapter[sid];
+        return typeof c === "number" ? c : -1;
+      }
+
+      function setCurrent(stopIdx) {
+        curIdx = stopIdx;
+        const stop = stops[stopIdx];
+        const chapter = chapterOf(stop);
+        bars.forEach((b, i) => b.classList.toggle("is-current", i === chapter));
+        tocLinks.forEach((l, i) => l.classList.toggle("is-current", i === chapter));
+        if (curEl) curEl.textContent = String(Math.max(0, chapter + 1)).padStart(2, "0");
+      }
+
+      function openOverlay() {
+        if (!overlay || !strip) return;
+        overlay.hidden = false;
+        strip.setAttribute("aria-expanded", "true");
+      }
+      function closeOverlay() {
+        if (!overlay || !strip) return;
+        overlay.hidden = true;
+        strip.setAttribute("aria-expanded", "false");
+      }
+
+      if (strip) strip.addEventListener("click", openOverlay);
+      if (closeBtn) closeBtn.addEventListener("click", closeOverlay);
+      if (overlay) {
+        overlay.addEventListener("click", (e) => {
+          if (e.target === overlay) closeOverlay();
+        });
+      }
+      tocLinks.forEach((link) => {
+        link.addEventListener("click", () => {
+          // Let the hash navigation run, then collapse the overlay.
+          setTimeout(closeOverlay, 0);
+        });
+      });
+
+      // Keyboard navigation: ←/→ and ↑/↓ step between stops. Skipped
+      // when the overlay is open (Esc closes that instead) and when
+      // focus is in a form field.
+      document.addEventListener("keydown", (e) => {
+        if (overlay && !overlay.hidden) {
+          if (e.key === "Escape") closeOverlay();
+          return;
+        }
+        const active = document.activeElement;
+        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
+
+        if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+          const next = stops[Math.min(curIdx + 1, stops.length - 1)];
+          if (next) next.scrollIntoView({ behavior: "smooth", block: "start" });
+          e.preventDefault();
+        } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+          const prev = stops[Math.max(curIdx - 1, 0)];
+          if (prev) prev.scrollIntoView({ behavior: "smooth", block: "start" });
+          e.preventDefault();
+        }
+      });
+
+      // IntersectionObserver: track the most-visible stop, update strip.
+      if ("IntersectionObserver" in window && stops.length) {
+        const obs = new IntersectionObserver(
+          (entries) => {
+            let best = null;
+            for (const ent of entries) {
+              if (ent.isIntersecting && (!best || ent.intersectionRatio > best.intersectionRatio)) {
+                best = ent;
+              }
+            }
+            if (best) {
+              const idx = stops.indexOf(best.target);
+              if (idx >= 0) setCurrent(idx);
+            }
+          },
+          { threshold: [0.5, 0.75] },
+        );
+        stops.forEach((s) => obs.observe(s));
+      }
+    })();
+  </script>
 </BaseLayout>
