@@ -86,30 +86,9 @@ const rulesPalette = [
   { nm: "ruleSoft", hex: BRAND.ruleSoft, role: "Faint divider, list rows" },
 ];
 const accents = [
-  {
-    nm: "brick",
-    hex: BRAND.brick,
-    role: "The accent; once per surface",
-    lens: "Red",
-    lensBg: "rgba(141,58,44,.12)",
-    lensCol: BRAND.brick,
-  },
-  {
-    nm: "sea",
-    hex: BRAND.sea,
-    role: "Structure, headers, infrastructure",
-    lens: "Blue",
-    lensBg: "rgba(58,74,82,.14)",
-    lensCol: BRAND.sea,
-  },
-  {
-    nm: "fjord",
-    hex: BRAND.fjord,
-    role: "Lighter blue; a variation on sea",
-    lens: "Blue",
-    lensBg: "rgba(77,107,118,.14)",
-    lensCol: BRAND.fjord,
-  },
+  { nm: "brick", hex: BRAND.brick, role: "The accent; once per surface" },
+  { nm: "sea", hex: BRAND.sea, role: "Structure, headers, infrastructure" },
+  { nm: "fjord", hex: BRAND.fjord, role: "Lighter blue; a variation on sea" },
   { nm: "amber", hex: BRAND.amber, role: "Warmer emphasis, “draft” markers" },
   { nm: "tide", hex: BRAND.tide, role: "Quiet neutral grey" },
   { nm: "marsh", hex: BRAND.marsh, role: "External / writing" },
@@ -377,11 +356,6 @@ const donts = [
                 <div class="cvi-swatch-nm">{s.nm}</div>
                 <div class="cvi-swatch-hex">{s.hex}</div>
                 <div class="cvi-swatch-role">{s.role}</div>
-                {s.lens && (
-                  <span class="cvi-swatch-lens" style={`background:${s.lensBg};color:${s.lensCol}`}>
-                    {s.lens}
-                  </span>
-                )}
               </div>
             </div>
           ))
@@ -838,16 +812,27 @@ const donts = [
       font-style: italic;
       color: var(--color-ink-soft);
     }
+    /* 4-column grid (Document · Mark · Type · Ground) keeps the meta
+     * row aligned in a deterministic line rather than wrapping a
+     * single overflow item to a second row. Mobile collapses to a
+     * 2-col grid so the labels stay readable without a viewport
+     * scroll. */
     .cvi-meta {
-      display: flex;
-      gap: 34px;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
       margin-top: 26px;
       padding-top: 22px;
       border-top: 1px solid var(--color-rule-soft);
     }
     .cvi-meta div span {
       display: block;
+    }
+    @media (max-width: 720px) {
+      .cvi-meta {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 18px;
+      }
     }
     .cvi-k {
       font-family: var(--font-mono);
@@ -1035,8 +1020,14 @@ const donts = [
       display: flex;
       flex-direction: column;
     }
+    /* Subtle inset rim so paper-tone chips (paper, paperWarm, paperCool)
+     * don't melt into the surrounding paper background. Uses the
+     * canonical --color-rule-soft (already the "faint divider" token)
+     * so the shadow stays inside the brand contract instead of pulling
+     * an ad-hoc rgba. */
     .cvi-chip {
       height: 108px;
+      box-shadow: inset 0 0 0 1px var(--color-rule-soft);
     }
     .cvi-swatch-info {
       padding: 13px 14px 15px;
@@ -1060,16 +1051,6 @@ const donts = [
       color: var(--color-ink-soft);
       margin-top: 8px;
       line-height: 1.4;
-    }
-    .cvi-swatch-lens {
-      display: inline-block;
-      font-family: var(--font-mono);
-      font-size: 9px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      padding: 2px 6px;
-      border-radius: 2px;
-      margin-top: 9px;
     }
     .cvi-grouplabel {
       font-family: var(--font-mono);
@@ -1334,12 +1315,18 @@ const donts = [
     }
 
     /* ── code blocks ────────────────────────────────────────────────────── */
+    /* white-space: pre-wrap + overflow-wrap: anywhere lets long lines
+     * (the §07 favicon SVG markup, the §05 :root token list) wrap inside
+     * the panel rather than triggering a horizontal scroll that breaks
+     * the editorial reading flow. */
     .cvi-pre {
       background: var(--color-ink);
       color: var(--color-paper);
       border-radius: 4px;
       padding: 18px 20px;
       overflow: auto;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
       font-family: var(--font-mono);
       font-size: 12.5px;
       line-height: 1.7;
@@ -1347,13 +1334,20 @@ const donts = [
     }
 
     /* ── voice ──────────────────────────────────────────────────────────── */
+    /* §09 "In one breath" — centered + balanced wrap so the sentence
+     * sits as a single composed editorial statement rather than a
+     * left-edge body paragraph. text-wrap: balance evens the line
+     * breaks visually so the closing clauses don't orphan. */
     .cvi-voice {
       max-width: 760px;
+      margin: 0 auto;
       font-size: 23px;
       font-family: var(--font-display);
       font-weight: 400;
       line-height: 1.4;
       color: var(--color-ink);
+      text-align: center;
+      text-wrap: balance;
     }
 
     /* ── footer ─────────────────────────────────────────────────────────── */
