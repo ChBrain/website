@@ -141,16 +141,32 @@ describe("main (company front door) — design contract", () => {
       expect(accent?.textContent?.trim()).toBe("HACKS");
     });
 
-    it("lede frames the four disciplines with the 'with or without AI' tail", () => {
+    it("lede frames the offer (legacy disciplines list OR the new outcomes-to-delivery line)", () => {
+      // Two accepted shapes:
+      //   LEGACY — long form listing the four disciplines + the
+      //   "with or without AI" tail: "An enterprise architect's method –
+      //   applied across AI, ITSM, DevOps and enterprise architecture,
+      //   with or without AI..."
+      //   DRIVING — short positioning line that pairs with the new
+      //   masthead grammar: "Driving outcomes, from Architecture to
+      //   Delivery." (architecture + delivery as the bookend nouns).
+      // Both must mention "architecture" — that's the brand-identifying
+      // structural anchor.
       const dom = new JSDOM(main!.html);
       const lede = dom.window.document.querySelector(".lede");
       // Source wraps the lede across lines; collapse whitespace before matching.
       const text = (lede?.textContent ?? "").toLowerCase().replace(/\s+/g, " ");
-      expect(text).toContain("ai");
-      expect(text).toContain("itsm");
-      expect(text).toContain("devops");
-      expect(text).toContain("enterprise architecture");
-      expect(text).toContain("with or without ai");
+      expect(text).toContain("architecture");
+      const isLegacy =
+        text.includes("itsm") &&
+        text.includes("devops") &&
+        text.includes("enterprise architecture") &&
+        text.includes("with or without ai");
+      const isDriving = text.includes("driving") && text.includes("delivery");
+      expect(
+        isLegacy || isDriving,
+        `lede "${text}" matched neither the legacy disciplines list nor the new driving-to-delivery line`,
+      ).toBe(true);
     });
 
     it("draft-marker is present (positioning still needs Kai's touch)", () => {
