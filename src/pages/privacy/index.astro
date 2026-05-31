@@ -2,13 +2,6 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
-import { URLS } from "../../lib/urls";
-
-const apexNav = [
-  { label: "company", href: URLS.main },
-  { label: "architecture", href: URLS.architecture },
-  { label: "cultures", href: "#" },
-];
 
 // Sub-processors. Each row has its own privacy-policy link.
 const processors = [
@@ -40,7 +33,7 @@ const processors = [
   description="How KAI HACKS AI handles the small amount of data that passes through this site and its newsletter - who processes it, why, and what you can ask us to do about it."
 >
   <div class="arch-page privacy">
-    <SiteHeader domain="kaihacks" tld=".ai" basePath={URLS.main} nav={apexNav} />
+    <SiteHeader domain="kaihacks" tld=".ai" location="privacy" />
 
     <header class="p-mast">
       <div class="p-mono">privacy</div>
@@ -51,9 +44,7 @@ const processors = [
       </p>
       <div class="p-meta">
         <div>
-          <span class="p-k">Document</span><span class="p-v"
-            >Privacy statement · <span class="p-fillme">DRAFT v0.1</span></span
-          >
+          <span class="p-k">Document</span><span class="p-v">Privacy statement</span>
         </div>
         <div>
           <span class="p-k">Effective</span><span class="p-v">15 March 2026</span>
@@ -218,9 +209,7 @@ const processors = [
     </section>
 
     <footer class="p-foot">
-      <p class="p-mono p-foot-line">
-        KAI HACKS AI · Privacy statement · <span class="p-fillme">DRAFT - not yet published</span>
-      </p>
+      <p class="p-mono p-foot-line">KAI HACKS AI · Privacy statement</p>
       <p class="p-mono p-foot-line">Effective 15 March 2026 · privacy@kaihacks.ai</p>
     </footer>
 
@@ -267,16 +256,27 @@ const processors = [
       line-height: 1.55;
       margin: 0 0 16px;
     }
+    /* 2-column grid keeps the 4 meta rows aligned in a tidy block
+     * (Document | Effective on top, Controller | Contact below) rather
+     * than wrapping unpredictably as a flex-wrap row. The right column
+     * has the "Effective" key hang against the right edge of the column
+     * gap, balancing the left column's longer "Document" value. */
     .p-meta {
-      display: flex;
-      gap: 34px;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px 48px;
       margin-top: 24px;
       padding-top: 20px;
       border-top: 1px solid var(--color-rule-soft);
     }
     .p-meta div span {
       display: block;
+    }
+    @media (max-width: 600px) {
+      .p-meta {
+        grid-template-columns: 1fr;
+        gap: 18px;
+      }
     }
     .p-k {
       font-family: var(--font-mono);
@@ -403,27 +403,6 @@ const processors = [
     }
     .p-proc-what a {
       font-size: 12px;
-    }
-
-    /* ── draft markers (amber = draft per CVI) ──────────────────────────── */
-    .p-todo {
-      background: rgba(201, 142, 54, 0.12);
-      border: 1px solid rgba(201, 142, 54, 0.4);
-      color: var(--color-amber-ink);
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.02em;
-      border-radius: 2px;
-      padding: 1px 6px;
-      white-space: nowrap;
-    }
-    .p-fillme {
-      color: var(--color-amber);
-      font-style: normal;
-      font-weight: 600;
-      background: rgba(201, 142, 54, 0.1);
-      padding: 0 4px;
-      border-radius: 2px;
     }
 
     /* ── footer ─────────────────────────────────────────────────────────── */
