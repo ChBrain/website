@@ -43,10 +43,20 @@ const SECTIONS: { n: string; id: string; h2: string | string[]; note: string }[]
   { n: "§04", id: "apps", h2: "Applications", note: "what runs on the architecture" },
 ];
 
-// AIDE acrostic — first letter of each domain is bricked.
-const DOMAINS = ["AI", "ITSM", "DevOps", "Enterprise Architecture"];
+// AIDE acrostic — first letter of each domain is bricked. Two accepted forms:
+// - DOMAINS_LEGACY: full names (Enterprise Architecture spelled out)
+// - DOMAINS_EA: abbreviated form (EA with the full expansion in a gloss row).
+// Both render the acrostic A·I·D·E at the initials. The bricked-initial
+// assertion stays strict (initials must be exactly ["A","I","D","E"]).
+const DOMAINS_LEGACY = ["AI", "ITSM", "DevOps", "Enterprise Architecture"];
+const DOMAINS_EA = ["AI", "ITSM", "DevOps", "EA"];
 
-const ENGAGE = ["Advisory", "Implementation", "Workshops"];
+// Engage names are in editorial flux: the current 3 (Advisory / Implementation /
+// Workshops) is being lifted to a 4-item WAIT acrostic (Workshops / Advisory /
+// Implementation / Transformation) so both columns are acrostics. We accept
+// either set so the source lift can land without breaking this contract.
+const ENGAGE_OLD = ["Advisory", "Implementation", "Workshops"];
+const ENGAGE_WAIT = ["Workshops", "Advisory", "Implementation", "Transformation"];
 
 // Canonical timeline. Bookends (index 0 and 5) carry ai:true.
 const TIMELINE = [
@@ -206,7 +216,7 @@ describe("main (company front door) — design contract", () => {
   });
 
   describe("§01 Services — AIDE acrostic + engagement + brick CTA", () => {
-    it("renders 4 domains in canonical AIDE order", () => {
+    it("renders 4 domains in canonical AIDE order (legacy or EA-abbreviated form)", () => {
       const dom = new JSDOM(main!.html);
       const section = dom.window.document.querySelector("section#services");
       const cols = section!.querySelectorAll(".services-col");
@@ -214,16 +224,16 @@ describe("main (company front door) — design contract", () => {
       const domainRows = [...domainCol.querySelectorAll(".services-domain")].filter(
         (row) => !row.classList.contains("services-domain--coda"),
       );
-      expect(domainRows.length).toBe(DOMAINS.length);
-      domainRows.forEach((row, i) => {
-        // The first letter is wrapped in a separate span (.services-domain-initial)
-        // for the brick accent, so textContent inserts whitespace between the
-        // initial and the rest. Collapse whitespace, then re-join the initial
-        // to the rest (drops the single space after the first char).
-        const text = (row.textContent ?? "").replace(/\s+/g, " ").trim();
-        const normalised = text.length > 1 && text[1] === " " ? text[0] + text.slice(2) : text;
-        expect(normalised).toBe(DOMAINS[i]);
+      expect(domainRows.length).toBe(DOMAINS_LEGACY.length);
+      // Each row carries a .services-domain-name (the bricked-initial + rest).
+      // If the new structure adds a sibling gloss row, the name extractor only
+      // looks at the name child so the gloss text doesn't leak in.
+      const names = domainRows.map((row) => {
+        const nameEl = row.querySelector(".services-domain-name") ?? row;
+        const text = (nameEl.textContent ?? "").replace(/\s+/g, " ").trim();
+        return text.length > 1 && text[1] === " " ? text[0] + text.slice(2) : text;
       });
+      expect([DOMAINS_LEGACY, DOMAINS_EA]).toContainEqual(names);
     });
 
     it("first letter of each domain is bricked (AIDE acrostic preserved)", () => {
@@ -243,20 +253,29 @@ describe("main (company front door) — design contract", () => {
       expect(coda?.textContent?.trim()).toBe("…you name it");
     });
 
-    it("renders 3 engagement modes in canonical order", () => {
+    it("renders the engagement modes in canonical order (3 legacy or 4 WAIT)", () => {
       const dom = new JSDOM(main!.html);
       const section = dom.window.document.querySelector("section#services");
-      const engageNames = [...section!.querySelectorAll(".services-engage-name")].map((n) =>
-        n.textContent?.trim(),
+      const engageNames = [...section!.querySelectorAll(".services-engage-name")].map(
+        (n) => n.textContent?.trim() ?? "",
       );
-      expect(engageNames).toEqual(ENGAGE);
+      // Strip any bricked-initial whitespace artefact so "W orkshops" matches
+      // "Workshops" once the WAIT lift wraps the first letter in its own span.
+      const normalised = engageNames.map((t) => {
+        const s = t.replace(/\s+/g, " ").trim();
+        return s.length > 1 && s[1] === " " ? s[0] + s.slice(2) : s;
+      });
+      expect([ENGAGE_OLD, ENGAGE_WAIT]).toContainEqual(normalised);
     });
 
-    it("brick CTA 'Start a conversation →' points to #contact", () => {
+    it("brick CTA 'Start a conversation →' points to the contact destination", () => {
       const dom = new JSDOM(main!.html);
       const cta = dom.window.document.querySelector("section#services a.services-cta");
       expect(cta).not.toBeNull();
-      expect(cta!.getAttribute("href")).toBe("#contact");
+      // Accept the legacy in-page anchor (#contact) or the new dedicated
+      // contact surface (URLS.contact / /contact/) once the page lands.
+      const href = cta!.getAttribute("href") ?? "";
+      expect(href === "#contact" || /\/contact\/?$/.test(href)).toBe(true);
       expect(cta!.textContent?.trim()).toContain("Start a conversation");
     });
   });
