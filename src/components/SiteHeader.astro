@@ -60,18 +60,14 @@ const useLocationLayout = Boolean(location);
         </span>
         <div class="topbar-right">
           {version && <span class="topbar-version">khai · {version}</span>}
-          <a href={wordmarkHref} class="topbar-domain">
-            {domain}
-            <span class="topbar-domain-tld">{tld}</span>
-          </a>
+          {/* prettier-ignore */}
+          <a href={wordmarkHref} class="topbar-domain">{domain}<span class="topbar-domain-tld">{tld}</span></a>
         </div>
       </>
     ) : (
       <>
-        <a href={wordmarkHref} class="topbar-domain">
-          {domain}
-          <span class="topbar-domain-tld">{tld}</span>
-        </a>
+        {/* prettier-ignore */}
+        <a href={wordmarkHref} class="topbar-domain">{domain}<span class="topbar-domain-tld">{tld}</span></a>
         {nav && nav.length > 0 && (
           <nav class="topbar-nav" aria-label="Primary">
             {nav.map((n) => (
