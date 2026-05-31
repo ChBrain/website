@@ -1,23 +1,27 @@
 ---
 // SiteFooter — the one global colophon for every surface.
 //
-// Three-column rhythm (chrome restructure):
+// Three-column rhythm:
 //
-//   KAI HACKS AI · CVR 41768274        Contact        Privacy · CVI · © 2026
+//   KAI HACKS AI · © 2026        Contact        Privacy · CVI
 //
-// - Left: identity (wordmark linking to URLS.main + CVR). The mailto
-//   that used to sit here moves to the dedicated /contact/ surface, so
-//   the footer doesn't duplicate it.
+// - Left: identity (wordmark linking to URLS.main) + © year. The CVR
+//   number used to sit here; it now lives on the /contact/ page (the
+//   one surface where someone reaching out actually needs it). The
+//   mailto also moved to /contact/ for the same reason.
 // - Center: a single Contact link → URLS.contact. Suppressed on the
 //   /contact/ page itself via the hideContact prop (prevents the
 //   self-reference).
-// - Right: Privacy · CVI · © 2026 (reordered so the legal links lead
-//   and the year sits at the closing position).
+// - Right: Privacy · CVI. Two legal links, nothing else.
+//
+// The © year sits with the identity (left) rather than the legal
+// links (right) because it's a brand statement, not a legal one;
+// pairing it with the wordmark balances the left column visually
+// against the right.
 //
 // Class names (.footfed, .footfed-row, .footfed-legal-link) are
 // preserved so the design-contract tests (privacy, cvi, main) keep
-// passing without modification. New class: .footfed-contact for the
-// centered Contact slot.
+// passing without modification.
 
 import { URLS } from "../lib/urls";
 
@@ -32,7 +36,7 @@ const { hideContact = false } = Astro.props;
 <footer class="footfed">
   <div class="footfed-row">
     <div class="footfed-identity">
-      <a href={URLS.main}>KAI HACKS AI</a> · CVR 41768274
+      <a href={URLS.main}>KAI HACKS AI</a> · © 2026
     </div>
     {
       !hideContact && (
@@ -45,7 +49,7 @@ const { hideContact = false } = Astro.props;
     }
     <nav class="footfed-legal" aria-label="Site">
       <a class="footfed-legal-link" href={URLS.privacy}>Privacy</a> ·
-      <a class="footfed-legal-link" href={URLS.cvi}>CVI</a> · © 2026
+      <a class="footfed-legal-link" href={URLS.cvi}>CVI</a>
     </nav>
   </div>
 </footer>
