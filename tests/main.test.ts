@@ -43,8 +43,13 @@ const SECTIONS: { n: string; id: string; h2: string | string[]; note: string }[]
   { n: "§04", id: "apps", h2: "Applications", note: "what runs on the architecture" },
 ];
 
-// AIDE acrostic — first letter of each domain is bricked.
-const DOMAINS = ["AI", "ITSM", "DevOps", "Enterprise Architecture"];
+// AIDE acrostic — first letter of each domain is bricked. Two accepted forms:
+// - DOMAINS_LEGACY: full names (Enterprise Architecture spelled out)
+// - DOMAINS_EA: abbreviated form (EA with the full expansion in a gloss row).
+// Both render the acrostic A·I·D·E at the initials. The bricked-initial
+// assertion stays strict (initials must be exactly ["A","I","D","E"]).
+const DOMAINS_LEGACY = ["AI", "ITSM", "DevOps", "Enterprise Architecture"];
+const DOMAINS_EA = ["AI", "ITSM", "DevOps", "EA"];
 
 // Engage names are in editorial flux: the current 3 (Advisory / Implementation /
 // Workshops) is being lifted to a 4-item WAIT acrostic (Workshops / Advisory /
@@ -211,7 +216,7 @@ describe("main (company front door) — design contract", () => {
   });
 
   describe("§01 Services — AIDE acrostic + engagement + brick CTA", () => {
-    it("renders 4 domains in canonical AIDE order", () => {
+    it("renders 4 domains in canonical AIDE order (legacy or EA-abbreviated form)", () => {
       const dom = new JSDOM(main!.html);
       const section = dom.window.document.querySelector("section#services");
       const cols = section!.querySelectorAll(".services-col");
@@ -219,16 +224,16 @@ describe("main (company front door) — design contract", () => {
       const domainRows = [...domainCol.querySelectorAll(".services-domain")].filter(
         (row) => !row.classList.contains("services-domain--coda"),
       );
-      expect(domainRows.length).toBe(DOMAINS.length);
-      domainRows.forEach((row, i) => {
-        // The first letter is wrapped in a separate span (.services-domain-initial)
-        // for the brick accent, so textContent inserts whitespace between the
-        // initial and the rest. Collapse whitespace, then re-join the initial
-        // to the rest (drops the single space after the first char).
-        const text = (row.textContent ?? "").replace(/\s+/g, " ").trim();
-        const normalised = text.length > 1 && text[1] === " " ? text[0] + text.slice(2) : text;
-        expect(normalised).toBe(DOMAINS[i]);
+      expect(domainRows.length).toBe(DOMAINS_LEGACY.length);
+      // Each row carries a .services-domain-name (the bricked-initial + rest).
+      // If the new structure adds a sibling gloss row, the name extractor only
+      // looks at the name child so the gloss text doesn't leak in.
+      const names = domainRows.map((row) => {
+        const nameEl = row.querySelector(".services-domain-name") ?? row;
+        const text = (nameEl.textContent ?? "").replace(/\s+/g, " ").trim();
+        return text.length > 1 && text[1] === " " ? text[0] + text.slice(2) : text;
       });
+      expect([DOMAINS_LEGACY, DOMAINS_EA]).toContainEqual(names);
     });
 
     it("first letter of each domain is bricked (AIDE acrostic preserved)", () => {
