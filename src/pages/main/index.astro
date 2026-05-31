@@ -27,12 +27,14 @@ const engage = [
 // §02 Founder - the timeline.
 // Bookends (2004 TU München, 2026 KAI HACKS AI) are flagged ai: true and
 // render with a brick dot. Order is canonical and asserted by tests.
-// Year ranges use the spaced-hyphen form per the CVI Writing rules
-// (no en-dashes anywhere, including numeric ranges).
+// Each row carries a single start year. Duration is implicit in the
+// gap to the next row (2006 to 2012 = 6 years at Telefónica, etc.),
+// and a uniform 4-character year column keeps the left edge aligned
+// on narrow viewports.
 const arc = [
   { y: "2004", co: "TU München", role: "AI research", ai: true },
-  { y: "2006 - ’12", co: "Telefónica", role: "SA · ITSM · EA", ai: false },
-  { y: "2012 - ’20", co: "Danfoss", role: "EA · IT Innovation", ai: false },
+  { y: "2006", co: "Telefónica", role: "SA · ITSM · EA", ai: false },
+  { y: "2012", co: "Danfoss", role: "EA · IT Innovation", ai: false },
   { y: "2021", co: "q.beyond", role: "Chief EA", ai: false },
   { y: "2023", co: "FLS", role: "IT Operations", ai: false },
   { y: "2026", co: "KAI HACKS AI", role: "AI enablement", ai: true },
