@@ -21,16 +21,12 @@ import SiteFooter from "../../components/SiteFooter.astro";
 
     <main>
       <header class="ct-mast">
-        <div class="ct-overline">the direct line · for the brief</div>
+        <div class="ct-overline">the direct line</div>
         <h1 class="ct-h1">Contact<em>.</em></h1>
         <p class="ct-lede">
           Tell me what you're working on: the shape of the team, the question, the constraint. I'll
           come back with what I see and what I'd do next.
         </p>
-        <div class="ct-draft">
-          <span class="ct-draft-dot" aria-hidden="true"></span>draft · the call to start, in your
-          words
-        </div>
       </header>
 
       <section class="ct-card">
@@ -43,8 +39,8 @@ import SiteFooter from "../../components/SiteFooter.astro";
           <div class="ct-v">41768274</div>
         </div>
         <p class="ct-note">
-          I read every brief. If it fits, you'll hear back the same week with a first read and the
-          shape of an engagement.
+          I read every brief.<br />If it fits, you'll hear back the same week with a first read and
+          the shape of an engagement.
         </p>
       </section>
     </main>
@@ -53,8 +49,19 @@ import SiteFooter from "../../components/SiteFooter.astro";
   </div>
 
   <style>
+    /* Flex column + full-viewport min-height so the sticky SiteFooter
+     * pins to the bottom of the viewport on short content (the contact
+     * page is a single card — without this the footer would float
+     * mid-page). Matches the chrome rhythm of the snap surfaces while
+     * staying a non-snap page. */
     .contact-page {
       max-width: 820px;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .contact-page main {
+      flex: 1;
     }
 
     /* ── masthead ─────────────────────────────────────────────────────── */
@@ -107,24 +114,6 @@ import SiteFooter from "../../components/SiteFooter.astro";
         font-size: 21px;
       }
     }
-    .ct-draft {
-      margin-top: 14px;
-      font-family: var(--font-mono);
-      font-size: 9.5px;
-      letter-spacing: 0.2em;
-      color: var(--color-amber);
-      text-transform: uppercase;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .ct-draft-dot {
-      display: inline-block;
-      width: 6px;
-      height: 6px;
-      background: var(--color-amber);
-    }
-
     /* ── the one card ─────────────────────────────────────────────────── */
     .ct-card {
       margin: 38px 0;
@@ -175,14 +164,19 @@ import SiteFooter from "../../components/SiteFooter.astro";
     .ct-mail:hover {
       border-bottom-color: var(--color-brick);
     }
+    /* Two-line centered editorial note: a hard <br /> separates the
+     * opening promise ("I read every brief.") from the response
+     * commitment. text-align: center keeps both lines balanced under
+     * the card's editorial axis. */
     .ct-note {
-      margin: 18px 0 0;
+      margin: 18px auto 0;
       max-width: 620px;
       font-family: var(--font-prose);
       font-style: italic;
       font-size: 15px;
       line-height: 1.5;
       color: var(--color-ink-soft);
+      text-align: center;
     }
   </style>
 </BaseLayout>
