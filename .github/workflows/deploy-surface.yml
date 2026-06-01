@@ -86,7 +86,7 @@ jobs:
             # own vhost root. See docs/deploy-targets.md.
             case "$surface" in
               architecture) target="$base/architecture.kaihacks.ai/" ;;
-              main)         target="$base/main/" ;;
+              main)         target="$base/" ;;
               privacy)      target="$base/privacy/" ;;
               cultures)     target="$base/cultures.kaihacks.ai/" ;;
               contact)      target="$base/contact/" ;;
