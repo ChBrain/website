@@ -2,6 +2,10 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
+import pkg from "@chbrain/khai-arch/package.json";
+
+// The canon edition, derived from the installed canon -- one source, no drift.
+const edition = `v${pkg.version}`;
 
 const movements = [
   {
@@ -39,7 +43,7 @@ const movements = [
   description="KAI HACKS AI. The kaihacks specification reads itself: who builds, how it operates, how it runs."
 >
   <div class="arch-home">
-    <SiteHeader domain="architecture" tld=".kaihacks.ai" basePath="./" version="v0.0.6" />
+    <SiteHeader domain="kaihacks" tld=".ai" location="architecture" />
 
     <section class="masthead">
       <div class="section-label">§0 · the specification</div>
@@ -124,7 +128,7 @@ const movements = [
         <div class="playbook-card-body">
           <div class="playbook-card-row">
             <span class="playbook-card-url">architecture.kaihacks.ai/playbook</span>
-            <span class="playbook-card-state">live · the field manual</span>
+            <span class="playbook-card-state">{edition} · live · the field manual</span>
           </div>
           <div class="playbook-card-title">Playbook</div>
           <p class="playbook-card-note">
