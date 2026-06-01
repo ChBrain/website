@@ -1,0 +1,125 @@
+name: deploy-surface
+
+# Reusable single-surface deploy. Builds the site and rsyncs ONE
+# surface's dist/ subfolder to its document root for the chosen env.
+#
+# This is the shared engine behind both the auto-staging deploy (called
+# once per surface in a matrix) and the per-surface production tag
+# deploys, and it can be run by hand from the Actions tab via
+# workflow_dispatch ("deploy my sites independently").
+#
+# The surface -> document-root mapping below is the single source of
+# truth; it mirrors the host layout documented in docs/deploy-targets.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      surface:
+        description: Which surface to deploy
+        type: choice
+        required: true
+        options:
+          - architecture
+          - main
+          - privacy
+          - cultures
+          - contact
+      env:
+        description: Target environment
+        type: choice
+        required: true
+        default: staging
+        options:
+          - staging
+          - production
+  workflow_call:
+    inputs:
+      surface:
+        required: true
+        type: string
+      env:
+        required: true
+        type: string
+      ref:
+        description: Git ref to check out (defaults to the triggering ref)
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+      - name: install
+        run: npm install
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: build
+        run: |
+          if [ "${{ inputs.env }}" = "production" ]; then
+            # Production URLs (no DEPLOY_ENV) + full baseline gates.
+            npm test
+          else
+            # Staging URLs: the URLS helper switches cross-surface links
+            # to staging.kaihacks.ai when DEPLOY_ENV=staging.
+            DEPLOY_ENV=staging npm run build
+          fi
+      - name: resolve rsync target
+        id: target
+        run: |
+          surface="${{ inputs.surface }}"
+          env="${{ inputs.env }}"
+          base="/home/c216mkgp1lzk/public_html"
+          if [ "$env" = "production" ]; then
+            # Production document roots. Apex subpaths (main, privacy,
+            # contact) live at /public_html/<path>/; subdomains at their
+            # own vhost root. See docs/deploy-targets.md.
+            case "$surface" in
+              architecture) target="$base/architecture.kaihacks.ai/" ;;
+              main)         target="$base/main/" ;;
+              privacy)      target="$base/privacy/" ;;
+              cultures)     target="$base/cultures.kaihacks.ai/" ;;
+              contact)      target="$base/contact/" ;;
+              *) echo "::error::unknown surface '$surface'"; exit 1 ;;
+            esac
+          elif [ "$env" = "staging" ]; then
+            # Every surface stages under the single staging vhost.
+            case "$surface" in
+              architecture|main|privacy|cultures|contact)
+                target="$base/staging.kaihacks.ai/$surface/" ;;
+              *) echo "::error::unknown surface '$surface'"; exit 1 ;;
+            esac
+          else
+            echo "::error::unknown env '$env' (expected staging or production)"
+            exit 1
+          fi
+          # Guard: never rsync --delete from a surface the build did not
+          # emit. An empty source with --delete would wipe the live dir.
+          if [ ! -d "dist/$surface" ]; then
+            echo "::error::dist/$surface does not exist - build emitted no '$surface' surface"
+            exit 1
+          fi
+          echo "target=$target" >> "$GITHUB_OUTPUT"
+          echo "Deploying dist/$surface/ -> $target ($env)"
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/kaihacksai
+          chmod 600 ~/.ssh/kaihacksai
+          ssh-keyscan 92.205.150.56 >> ~/.ssh/known_hosts || true
+      - name: Deploy surface via rsync
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/kaihacksai" \
+            "./dist/${{ inputs.surface }}/" \
+            "c216mkgp1lzk@92.205.150.56:${{ steps.target.outputs.target }}"
