@@ -24,7 +24,7 @@
     "prepare": "husky && chmod +x .husky/pre-commit"
   },
   "dependencies": {
-    "@chbrain/khai-arch": "^0.0.4",
+    "@chbrain/khai-arch": "^0.0.6",
     "@fontsource-variable/newsreader": "^5.2.10",
     "@fontsource-variable/source-serif-4": "^5.2.9",
     "@fontsource/ibm-plex-mono": "^5.2.7"

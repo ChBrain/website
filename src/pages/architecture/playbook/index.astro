@@ -5,26 +5,7 @@ import SiteFooter from "../../../components/SiteFooter.astro";
 import Mark from "../../../components/Mark.astro";
 import { loadAllSpecs } from "../../../lib/load-specs";
 import { parseSpec, type ParsedSpec } from "../../../lib/parse-spec";
-
-// Canonical order of the playbook. Plot at the top (the system),
-// the five Casts (the elements Plot casts), and the two substrate
-// files everything rests on. This order is the design contract.
-const ORDER = [
-  "plot",
-  "process",
-  "position",
-  "piece",
-  "place",
-  "persona",
-  "architecture",
-  "instructions",
-];
-
-const ROLE_LABEL: Record<string, string> = {
-  system: "the system",
-  element: "element",
-  meta: "meta",
-};
+import { playbook } from "@chbrain/khai-arch";
 
 const allSpecs = loadAllSpecs();
 const bySlug = new Map<string, ParsedSpec | null>();
@@ -36,51 +17,46 @@ for (const raw of allSpecs) {
   }
 }
 
-// Assemble the canonical 8 spreads. A spread always renders — if a spec
-// isn't yet in the package, the spread is rendered as a "coming" stub.
-const spreads = ORDER.map((slug, i) => {
-  const parsed = bySlug.get(slug) ?? null;
-  const fm = parsed?.frontmatter;
-  const role = fm?.class ?? "element";
-  const groupKey = role === "system" ? "system" : role === "meta" ? "meta" : "element";
-  return {
-    slug,
-    idx: i,
-    n: String(i).padStart(2, "0"),
-    name: fm?.id ? fm.id.charAt(0).toUpperCase() + fm.id.slice(1) : null,
-    subtitle: fm?.subtitle ?? null,
-    status: fm?.status ?? "draft",
-    role,
-    roleLabel: ROLE_LABEL[role] ?? role,
-    chapters: parsed?.chapters ?? [],
-    coda: parsed?.coda ?? null,
-    groupKey,
-    written: !!parsed,
-  };
-});
-
-const groupLabels: Record<string, string> = {
-  system: "the system",
-  element: "casts",
-  meta: "rests on",
-};
-
-// Build the overlay TOC structure grouped by role.
-const tocGroups = ["system", "element", "meta"].map((g) => ({
-  key: g,
-  label: groupLabels[g],
-  items: spreads.filter((s) => s.groupKey === g),
+// The playbook spine is owned by the canon (@chbrain/khai-arch): each group
+// declares its label and its ordered members. We render that and never
+// re-declare the order or grouping here -- add a spec to the canon's model and
+// it appears, with no edit to this file. (Phase 3: the "enriched by" group's
+// items get one card per installed engine appended here.)
+let idx = 0;
+const tocGroups = playbook.map((group) => ({
+  key: group.id,
+  label: group.label,
+  items: group.members.map((slug) => {
+    const parsed = bySlug.get(slug) ?? null;
+    const fm = parsed?.frontmatter;
+    const n = idx++;
+    return {
+      slug,
+      idx: n,
+      n: String(n).padStart(2, "0"),
+      name: fm?.id ? fm.id.charAt(0).toUpperCase() + fm.id.slice(1) : null,
+      subtitle: fm?.subtitle ?? null,
+      status: fm?.status ?? "draft",
+      role: group.label,
+      roleLabel: group.label,
+      chapters: parsed?.chapters ?? [],
+      coda: parsed?.coda ?? null,
+      groupKey: group.id,
+      written: !!parsed,
+    };
+  }),
 }));
 
+const spreads = tocGroups.flatMap((g) => g.items);
 const total = spreads.length;
 ---
 
 <BaseLayout
   title="Playbook · architecture · kaihacks"
-  description="The KAI HACKS AI playbook: Plot, the five elements that Plot casts, and the two substrate files everything rests on."
+  description="The KAI HACKS AI playbook: Plot, the five elements that Plot casts, and the substrate that holds and enriches it."
 >
   <div class="playbook">
-    <SiteHeader domain="architecture" tld=".kaihacks.ai" basePath="../" version="v0.0.4" />
+    <SiteHeader domain="architecture" tld=".kaihacks.ai" basePath="../" version="v0.0.6" />
 
     {
       /* Collapsed-strip indicator on the left edge. Click to expand the
