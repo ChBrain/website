@@ -5,24 +5,74 @@ import { loadBuiltPages } from "./helpers/load-built-html";
 const pages = loadBuiltPages(process.cwd());
 const home = pages.find((p) => p.path === "architecture/index.html");
 
+// Chrome-lift detection (expand-contract gate). The architecture surface is
+// migrating from the legacy header (wordmark left, version chip right) to the
+// shared location layout (wayfinding left; the wordmark moves right and
+// backlinks UP one level; the version chip leaves the header -- the edition
+// moves onto the page). We detect which build produced the page by the
+// presence of the .topbar-location label and assert the matching contract, so
+// this lands tests-first (green on the current build) and the source PR flips
+// it (green on the lifted build).
+const homeLifted = home
+  ? !!new JSDOM(home.html).window.document.querySelector(".topbar-location")
+  : false;
+
 describe("architecture home - design contract", () => {
   it("page exists at architecture/index.html", () => {
     expect(home).toBeDefined();
   });
 
   describe("topbar", () => {
-    it("renders the domain caption with .kaihacks.ai accent", () => {
-      const dom = new JSDOM(home!.html);
-      const tld = dom.window.document.querySelector(".topbar-domain-tld");
-      expect(tld).not.toBeNull();
-      expect(tld!.textContent).toBe(".kaihacks.ai");
-    });
+    if (homeLifted) {
+      // Lifted (location layout). The home sits at the architecture root, so
+      // the top-right wordmark backlinks UP to the main site -> kaihacks.ai
+      // (.ai accent). Top-left names where you are. No version chip.
+      it("top-left wayfinding names the current section (architecture)", () => {
+        const dom = new JSDOM(home!.html);
+        const loc = dom.window.document.querySelector(".topbar-location");
+        expect(loc).not.toBeNull();
+        expect(loc!.textContent?.trim().toLowerCase()).toBe("architecture");
+      });
 
-    it("shows the khai version", () => {
+      it("top-right wordmark backlinks to main with the .ai accent", () => {
+        const dom = new JSDOM(home!.html);
+        const tld = dom.window.document.querySelector(".topbar-domain-tld");
+        expect(tld).not.toBeNull();
+        expect(tld!.textContent).toBe(".ai");
+      });
+
+      it("carries no version chip in the header (edition moves to the §2 card)", () => {
+        const dom = new JSDOM(home!.html);
+        expect(dom.window.document.querySelector(".topbar-version")).toBeNull();
+      });
+    } else {
+      it("renders the domain caption with .kaihacks.ai accent", () => {
+        const dom = new JSDOM(home!.html);
+        const tld = dom.window.document.querySelector(".topbar-domain-tld");
+        expect(tld).not.toBeNull();
+        expect(tld!.textContent).toBe(".kaihacks.ai");
+      });
+
+      it("shows the khai version", () => {
+        const dom = new JSDOM(home!.html);
+        const version = dom.window.document.querySelector(".topbar-version");
+        expect(version).not.toBeNull();
+        expect(version!.textContent).toMatch(/khai\s*·\s*v\d+\.\d+\.\d+/);
+      });
+    }
+  });
+
+  describe("§2 playbook card - canon edition", () => {
+    it("carries the live edition (vX.Y.Z) on the card meta line once lifted", () => {
+      // The edition mark is added with the chrome lift; until then the card's
+      // meta line is just "live · the field manual" with no version.
+      if (!homeLifted) return;
       const dom = new JSDOM(home!.html);
-      const version = dom.window.document.querySelector(".topbar-version");
-      expect(version).not.toBeNull();
-      expect(version!.textContent).toMatch(/khai\s*·\s*v\d+\.\d+\.\d+/);
+      const state = dom.window.document.querySelector(".playbook-card-state");
+      expect(state, "missing .playbook-card-state").not.toBeNull();
+      expect(state!.textContent).toMatch(/v\d+\.\d+\.\d+/);
+      // the field-manual framing stays alongside the edition
+      expect(state!.textContent?.toLowerCase()).toContain("field manual");
     });
   });
 

@@ -24,6 +24,16 @@ const CANON = playbookPage
   ? !!new JSDOM(playbookPage.html).window.document.querySelector("article#play.pb-spread")
   : false;
 
+// Chrome-lift detection (a separate axis from CANON). The header migrates to
+// the shared location layout: wayfinding left; the wordmark moves right and
+// backlinks UP to the architecture root (still architecture.kaihacks.ai, so
+// the TLD accent is unchanged); the version chip leaves the header; the
+// edition is stamped bottom-left on the cover. Detected by the .topbar-location
+// label -- additive assertions skip until the source lift lands.
+const LIFTED = playbookPage
+  ? !!new JSDOM(playbookPage.html).window.document.querySelector(".topbar-location")
+  : false;
+
 const SPINE: { n: string; slug: string; role: string }[] = CANON
   ? [
       { n: "00", slug: "play", role: "production" },
@@ -60,10 +70,27 @@ describe("architecture playbook - design contract", () => {
 
   describe("global chrome (SiteHeader + SiteFooter)", () => {
     it("renders the SiteHeader with .kaihacks.ai TLD accent", () => {
+      // The playbook sits one level below the architecture root, so the
+      // wordmark backlinks UP to architecture.kaihacks.ai either way -- the
+      // TLD accent is unchanged by the lift.
       const dom = new JSDOM(playbookPage!.html);
       const tld = dom.window.document.querySelector(".topbar-domain-tld");
       expect(tld).not.toBeNull();
       expect(tld!.textContent).toBe(".kaihacks.ai");
+    });
+
+    it("top-left wayfinding names the section (playbook) once lifted", () => {
+      if (!LIFTED) return;
+      const dom = new JSDOM(playbookPage!.html);
+      const loc = dom.window.document.querySelector(".topbar-location");
+      expect(loc).not.toBeNull();
+      expect(loc!.textContent?.trim().toLowerCase()).toBe("playbook");
+    });
+
+    it("carries no version chip in the header once lifted (edition is on the cover)", () => {
+      if (!LIFTED) return;
+      const dom = new JSDOM(playbookPage!.html);
+      expect(dom.window.document.querySelector(".topbar-version")).toBeNull();
     });
 
     it("renders the SiteFooter with the global Privacy + CVI links", () => {
@@ -72,6 +99,19 @@ describe("architecture playbook - design contract", () => {
       const labels = links.map((a) => a.textContent?.trim());
       expect(labels).toContain("Privacy");
       expect(labels).toContain("CVI");
+    });
+  });
+
+  describe("cover - canon edition mark", () => {
+    it("stamps the edition (khai · vX.Y.Z) on the cover once lifted", () => {
+      // Bottom-left on the front cover, derived from the installed canon. Added
+      // with the chrome lift; skipped until then.
+      if (!LIFTED) return;
+      const dom = new JSDOM(playbookPage!.html);
+      const edition = dom.window.document.querySelector(".pb-cover-edition");
+      expect(edition, "missing .pb-cover-edition").not.toBeNull();
+      expect(edition!.textContent?.toLowerCase()).toContain("khai");
+      expect(edition!.textContent).toMatch(/v\d+\.\d+\.\d+/);
     });
   });
 
