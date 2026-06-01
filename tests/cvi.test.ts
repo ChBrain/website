@@ -30,16 +30,6 @@ import { BRAND } from "../src/lib/brand";
 const pages = loadBuiltPages(process.cwd());
 const cvi = pages.find((p) => p.path === "main/cvi/index.html");
 
-// Expand-contract gate. The §02 mark-set sub-panels (02·ii monogram,
-// 02·iii app-icon, + the ink-dot lockup) arrive via a separate source
-// PR. Detect whether they're present and assert the matching structure
-// strictly either way, so this contract is green before AND after the
-// source lands (same transition pattern as the 8->9 Writing chapter).
-// Tighten to new-only once the source PR is merged.
-const HAS_SET_SUBPANELS = cvi
-  ? !!new JSDOM(cvi.html).window.document.querySelector("section#set-monogram")
-  : false;
-
 // Canonical TOC: 9 chapters with Writing inserted as 06 between
 // Typography and Icon. The legacy 8-chapter shape (no Writing peer)
 // is gone — Writing is a top-level peer to Typography and the
@@ -71,9 +61,7 @@ interface ChapterSpec {
 // asserts the secondary panels.
 const SECTIONS: ChapterSpec[] = [
   { id: "mark", n: "01", h2: "The mark" },
-  HAS_SET_SUBPANELS
-    ? { id: "set", n: "02 · i", h2: "The set: the full lockup" }
-    : { id: "set", n: "02", h2: "The set: which to use when" },
+  { id: "set", n: "02 · i", h2: "The set: the full lockup" },
   { id: "space", n: "03", h2: "Clear space & minimum size" },
   { id: "color", n: "04 · i", h2: "Colour: ground & voice" },
   { id: "type", n: "05 · i", h2: "Typography: the families" },
@@ -84,12 +72,8 @@ const SECTIONS: ChapterSpec[] = [
 ];
 
 const SUB_PANELS: ChapterSpec[] = [
-  ...(HAS_SET_SUBPANELS
-    ? [
-        { id: "set-monogram", n: "02 · ii", h2: "The set: the kh monogram" },
-        { id: "set-icon", n: "02 · iii", h2: "The set: the app-icon tile" },
-      ]
-    : []),
+  { id: "set-monogram", n: "02 · ii", h2: "The set: the kh monogram" },
+  { id: "set-icon", n: "02 · iii", h2: "The set: the app-icon tile" },
   { id: "color-accents", n: "04 · ii", h2: "Colour: the accents" },
   { id: "color-rules", n: "04 · iii", h2: "Colour: rules & tokens" },
   { id: "type-scale", n: "05 · ii", h2: "Typography: the scale" },
@@ -99,7 +83,7 @@ const LOCKUP_VARIANTS = [
   { tag: "khai-mark.svg", title: "Primary · brick" },
   { tag: "khai-mark-sea.svg", title: "Sea dot" },
   { tag: "khai-mark-amber.svg", title: "Amber dot" },
-  ...(HAS_SET_SUBPANELS ? [{ tag: "khai-mark-ink.svg", title: "Ink dot" }] : []),
+  { tag: "khai-mark-ink.svg", title: "Ink dot" },
   { tag: "khai-mark-reverse.svg", title: "Reverse" },
 ];
 
@@ -238,7 +222,7 @@ describe("CVI - design contract", () => {
   });
 
   describe("§02 the set - lockup variants", () => {
-    it("renders the authorised variants in canonical order", () => {
+    it("renders all 5 authorised variants in canonical order", () => {
       const dom = new JSDOM(cvi!.html);
       const setSection = dom.window.document.querySelector("section#set");
       const cards = [...setSection!.querySelectorAll(".cvi-card")];
@@ -255,14 +239,13 @@ describe("CVI - design contract", () => {
       const dom = new JSDOM(cvi!.html);
       const setSection = dom.window.document.querySelector("section#set");
       const stages = setSection!.querySelectorAll(".cvi-stage");
-      expect(stages.length).toBe(LOCKUP_VARIANTS.length);
+      expect(stages.length).toBe(5);
       const darkStages = setSection!.querySelectorAll(".cvi-stage--dark");
       expect(darkStages.length).toBe(1);
     });
   });
 
-  // Gated: only runs once the source PR adds the family sub-panels.
-  describe.runIf(HAS_SET_SUBPANELS)("§02 the set - monogram + icon families", () => {
+  describe("§02 the set - monogram + icon families", () => {
     it("§02·ii renders the 5-variant kh monogram family", () => {
       const dom = new JSDOM(cvi!.html);
       const s = dom.window.document.querySelector("section#set-monogram");
