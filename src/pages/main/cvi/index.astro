@@ -1543,7 +1543,13 @@ const donts = [
     #voice .cvi-seclabel-body {
       flex: 0 0 auto;
     }
-    .cvi-voice {
+    /* Selector is .cvi p.cvi-voice (not just .cvi-voice) so the rule
+     * out-specifics the generic .cvi p rule above which would otherwise
+     * win on margin / color / text-wrap. Without the bump, margin: 0
+     * auto is overridden by margin: 0, the block hugs the flex parent's
+     * left edge and only the text inside centres — block stays off-axis
+     * horizontally even though text-align does its job. */
+    .cvi p.cvi-voice {
       max-width: 760px;
       margin: 0 auto;
       font-size: 23px;
