@@ -42,8 +42,10 @@ if (!raw) {
 }
 
 // Drop the file's fixed width/height so CSS controls size; viewBox keeps
-// the aspect ratio.
-const svg = raw.replace(/\s(width|height)="[^"]*"/g, "");
+// the aspect ratio. Scope the strip to the <svg> opening tag only -- a global
+// strip also clears child geometry (e.g. the lockup's rule <rect width/height>),
+// collapsing the rule bar to nothing.
+const svg = raw.replace(/<svg\b[^>]*>/, (tag) => tag.replace(/\s(width|height)="[^"]*"/g, ""));
 ---
 
 <span class:list={["mark", className]} style={`--mark-w:${width}px`} set:html={svg} />

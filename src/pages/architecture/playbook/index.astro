@@ -156,13 +156,14 @@ const total = spreads.length;
         <h1 class="pb-cover-title">
           Playbook<em>.</em>
         </h1>
-        <p class="pb-cover-sub">The elements of how a world is moved, one file at a time.</p>
+        {/* prettier-ignore */}
+        <p class="pb-cover-sub">The elements of how a world is moved, <br />one file at a time.</p>
         <div class="pb-cover-actions">
           <a href="#plot" class="pb-cover-cta">Open the playbook →</a>
           <span class="pb-cover-hint">or press →</span>
         </div>
       </div>
-      {/* Edition stamp, bottom-left of the cover. Derived from the canon. */}
+      {/* Edition stamp, bottom-center of the cover. Derived from the canon. */}
       <span class="pb-cover-edition">khai · {edition}</span>
     </header>
 
@@ -446,20 +447,24 @@ const total = spreads.length;
     .pb-cover-mark {
       position: absolute;
       top: 1.25rem;
-      left: 0;
+      left: 50%;
+      transform: translateX(-50%);
     }
     @media (max-width: 640px) {
       .pb-cover-mark {
         position: static;
+        transform: none;
+        text-align: center;
         margin-bottom: 28px;
       }
     }
-    /* Edition stamp: bottom-left of the cover, small. Mirrors the mark's
-     * top-left anchor; small enough to read as a colophon, not a heading. */
+    /* Edition stamp: bottom-center of the cover, small. A colophon, not a
+     * heading; centered to sit under the title column. */
     .pb-cover-edition {
       position: absolute;
       bottom: 1.25rem;
-      left: 0;
+      left: 50%;
+      transform: translateX(-50%);
       font-family: var(--font-mono);
       font-size: 11px;
       letter-spacing: 0.16em;
@@ -469,6 +474,9 @@ const total = spreads.length;
     @media (max-width: 640px) {
       .pb-cover-edition {
         position: static;
+        transform: none;
+        display: block;
+        text-align: center;
         margin-top: 24px;
       }
     }
@@ -657,6 +665,11 @@ const total = spreads.length;
       .pb-facets {
         grid-template-columns: 1fr 1fr;
         gap: 22px;
+      }
+      /* Odd count: the last card spans both columns, so the grid never ends on
+       * a lonely half-row (WIRES = 5, HACKS = 5, any odd spec). */
+      .pb-facet:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
       }
     }
     .pb-facet {
