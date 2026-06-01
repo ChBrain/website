@@ -39,8 +39,8 @@ import SiteFooter from "../../components/SiteFooter.astro";
           <div class="ct-v">41768274</div>
         </div>
         <p class="ct-note">
-          I read every brief.<br />If it fits, you'll hear back the same week with a first read and
-          the shape of an engagement.
+          I read every brief.<br />If it fits, you'll hear back the same week<br />with a first read
+          and the shape of an engagement.
         </p>
       </section>
     </main>
@@ -176,10 +176,11 @@ import SiteFooter from "../../components/SiteFooter.astro";
     .ct-mail:hover {
       border-bottom-color: var(--color-brick);
     }
-    /* Two-line centered editorial note: a hard <br /> separates the
-     * opening promise ("I read every brief.") from the response
-     * commitment. text-align: center keeps both lines balanced under
-     * the card's editorial axis. */
+    /* Three-line centered editorial note. Hard line breaks pace the
+     * read: "I read every brief." (the promise) / "If it fits, you'll
+     * hear back the same week" (the cadence) / "with a first read and
+     * the shape of an engagement." (what the reply is). text-align:
+     * center keeps the three lines balanced under the card. */
     .ct-note {
       margin: 18px auto 0;
       max-width: 620px;
