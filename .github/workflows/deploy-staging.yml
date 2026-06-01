@@ -27,9 +27,7 @@ jobs:
         surface:
           - architecture
           - main
-          - privacy
           - cultures
-          - contact
     uses: ./.github/workflows/deploy-surface.yml
     with:
       surface: ${{ matrix.surface }}

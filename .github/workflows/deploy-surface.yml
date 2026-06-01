@@ -21,9 +21,7 @@ on:
         options:
           - architecture
           - main
-          - privacy
           - cultures
-          - contact
       env:
         description: Target environment
         type: choice
@@ -81,21 +79,20 @@ jobs:
           env="${{ inputs.env }}"
           base="/home/c216mkgp1lzk/public_html"
           if [ "$env" = "production" ]; then
-            # Production document roots. Apex subpaths (main, privacy,
-            # contact) live at /public_html/<path>/; subdomains at their
-            # own vhost root. See docs/deploy-targets.md.
+            # Production document roots. main is the apex front door:
+            # kaihacks.ai's doc root is /public_html/main/, and its privacy/,
+            # contact/, and cvi/ pages live inside main's own dist. Subdomains
+            # have their own vhost root. See docs/deploy-targets.md.
             case "$surface" in
               architecture) target="$base/architecture.kaihacks.ai/" ;;
               main)         target="$base/main/" ;;
-              privacy)      target="$base/privacy/" ;;
               cultures)     target="$base/cultures.kaihacks.ai/" ;;
-              contact)      target="$base/contact/" ;;
               *) echo "::error::unknown surface '$surface'"; exit 1 ;;
             esac
           elif [ "$env" = "staging" ]; then
             # Every surface stages under the single staging vhost.
             case "$surface" in
-              architecture|main|privacy|cultures|contact)
+              architecture|main|cultures)
                 target="$base/staging.kaihacks.ai/$surface/" ;;
               *) echo "::error::unknown surface '$surface'"; exit 1 ;;
             esac

@@ -25,7 +25,11 @@ import { loadBuiltPages } from "./helpers/load-built-html";
  */
 
 const pages = loadBuiltPages(process.cwd());
-const privacy = pages.find((p) => p.path === "privacy/index.html");
+// Privacy folds under the main surface (dist/main/privacy/) when main becomes
+// the apex; accept either build path while the move lands.
+const privacy =
+  pages.find((p) => p.path === "privacy/index.html") ??
+  pages.find((p) => p.path === "main/privacy/index.html");
 
 const SECTIONS = [
   { n: "01", h2: "The short version" },
