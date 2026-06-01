@@ -105,7 +105,7 @@ const variants = [
 ];
 
 const surfaces = [
-  { nm: "paper", hex: BRAND.paper, role: "The page. Warm ground, default surface" },
+  { nm: "paper", hex: BRAND.paper, role: "The default page; warm ground" },
   { nm: "paperWarm", hex: BRAND.paperWarm, role: "Raised cards, panels" },
   { nm: "paperDeep", hex: BRAND.paperDeep, role: "Recessed / banded sections" },
   { nm: "ice", hex: BRAND.ice, role: "Cooler white; a morning surface" },
@@ -719,27 +719,33 @@ const donts = [
     </section>
 
     <section id="voice" class="cvi-section cvi-section--last">
-      <div class="cvi-seclabel">
-        <span class="cvi-n">09</span>
-        <div class="cvi-seclabel-body">
-          <div class="cvi-sectop"><h2 class="cvi-h2">In one breath</h2></div>
+      <div class="cvi-voice-center">
+        <div class="cvi-seclabel">
+          <span class="cvi-n">09</span>
+          <div class="cvi-seclabel-body">
+            <div class="cvi-sectop"><h2 class="cvi-h2">In one breath</h2></div>
+          </div>
         </div>
+        <p class="cvi-voice">
+          Warm paper, near-black ink, hairline rules;<br />
+          and a single brick dot that does all the talking.<br />
+          Editorial, calm, exact.<br />
+          The system never shouts; it simply holds.
+        </p>
       </div>
-      <p class="cvi-voice">
-        Warm paper, near-black ink, hairline rules;<br />
-        and a single brick dot that does all the talking.<br />
-        Editorial, calm, exact.<br />
-        The system never shouts; it simply holds.
-      </p>
-    </section>
 
-    <footer class="cvi-footer">
-      <p class="cvi-mono cvi-foot-line">KAI HACKS AI · Corporate Visual Identity · v0.1.0</p>
-      <p class="cvi-mono cvi-foot-line">
-        Newsreader · Source Serif 4 · IBM Plex Mono &nbsp;·&nbsp; ink #16130f · ghost #c9bea7 ·
-        brick #8d3a2c · sea #3a4a52 · amber #c98e36
-      </p>
-    </footer>
+      {
+        /* Colophon lives inside the last panel so it lands in-viewport on
+        snap, rather than below the fold needing an extra scroll nudge. */
+      }
+      <footer class="cvi-footer">
+        <p class="cvi-mono cvi-foot-line">KAI HACKS AI · Corporate Visual Identity · v0.1.0</p>
+        <p class="cvi-mono cvi-foot-line">
+          Newsreader · Source Serif 4 · IBM Plex Mono &nbsp;·&nbsp; ink #16130f · ghost #c9bea7 ·
+          brick #8d3a2c · sea #3a4a52 · amber #c98e36
+        </p>
+      </footer>
+    </section>
 
     <SiteFooter />
   </div>
@@ -1582,8 +1588,22 @@ const donts = [
     }
 
     /* ── footer ─────────────────────────────────────────────────────────── */
+    /* §09 holds the voice block centered in the panel and the colophon
+     * pinned to the bottom, so both land in one viewport on snap. */
+    .cvi-voice-center {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
     .cvi-footer {
-      padding: 50px 0 100px;
+      padding: 40px 0 8px;
+    }
+    @media (max-width: 640px) {
+      /* No snap on mobile - restore breathing room before the SiteFooter. */
+      .cvi-footer {
+        padding: 40px 0 64px;
+      }
     }
     .cvi-foot-line {
       line-height: 1.9;
