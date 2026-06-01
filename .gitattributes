@@ -1,0 +1,29 @@
+# Enforce LF line endings on checkout across all platforms.
+#
+# Without this, Windows checkout with `core.autocrlf=true` rewrites
+# every text file from LF (the form in git's object store) to CRLF
+# (on the working tree). Prettier's default `endOfLine: "lf"` then
+# flags every file as a formatting error and the husky pre-commit
+# `format:check` hook blocks every commit — even though CI on Linux
+# (LF native) passes cleanly. The divergence cost contributors
+# `--no-verify` workarounds for problems that don't exist in the
+# canonical form.
+#
+# `* text=auto` lets git detect text vs binary; `eol=lf` then forces
+# LF on checkout for everything classified as text. Binary files
+# (images, fonts) are detected and left alone.
+* text=auto eol=lf
+
+# Belt-and-braces: explicitly mark the common binaries we ship so
+# they're never accidentally converted, even if auto-detection
+# guesses wrong.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.pdf binary
