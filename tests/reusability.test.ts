@@ -3,23 +3,24 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
 
 /**
- * Reusability drift detector — source-based, report-only.
+ * Reusability drift detector — source-based, hard gate.
  *
  * Scans src/ for inline literals that ought to live in shared atoms
- * (src/lib/brand.ts, src/styles/tokens.css, src/components/*). Today
- * the test always passes; findings are printed to stdout so CI logs
- * surface drift candidates without blocking PRs.
+ * (src/lib/brand.ts, src/styles/tokens.css, src/components/*). Any
+ * finding outside the allowlist fails CI. The allowlist is the only
+ * escape hatch — extend it intentionally with a one-line justification
+ * when something legitimate hits the scan.
  *
- * Flip FAIL_ON_FINDINGS to true once the allowlist stabilises to
- * convert this into a hard gate.
- *
- * Three checks today:
+ * Three checks:
  *  - hex literals outside src/lib/brand.ts + tokens.css + CVI display content
  *  - font-family string literals outside the canonical homes
  *  - <svg> blocks outside src/components/
+ *
+ * Findings are still logged to stdout before failing so CI output
+ * surfaces the exact drift candidates.
  */
 
-const FAIL_ON_FINDINGS = false;
+const FAIL_ON_FINDINGS = true;
 
 const ROOT = process.cwd();
 const SCAN_ROOTS = ["src"];
@@ -42,11 +43,15 @@ const ALLOWLIST = {
   // files via @fontsource(-variable) imports in its frontmatter (no
   // third-party Google Fonts request). KhaiMark embeds Newsreader in
   // an inline SVG style attribute (CSS vars can't reach the SVG text
-  // element).
+  // element). The CVI page IS the brand colophon — it documents the
+  // type stack and renders inline font-family declarations as part of
+  // its content (same exemption pattern as the hex allowlist above:
+  // the doc surface is allowed to display what it documents).
   fontFamily: new Set<string>([
     "src/styles/tokens.css",
     "src/layouts/BaseLayout.astro",
     "src/components/KhaiMark.astro",
+    "src/pages/main/cvi/index.astro",
   ]),
   // Components own reusable SVG. The CVI's icon-tile <img src="/favicon.svg">
   // is a raster reference, not an inline svg block, so it doesn't trigger.
@@ -126,7 +131,7 @@ function format(findings: Finding[]): string {
 }
 
 describe("reusability — inline-literal drift detector", () => {
-  it("scans src/ for hex / font-family / inline-svg drift (report-only)", () => {
+  it("scans src/ for hex / font-family / inline-svg drift", () => {
     const findings: Finding[] = [];
     for (const dir of SCAN_ROOTS) {
       const root = join(ROOT, dir);
