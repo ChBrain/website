@@ -97,23 +97,6 @@ const movements = [
           ))
         }
       </div>
-
-      <div class="directions">
-        <div class="direction">
-          <div class="direction-arrow">KAI → HACKS → AI</div>
-          <div class="direction-gloss">
-            <span class="direction-label">read forward ·</span>
-            <em>how you build one.</em>
-          </div>
-        </div>
-        <div class="direction">
-          <div class="direction-arrow">AI ← HACKS ← KAI</div>
-          <div class="direction-gloss">
-            <span class="direction-label">read backward ·</span>
-            <em>how you explain one.</em>
-          </div>
-        </div>
-      </div>
     </section>
 
     <section class="section playbook-cta">
@@ -216,6 +199,13 @@ const movements = [
     /* masthead */
     .masthead {
       padding: 1.875rem 0 1.5rem;
+      /* Centered hero, matching the main site's grammar. The masthead's
+       * children (label, title, subline, draft marker) stack and center;
+       * the wrapped title centers its lines via justify-content below. */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
     }
     @media (min-width: 641px) {
       .masthead {
@@ -239,6 +229,7 @@ const movements = [
       display: flex;
       flex-wrap: wrap;
       align-items: baseline;
+      justify-content: center;
       column-gap: 0.26em;
     }
     @media (min-width: 641px) {
@@ -438,50 +429,6 @@ const movements = [
       width: 16px;
       height: 1px;
       background: var(--color-rule);
-    }
-
-    /* directions */
-    .directions {
-      margin-top: 1.125rem;
-      border-top: 1px solid var(--color-ink);
-      padding-top: 1.125rem;
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    @media (min-width: 641px) {
-      .directions {
-        gap: 36px;
-      }
-    }
-    .direction {
-      flex: 1 1 100%;
-    }
-    @media (min-width: 641px) {
-      .direction {
-        flex: 1 1 320px;
-      }
-    }
-    .direction-arrow {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.2em;
-      color: var(--color-brick);
-      text-transform: uppercase;
-    }
-    .direction-gloss {
-      margin-top: 6px;
-      font-family: var(--font-prose);
-      font-size: 16px;
-      color: var(--color-ink);
-    }
-    .direction-label {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.18em;
-      color: var(--color-ink-soft);
-      text-transform: uppercase;
-      margin-right: 8px;
     }
 
     /* §2 playbook CTA card — mirrors the architecture-card on main:
