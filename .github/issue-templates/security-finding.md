@@ -30,6 +30,7 @@ labels: ["security", "triage"]
 <!-- Describe how the fix adheres to least privilege: minimum permissions, minimal scope, etc. -->
 
 This fix will:
+
 - [ ] Add explicit `permissions` block to limit access
 - [ ] Remove unnecessary permissions or scopes
 - [ ] Document why each permission is required

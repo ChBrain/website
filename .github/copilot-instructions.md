@@ -29,4 +29,4 @@ When a security finding (Dependabot, GitHub Advisory, code review, or audit) arr
 
 ---
 
-*Last updated: June 2026*
+_Last updated: June 2026_

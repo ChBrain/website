@@ -11,6 +11,7 @@ If you discover a security vulnerability, misconfiguration, or advisory affectin
 ## Security Finding Workflow
 
 Every security finding must be attached to a PR before it's resolved. This ensures:
+
 - Audit trail of who fixed it and when
 - Peer review of the remediation
 - Clear documentation of the security rationale
@@ -44,6 +45,7 @@ Every security finding must be attached to a PR before it's resolved. This ensur
 **PR Title:** `security(deploy): add explicit permissions to deploy-production.yml workflow`
 
 **Code change:**
+
 ```yaml
 # Explicit permissions follow the principle of least privilege.
 # This workflow deploys the site, so it needs to read repository contents.
@@ -66,14 +68,14 @@ All security fixes must adhere to least privilege:
 
 **Common permissions for website workflows:**
 
-| Permission | Use Case |
-|---|---|
-| `contents: read` | Checkout repo, run tests, read files |
-| `contents: write` | Push commits, create tags (release workflows only) |
-| `pull-requests: write` | Create or update PRs (automation workflows) |
-| `packages: read` | Install from GitHub Packages |
-| `security-events: write` | CodeQL analysis workflow |
-| `actions: read` | Read workflow metadata (CodeQL) |
+| Permission               | Use Case                                           |
+| ------------------------ | -------------------------------------------------- |
+| `contents: read`         | Checkout repo, run tests, read files               |
+| `contents: write`        | Push commits, create tags (release workflows only) |
+| `pull-requests: write`   | Create or update PRs (automation workflows)        |
+| `packages: read`         | Install from GitHub Packages                       |
+| `security-events: write` | CodeQL analysis workflow                           |
+| `actions: read`          | Read workflow metadata (CodeQL)                    |
 
 ## Governance
 
