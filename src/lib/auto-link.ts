@@ -1,4 +1,13 @@
-const TYPE_IDS = ["plot", "process", "position", "piece", "place", "persona", "instructions"];
+const TYPE_IDS = [
+  "plot",
+  "process",
+  "position",
+  "piece",
+  "place",
+  "persona",
+  "architecture",
+  "instructions",
+];
 
 /**
  * Auto-link uppercase type-name tokens in body prose to their sibling type pages.

@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { createRequire } from "node:module";
 
@@ -20,7 +20,7 @@ export interface RawSpec {
 export function loadAllSpecs(): RawSpec[] {
   const entries = readdirSync(KHAI_ARCH_DIR)
     .filter((name) => name.endsWith(".md"))
-    .filter((name) => name !== "architecture.md");
+    .filter((name) => name !== "model.md");
 
   return entries.map((name) => {
     const id = name.replace(/\.md$/, "");
@@ -31,18 +31,4 @@ export function loadAllSpecs(): RawSpec[] {
       text: readFileSync(path, "utf-8"),
     };
   });
-}
-
-export function loadArchitecture(): RawSpec | null {
-  const path = join(KHAI_ARCH_DIR, "architecture.md");
-  try {
-    if (!statSync(path).isFile()) return null;
-    return {
-      id: "architecture",
-      path,
-      text: readFileSync(path, "utf-8"),
-    };
-  } catch {
-    return null;
-  }
 }
