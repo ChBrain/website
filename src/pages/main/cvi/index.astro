@@ -1536,9 +1536,27 @@ const donts = [
      * breaks visually so the closing clauses don't orphan. The §09
      * heading row (number + title) is also centered so it shares the
      * vertical axis with the body — the seclabel flex row needs the
-     * explicit justify so the §09 marker doesn't orphan to the left. */
+     * explicit justify so the §09 marker doesn't orphan to the left.
+     *
+     * Defensive: re-state display:flex + flex-direction:column +
+     * justify-content:center + min-height with #voice (higher
+     * specificity than the .cvi-section rule) so the chapter reliably
+     * vertical-centers even if something in the cascade weakens the
+     * .cvi-section flex. Drop padding-block: this section is the
+     * editorial closer — short content — and the standard 70px top/
+     * bottom padding was pulling content above viewport centre. */
+    @media (min-width: 641px) {
+      #voice.cvi-section {
+        min-height: calc(100vh - 8rem);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding-block: 0;
+      }
+    }
     #voice .cvi-seclabel {
       justify-content: center;
+      margin-bottom: 18px;
     }
     #voice .cvi-seclabel-body {
       flex: 0 0 auto;
