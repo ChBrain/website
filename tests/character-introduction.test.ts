@@ -72,6 +72,7 @@ const ALLOWED_RENDERER_WORDS = new Set([
   "piece",
   "place",
   "persona",
+  "play",
 ]);
 
 describe("character-introduction - built page words exist in source", () => {
