@@ -124,23 +124,13 @@ describe("main (company front door) — design contract", () => {
       expect(tld!.textContent).toBe(".ai");
     });
 
-    it("SiteHeader nav: legacy 3-item apex menu OR removed for the location-label shape", () => {
-      // Same two-shape contract as cvi.test.ts. After the chrome
-      // restructure the nav goes away (the wordmark moves right, the
-      // location label takes the left). Accept either form.
+    it("SiteHeader is in the location-label shape (no .topbar-nav)", () => {
+      // The chrome restructure landed across all surfaces; the legacy
+      // 3-item apex menu is gone. Locking the assertion catches any
+      // regression to it.
       const dom = new JSDOM(main!.html);
       const navLinks = [...dom.window.document.querySelectorAll(".topbar-nav a")];
-      const labels = navLinks.map((a) => a.textContent?.trim());
-      const isLegacy =
-        labels.length === 3 &&
-        labels[0] === "architecture" &&
-        labels[1] === "cultures" &&
-        labels[2] === "services";
-      const isLocationLabel = labels.length === 0;
-      expect(
-        isLegacy || isLocationLabel,
-        `nav "${labels.join(" · ")}" matched neither the legacy apex menu nor the location-label removal`,
-      ).toBe(true);
+      expect(navLinks.length).toBe(0);
     });
 
     it("renders the SiteFooter with the global Privacy + CVI links", () => {
@@ -176,45 +166,27 @@ describe("main (company front door) — design contract", () => {
       expect(accent?.textContent?.trim()).toBe("HACKS");
     });
 
-    it("lede frames the offer (legacy disciplines list OR the new outcomes-to-delivery line)", () => {
-      // Two accepted shapes:
-      //   LEGACY — long form listing the four disciplines + the
-      //   "with or without AI" tail: "An enterprise architect's method –
-      //   applied across AI, ITSM, DevOps and enterprise architecture,
-      //   with or without AI..."
-      //   DRIVING — short positioning line that pairs with the new
-      //   masthead grammar: "Driving outcomes, from Architecture to
-      //   Delivery." (architecture + delivery as the bookend nouns).
-      // Both must mention "architecture" — that's the brand-identifying
-      // structural anchor.
+    it("lede reads the canonical 'Driving outcomes, from Architecture to Delivery.'", () => {
+      // The masthead lede landed with the §01 services lift — "Driving
+      // outcomes, from Architecture to Delivery." pairs with the
+      // KAI HACKS AI. wordmark above. The legacy disciplines list
+      // ("AI, ITSM, DevOps, enterprise architecture, with or without
+      // AI…") is gone; Architecture remains the brand anchor.
       const dom = new JSDOM(main!.html);
       const lede = dom.window.document.querySelector(".lede");
       // Source wraps the lede across lines; collapse whitespace before matching.
       const text = (lede?.textContent ?? "").toLowerCase().replace(/\s+/g, " ");
       expect(text).toContain("architecture");
-      const isLegacy =
-        text.includes("itsm") &&
-        text.includes("devops") &&
-        text.includes("enterprise architecture") &&
-        text.includes("with or without ai");
-      const isDriving = text.includes("driving") && text.includes("delivery");
-      expect(
-        isLegacy || isDriving,
-        `lede "${text}" matched neither the legacy disciplines list nor the new driving-to-delivery line`,
-      ).toBe(true);
+      expect(text).toContain("driving");
+      expect(text).toContain("delivery");
     });
 
-    it("draft-marker tolerated (either present in legacy form, or removed in the final-fixes shape)", () => {
-      // Kai removed the draft-marker line as part of the final-fixes
-      // pass; the legacy shape kept it as an amber dot + label. Accept
-      // either — when present, the textContent must still contain
-      // "draft" (otherwise something other than the marker is rendering
-      // with the class).
+    it("no .draft-marker on the masthead (removed in the final-fixes pass)", () => {
+      // The draft-marker amber pill was removed in the final-fixes pass.
+      // Asserting absence catches any regression that puts it back.
       const dom = new JSDOM(main!.html);
       const draft = dom.window.document.querySelector(".draft-marker");
-      if (draft) {
-        expect((draft.textContent ?? "").toLowerCase()).toContain("draft");
-      }
+      expect(draft).toBeNull();
     });
   });
 
@@ -415,19 +387,14 @@ describe("main (company front door) — design contract", () => {
       expect(accentFlags).toEqual([false, true, false]);
     });
 
-    it("architecture sub-divider label tolerates either 'what the method runs on' OR 'what the method is'", () => {
-      // Legacy: "Architecture · what the method runs on" (framed
-      // applications as runtime).
-      // New: "Architecture · what the method is" (frames Architecture
-      // as the method's definition — the architecture-card carries the
-      // acronym expansion).
+    it("architecture sub-divider label reads 'Architecture · what the method is'", () => {
+      // The §03 reframe landed: Architecture is the method's definition
+      // (the architecture-card below carries the acronym expansion).
+      // The legacy "runs on" framing is gone.
       const dom = new JSDOM(main!.html);
       const section = dom.window.document.querySelector("section#method");
       const label = section!.querySelector(".architecture-sub-label")?.textContent?.trim();
-      expect([
-        "Architecture · what the method runs on",
-        "Architecture · what the method is",
-      ]).toContain(label);
+      expect(label).toBe("Architecture · what the method is");
     });
 
     it("architecture card links to URLS.architecture", () => {
@@ -438,13 +405,13 @@ describe("main (company front door) — design contract", () => {
     });
 
     it("architecture card carries the canonical title + 'live · the foundation' state", () => {
-      // Title accepts either the legacy short form 'Architecture' or
-      // the new long form 'KAI HACKS AI Architecture' — same card,
-      // the new form just hangs the brand prefix on the title.
+      // Title is the new brand-prefixed long form 'KAI HACKS AI
+      // Architecture' that landed with the §03 reframe. Legacy short
+      // 'Architecture' is gone.
       const dom = new JSDOM(main!.html);
       const card = dom.window.document.querySelector("section#method a.architecture-card");
       const title = card!.querySelector(".architecture-card-title")?.textContent?.trim();
-      expect(["Architecture", "KAI HACKS AI Architecture"]).toContain(title);
+      expect(title).toBe("KAI HACKS AI Architecture");
       expect(card!.querySelector(".architecture-card-state")?.textContent?.trim()).toBe(
         "live · the foundation",
       );

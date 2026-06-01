@@ -55,25 +55,14 @@ describe("privacy statement - design contract", () => {
       expect(tld!.textContent).toBe(".ai");
     });
 
-    it("renders the SiteHeader nav (legacy 3-item apex menu OR removed for the location-label shape)", () => {
-      // Two accepted shapes for the SiteHeader after the chrome restructure:
-      // - LEGACY: 3 nav items (company / architecture / cultures)
-      // - LOCATION-LABEL: nav removed; top-left is a wayfinding label and
-      //   the wordmark moves to the top-right. ".topbar-nav" may be absent
-      //   entirely or empty. Same tolerant contract as main + cvi + cultures.
+    it("renders the SiteHeader in the location-label shape (no .topbar-nav)", () => {
+      // The chrome lift landed in #104; privacy is on the location-label
+      // shape (wayfinding label top-left, wordmark top-right, no nav
+      // links). The legacy 3-item apex menu is gone — locking the
+      // assertion catches any regression to it.
       const dom = new JSDOM(privacy!.html);
       const navLinks = [...dom.window.document.querySelectorAll(".topbar-nav a")];
-      const labels = navLinks.map((a) => a.textContent?.trim());
-      const isLegacy =
-        labels.length === 3 &&
-        labels[0] === "company" &&
-        labels[1] === "architecture" &&
-        labels[2] === "cultures";
-      const isLocationLabel = labels.length === 0;
-      expect(
-        isLegacy || isLocationLabel,
-        `nav "${labels.join(" · ")}" matched neither the legacy apex menu nor the location-label removal`,
-      ).toBe(true);
+      expect(navLinks.length).toBe(0);
     });
 
     it("renders the SiteFooter with Privacy + CVI global links", () => {

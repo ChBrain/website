@@ -1,20 +1,12 @@
 name: deploy-staging
 
-# Runs after CI green on push to main. Builds the site with
-# DEPLOY_ENV=staging so the URLS helper switches cross-surface links
-# from production (kaihacks.ai/...) to staging (staging.kaihacks.ai/...).
-# Rsyncs five surfaces from dist/:
-#   - dist/architecture/ -> staging.kaihacks.ai/architecture/
-#   - dist/main/         -> staging.kaihacks.ai/main/
-#   - dist/privacy/      -> staging.kaihacks.ai/privacy/
-#   - dist/cultures/     -> staging.kaihacks.ai/cultures/
-#   - dist/contact/      -> staging.kaihacks.ai/contact/
-# The staging URLs are https://staging.kaihacks.ai/architecture/,
-# https://staging.kaihacks.ai/main/, https://staging.kaihacks.ai/privacy/,
-# https://staging.kaihacks.ai/cultures/ and
-# https://staging.kaihacks.ai/contact/. The apex staging.kaihacks.ai/
-# root is intentionally not deployed from this workflow; it is owned by
-# the placeholder in chbrain/kaihacks.
+# After CI is green on main, deploy every surface to staging. Each
+# surface runs through the shared deploy-surface reusable workflow, so
+# staging and production share one deploy engine.
+#
+# Surfaces deploy independently (matrix, fail-fast disabled): one
+# surface failing does not block the others, and any single surface can
+# be re-run on its own from the Actions tab.
 
 on:
   workflow_run:
@@ -28,77 +20,20 @@ permissions:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
-      - uses: actions/setup-node@v6
-        with:
-          node-version-file: .nvmrc
-      - name: install
-        run: npm install
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: build (staging URLs)
-        run: npm run build
-        env:
-          DEPLOY_ENV: staging
-      - name: Set up SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/kaihacksai
-          chmod 600 ~/.ssh/kaihacksai
-          ssh-keyscan 92.205.150.56 >> ~/.ssh/known_hosts || true
-      - name: Deploy architecture surface via rsync
-        run: |
-          # Rsync dist/architecture/ (not dist/) so dist/architecture/index.html
-          # lands as staging.kaihacks.ai/architecture/index.html (the listing),
-          # and dist/architecture/<slug>/index.html lands as
-          # staging.kaihacks.ai/architecture/<slug>/index.html. The kaihacks
-          # placeholder dist/index.html is intentionally NOT deployed; the
-          # staging.kaihacks.ai/ root is owned by chbrain/kaihacks.
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/kaihacksai" \
-            ./dist/architecture/ \
-            c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/staging.kaihacks.ai/architecture/
-      - name: Deploy main surface via rsync
-        run: |
-          # Rsync dist/main/ to staging.kaihacks.ai/main/. Lands as
-          # /main/index.html (the company front door) and
-          # /main/cvi/index.html (the CVI colophon).
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/kaihacksai" \
-            ./dist/main/ \
-            c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/staging.kaihacks.ai/main/
-      - name: Deploy privacy surface via rsync
-        run: |
-          # Rsync dist/privacy/ to staging.kaihacks.ai/privacy/. Lands as
-          # /privacy/index.html - the site-wide privacy statement linked
-          # from every page's SiteFooter.
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/kaihacksai" \
-            ./dist/privacy/ \
-            c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/staging.kaihacks.ai/privacy/
-      - name: Deploy cultures surface via rsync
-        run: |
-          # Rsync dist/cultures/ to staging.kaihacks.ai/cultures/. Lands as
-          # /cultures/index.html - the brand-book landing for the cultures
-          # application. The legacy live cultures.kaihacks.ai (served from
-          # chbrain/kaihacks) is unaffected; this staging deploy is for
-          # eyeballing the brand-aligned lift before production cutover.
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/kaihacksai" \
-            ./dist/cultures/ \
-            c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/staging.kaihacks.ai/cultures/
-      - name: Deploy contact surface via rsync
-        run: |
-          # Rsync dist/contact/ to staging.kaihacks.ai/contact/. Lands as
-          # /contact/index.html - the dedicated destination for the §01
-          # Services CTA on main. Same chrome (SiteHeader + SiteFooter)
-          # as every other surface.
-          rsync -avz --delete \
-            -e "ssh -i ~/.ssh/kaihacksai" \
-            ./dist/contact/ \
-            c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/staging.kaihacks.ai/contact/
+    strategy:
+      fail-fast: false
+      matrix:
+        surface:
+          - architecture
+          - main
+          - privacy
+          - cultures
+          - contact
+    uses: ./.github/workflows/deploy-surface.yml
+    with:
+      surface: ${{ matrix.surface }}
+      env: staging
+      # Deploy exactly the commit CI just validated, not the tip of main.
+      ref: ${{ github.event.workflow_run.head_sha }}
+    secrets: inherit
