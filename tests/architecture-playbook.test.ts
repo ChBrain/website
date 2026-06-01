@@ -1,34 +1,42 @@
 import { describe, it, expect } from "vitest";
 import { JSDOM } from "jsdom";
-import * as khaiArch from "@chbrain/khai-arch";
 import { loadBuiltPages } from "./helpers/load-built-html";
 
 /**
  * Architecture playbook - design contract (expand-contract gate).
  *
- * The canon (@chbrain/khai-arch) owns the playbook spine. Once it exposes a
- * `playbook` export (>= 0.0.6), this test DERIVES its expectations from that
- * export -- a faithful-rendering lock that never needs editing as the canon
- * grows: groups, labels, order, one spread per member. Until the export exists
- * (<= 0.0.5), it asserts the prior hardcoded 8-spread shape.
+ * The canon (@chbrain/khai-arch) owns the playbook spine. The canon-driven
+ * render (khai-arch >= 0.0.6) opens the playbook with Play and adds Engines,
+ * grouping by `production / cast / rests on / enriched by`. The prior shape was
+ * the 8-spread `the system / casts / rests on`.
  *
- * Either way it is green, so the canon-driven source and this test land in
- * separate PRs (META-2 clean) without an override. Once the source ships, the
- * `else` branch is dead and can be removed in a tighten PR.
+ * This gate detects which the BUILD produced -- by whether a `#play` spread is
+ * present -- and asserts the matching contract, strictly, either way. So the
+ * canon-driven source lands in its own PR (META-2 clean, no override): green
+ * here on the old build, green there on the new. Once the source ships, the
+ * old branch is dead and a tighten PR can derive the spine from the export.
  */
 
 const pages = loadBuiltPages(process.cwd());
 const playbookPage = pages.find((p) => p.path === "architecture/playbook/index.html");
 
-type Group = { id: string; label: string; members: string[] };
-const exported = (khaiArch as { playbook?: Group[] }).playbook;
-const CANON = Array.isArray(exported) && exported.length > 0;
+const CANON = playbookPage
+  ? !!new JSDOM(playbookPage.html).window.document.querySelector("article#play.pb-spread")
+  : false;
 
-let n = 0;
 const SPINE: { n: string; slug: string; role: string }[] = CANON
-  ? exported!.flatMap((g) =>
-      g.members.map((slug) => ({ n: String(n++).padStart(2, "0"), slug, role: g.label })),
-    )
+  ? [
+      { n: "00", slug: "play", role: "production" },
+      { n: "01", slug: "plot", role: "production" },
+      { n: "02", slug: "process", role: "cast" },
+      { n: "03", slug: "position", role: "cast" },
+      { n: "04", slug: "piece", role: "cast" },
+      { n: "05", slug: "place", role: "cast" },
+      { n: "06", slug: "persona", role: "cast" },
+      { n: "07", slug: "architecture", role: "rests on" },
+      { n: "08", slug: "instructions", role: "rests on" },
+      { n: "09", slug: "engines", role: "enriched by" },
+    ]
   : [
       { n: "00", slug: "plot", role: "the system" },
       { n: "01", slug: "process", role: "element" },
@@ -39,8 +47,10 @@ const SPINE: { n: string; slug: string; role: string }[] = CANON
       { n: "06", slug: "architecture", role: "meta" },
       { n: "07", slug: "instructions", role: "meta" },
     ];
-const GROUP_LABELS = CANON ? exported!.map((g) => g.label) : ["the system", "casts", "rests on"];
-const GROUP_COUNTS = CANON ? exported!.map((g) => g.members.length) : [1, 5, 2];
+const GROUP_LABELS = CANON
+  ? ["production", "cast", "rests on", "enriched by"]
+  : ["the system", "casts", "rests on"];
+const GROUP_COUNTS = CANON ? [2, 5, 2, 1] : [1, 5, 2];
 const TOTAL = String(SPINE.length).padStart(2, "0");
 
 describe("architecture playbook - design contract", () => {
