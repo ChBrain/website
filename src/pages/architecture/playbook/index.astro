@@ -3,7 +3,7 @@ import BaseLayout from "../../../layouts/BaseLayout.astro";
 import SiteHeader from "../../../components/SiteHeader.astro";
 import SiteFooter from "../../../components/SiteFooter.astro";
 import KhaiMark from "../../../components/KhaiMark.astro";
-import { loadAllSpecs, loadArchitecture } from "../../../lib/load-specs";
+import { loadAllSpecs } from "../../../lib/load-specs";
 import { parseSpec, type ParsedSpec } from "../../../lib/parse-spec";
 
 // Canonical order of the playbook. Plot at the top (the system),
@@ -26,21 +26,7 @@ const ROLE_LABEL: Record<string, string> = {
   meta: "meta",
 };
 
-// Substrate override. The frontmatter "class" field on architecture.md
-// and instructions.md is "element" (they're authored like elements),
-// but the playbook design treats them as the substrate that everything
-// rests on — their own group, with the "meta" role label. Mapping by
-// slug is the cleanest way to honour the design intent without forcing
-// a frontmatter rewrite upstream.
-const ROLE_OVERRIDE: Record<string, "system" | "element" | "meta"> = {
-  architecture: "meta",
-  instructions: "meta",
-};
-
 const allSpecs = loadAllSpecs();
-const architectureSpec = loadArchitecture();
-// Build a lookup of every spec we can find. loadAllSpecs() returns the
-// per-type files; loadArchitecture() returns architecture.md if present.
 const bySlug = new Map<string, ParsedSpec | null>();
 for (const raw of allSpecs) {
   try {
@@ -49,20 +35,13 @@ for (const raw of allSpecs) {
     bySlug.set(raw.id, null);
   }
 }
-if (architectureSpec) {
-  try {
-    bySlug.set("architecture", parseSpec(architectureSpec.text));
-  } catch {
-    bySlug.set("architecture", null);
-  }
-}
 
 // Assemble the canonical 8 spreads. A spread always renders — if a spec
 // isn't yet in the package, the spread is rendered as a "coming" stub.
 const spreads = ORDER.map((slug, i) => {
   const parsed = bySlug.get(slug) ?? null;
   const fm = parsed?.frontmatter;
-  const role = ROLE_OVERRIDE[slug] ?? fm?.class ?? "element";
+  const role = fm?.class ?? "element";
   const groupKey = role === "system" ? "system" : role === "meta" ? "meta" : "element";
   return {
     slug,
@@ -101,7 +80,7 @@ const total = spreads.length;
   description="The KAI HACKS AI playbook: Plot, the five elements that Plot casts, and the two substrate files everything rests on."
 >
   <div class="playbook">
-    <SiteHeader domain="architecture" tld=".kaihacks.ai" basePath="../" version="v0.0.2" />
+    <SiteHeader domain="architecture" tld=".kaihacks.ai" basePath="../" version="v0.0.3" />
 
     {
       /* Collapsed-strip indicator on the left edge. Click to expand the
