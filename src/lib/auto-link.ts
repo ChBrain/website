@@ -1,13 +1,8 @@
-const TYPE_IDS = [
-  "plot",
-  "process",
-  "position",
-  "piece",
-  "place",
-  "persona",
-  "architecture",
-  "instructions",
-];
+import { types } from "@chbrain/khai-arch";
+
+// Auto-link every canon type, derived from the installed canon so a new type
+// links automatically -- no hardcoded list to drift.
+const TYPE_IDS = Object.keys(types);
 
 /**
  * Auto-link uppercase type-name tokens in body prose to their sibling type pages.

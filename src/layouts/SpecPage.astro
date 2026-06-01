@@ -6,6 +6,7 @@ import ClassPill from "../components/ClassPill.astro";
 import MnemonicStrip from "../components/MnemonicStrip.astro";
 import ChapterGrid from "../components/ChapterGrid.astro";
 import { autoLink, rewriteMdLinks } from "../lib/auto-link";
+import { playbook } from "@chbrain/khai-arch";
 import MarkdownIt from "markdown-it";
 import type { ParsedSpec } from "../lib/parse-spec";
 
@@ -13,10 +14,11 @@ interface Props {
   spec: ParsedSpec;
 }
 
-// Canonical order of the 6 typed specs. Instructions is excluded - it's
-// the meta-type infrastructure, not a P-driver. Specs outside this list
-// (instructions) get no prev/next nav (currentIdx == -1).
-const TYPE_ORDER = ["plot", "process", "position", "piece", "place", "persona"];
+// Prev/next walks the content spine -- the production and cast groups from the
+// canon's playbook. The substrate (rests on / enriched by) gets no nav, as
+// before; a new content spec joins the walk automatically, no list to edit.
+const NAV_GROUPS = new Set(["production", "cast"]);
+const TYPE_ORDER = playbook.filter((g) => NAV_GROUPS.has(g.id)).flatMap((g) => g.members);
 
 const { spec } = Astro.props;
 const { frontmatter, lede, chapters, coda } = spec;
@@ -43,7 +45,7 @@ const nextId =
 
 <BaseLayout title={`${title} - kaihacks architecture`} description={frontmatter.subtitle}>
   <div class="arch-page">
-    <SiteHeader domain="architecture" tld=".kaihacks.ai" basePath="../" version="v0.0.4" />
+    <SiteHeader domain="architecture" tld=".kaihacks.ai" basePath="../" version="v0.0.6" />
 
     <header class="spec-header">
       <div class="spec-meta">
