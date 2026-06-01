@@ -1,0 +1,5 @@
+{
+  "source": ["src/**", "public/**", "astro.config.*"],
+  "test": ["tests/**", ".github/workflows/**", ".husky/**"],
+  "exemptRenames": true
+}
