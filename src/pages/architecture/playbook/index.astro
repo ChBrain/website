@@ -162,10 +162,8 @@ const total = spreads.length;
               <span class={`pb-spread-state pb-spread-state--${s.status}`}>{s.status}</span>
             </header>
 
-            <h2 class="pb-spread-title">
-              {s.name ?? s.slug}
-              <em>.</em>
-            </h2>
+            {/* prettier-ignore */}
+            <h2 class="pb-spread-title">{s.name ?? s.slug}<em>.</em></h2>
 
             {s.subtitle && <p class="pb-spread-sub">{s.subtitle}</p>}
 
@@ -412,6 +410,12 @@ const total = spreads.length;
         justify-content: center;
         align-items: center;
         padding: 2.25rem 0;
+      }
+      /* Optical nudge: a centered hero reads slightly high in a tall
+       * viewport, so bias it toward the lower third to balance the
+       * empty band below. The mark (absolute, top-left) is untouched. */
+      .pb-cover-body {
+        transform: translateY(10vh);
       }
     }
     @media (max-width: 640px) {
