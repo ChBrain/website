@@ -69,7 +69,7 @@ single source of truth. Three ways to invoke it:
   `env: staging`. Surfaces deploy independently (fail-fast disabled),
   so one failing surface never blocks the rest.
 - **Production tags** (`deploy-production.yml`): pushing a per-surface
-  tag (`main-v1.2.0`, `architecture-v0.0.3`, …) rebuilds and deploys
+  tag (`main-v0.0.1`, `architecture-v0.0.3`, …) rebuilds and deploys
   only that surface with `env: production`.
 - **Manual** (`workflow_dispatch`): run `deploy-surface` from the
   Actions tab (or `gh workflow run deploy-surface.yml -f surface=main

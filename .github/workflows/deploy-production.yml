@@ -10,7 +10,7 @@ name: deploy-production
 #
 # The tag prefix selects the surface; only that surface is rebuilt and
 # rsynced, so each site releases on its own cadence. The numeric suffix
-# (e.g. main-v1.2.0) is the release record - there is no per-surface
+# (e.g. main-v0.0.1) is the release record - there is no per-surface
 # version file to match against yet, so the tag itself is the source of
 # truth (see docs/deploy-targets.md, "Versioning").
 
