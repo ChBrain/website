@@ -138,14 +138,31 @@ describe("architecture home - design contract", () => {
       expect(accented[0].textContent?.trim()).toBe("HACKS");
     });
 
-    it("has both reading directions (forward and backward)", () => {
-      const dom = new JSDOM(home!.html);
-      const arrows = Array.from(dom.window.document.querySelectorAll(".direction-arrow")).map((a) =>
-        a.textContent?.trim(),
-      );
-      expect(arrows).toContain("KAI → HACKS → AI");
-      expect(arrows).toContain("AI ← HACKS ← KAI");
-    });
+    // The read-forward/backward directions strip was design-guide scaffolding
+    // and is being retired (the three movements stay). Expand-contract gate:
+    // assert both directions while they're present, assert the strip is gone
+    // once removed -- green on either build, so the source cut lands cleanly.
+    const hasDirections = home
+      ? new JSDOM(home.html).window.document.querySelectorAll(".direction-arrow").length > 0
+      : false;
+
+    if (hasDirections) {
+      it("has both reading directions (forward and backward)", () => {
+        const dom = new JSDOM(home!.html);
+        const arrows = Array.from(dom.window.document.querySelectorAll(".direction-arrow")).map(
+          (a) => a.textContent?.trim(),
+        );
+        expect(arrows).toContain("KAI → HACKS → AI");
+        expect(arrows).toContain("AI ← HACKS ← KAI");
+      });
+    } else {
+      it("the reading directions strip is retired (movements remain)", () => {
+        const dom = new JSDOM(home!.html);
+        expect(dom.window.document.querySelectorAll(".direction-arrow").length).toBe(0);
+        // the three movements are untouched by the cut
+        expect(dom.window.document.querySelectorAll(".movement").length).toBe(3);
+      });
+    }
   });
 
   describe("section structure", () => {
