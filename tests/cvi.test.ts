@@ -30,22 +30,11 @@ import { BRAND } from "../src/lib/brand";
 const pages = loadBuiltPages(process.cwd());
 const cvi = pages.find((p) => p.path === "main/cvi/index.html");
 
-// Two accepted TOC shapes — LEGACY (8 entries) or NEW (9, with Writing
-// inserted as 06 between Typography and Icon). The NEW shape promotes
-// the writing rules (voice & punctuation) to a top-level chapter, peer
-// to Typography, instead of being tucked under it. Bumps Icon/Applications/
-// In one breath to 07/08/09.
-const TOC_LEGACY = [
-  { n: "01", title: "The mark", href: "#mark" },
-  { n: "02", title: "The set", href: "#set" },
-  { n: "03", title: "Space & size", href: "#space" },
-  { n: "04", title: "Colour", href: "#color" },
-  { n: "05", title: "Typography", href: "#type" },
-  { n: "06", title: "Icon & favicon", href: "#icon" },
-  { n: "07", title: "Applications", href: "#apply" },
-  { n: "08", title: "In one breath", href: "#voice" },
-];
-const TOC_NEW = [
+// Canonical TOC: 9 chapters with Writing inserted as 06 between
+// Typography and Icon. The legacy 8-chapter shape (no Writing peer)
+// is gone — Writing is a top-level peer to Typography and the
+// following chapters are bumped to 07 / 08 / 09.
+const TOC = [
   { n: "01", title: "The mark", href: "#mark" },
   { n: "02", title: "The set", href: "#set" },
   { n: "03", title: "Space & size", href: "#space" },
@@ -59,72 +48,33 @@ const TOC_NEW = [
 
 interface ChapterSpec {
   id: string;
-  /** Exact .cvi-n text - .cvi-n must equal this. */
+  /** Exact .cvi-n text — .cvi-n must equal this. */
   n: string;
-  /**
-   * Accepted .cvi-h2 text. An array so we can tolerate the legacy
-   * en-dash form ("Colour – ground & voice") AND the new no-en-dash
-   * form ("Colour: ground & voice") that the en-dash sweep PR
-   * introduces. Single-string form still works via toContain.
-   */
-  h2: string[];
+  /** Exact .cvi-h2 text. */
+  h2: string;
 }
 
-// Two accepted SECTIONS shapes — LEGACY (Icon=06, Apply=07, Voice=08)
-// or NEW (Writing=06 inserted, Icon/Apply/Voice bump to 07/08/09).
-// The asserted IDs and headings change with the bump.
-// h2 values are arrays so the assertion accepts either the legacy
-// en-dash form ("Colour – ground & voice") or the new no-en-dash form
-// ("Colour: ground & voice") that the en-dash sweep PR introduces.
-// Sections without dashes carry a single-entry array.
-const SECTIONS_LEGACY: ChapterSpec[] = [
-  { id: "mark", n: "01", h2: ["The mark"] },
-  { id: "set", n: "02", h2: ["The set – which to use when", "The set: which to use when"] },
-  { id: "space", n: "03", h2: ["Clear space & minimum size"] },
-  // §04 colour is split into 3 sub-panels; #color is panel i.
-  // Panels ii (#color-accents) and iii (#color-rules) are asserted
-  // separately in SUB_PANELS below.
-  { id: "color", n: "04 · i", h2: ["Colour – ground & voice", "Colour: ground & voice"] },
-  // §05 typography is split into 2 sub-panels; #type is panel i.
-  // Panel ii (#type-scale) is asserted separately in SUB_PANELS below.
-  { id: "type", n: "05 · i", h2: ["Typography – the families", "Typography: the families"] },
-  { id: "icon", n: "06", h2: ["Icon & favicon"] },
-  { id: "apply", n: "07", h2: ["Applications & misuse"] },
-  { id: "voice", n: "08", h2: ["In one breath"] },
+// Canonical chapters. §04 Colour is split into 3 sub-panels
+// (#color "04 · i", #color-accents "04 · ii", #color-rules "04 · iii").
+// §05 Typography is split into 2 (#type "05 · i", #type-scale "05 · ii").
+// SECTIONS asserts the first panel of each chapter; SUB_PANELS below
+// asserts the secondary panels.
+const SECTIONS: ChapterSpec[] = [
+  { id: "mark", n: "01", h2: "The mark" },
+  { id: "set", n: "02", h2: "The set: which to use when" },
+  { id: "space", n: "03", h2: "Clear space & minimum size" },
+  { id: "color", n: "04 · i", h2: "Colour: ground & voice" },
+  { id: "type", n: "05 · i", h2: "Typography: the families" },
+  { id: "writing", n: "06", h2: "Writing: voice & punctuation" },
+  { id: "icon", n: "07", h2: "Icon & favicon" },
+  { id: "apply", n: "08", h2: "Applications & misuse" },
+  { id: "voice", n: "09", h2: "In one breath" },
 ];
-const SECTIONS_NEW: ChapterSpec[] = [
-  { id: "mark", n: "01", h2: ["The mark"] },
-  { id: "set", n: "02", h2: ["The set – which to use when", "The set: which to use when"] },
-  { id: "space", n: "03", h2: ["Clear space & minimum size"] },
-  { id: "color", n: "04 · i", h2: ["Colour – ground & voice", "Colour: ground & voice"] },
-  { id: "type", n: "05 · i", h2: ["Typography – the families", "Typography: the families"] },
-  { id: "writing", n: "06", h2: ["Writing: voice & punctuation"] },
-  { id: "icon", n: "07", h2: ["Icon & favicon"] },
-  { id: "apply", n: "08", h2: ["Applications & misuse"] },
-  { id: "voice", n: "09", h2: ["In one breath"] },
-];
-// Resolved at test time per build — picks the matching shape from #voice's n
-// label (08 = legacy, 09 = new). Lets the same test file pass on both
-// versions of the source while the lift lands.
-function pickSections(cvi: { html: string }): ChapterSpec[] {
-  const dom = new JSDOM(cvi.html);
-  const voice = dom.window.document.querySelector("section#voice .cvi-n")?.textContent?.trim();
-  return voice === "09" ? SECTIONS_NEW : SECTIONS_LEGACY;
-}
-function pickToc(cvi: { html: string }) {
-  const dom = new JSDOM(cvi.html);
-  const voice = dom.window.document.querySelector("section#voice .cvi-n")?.textContent?.trim();
-  return voice === "09" ? TOC_NEW : TOC_LEGACY;
-}
 
 const SUB_PANELS: ChapterSpec[] = [
-  { id: "color-accents", n: "04 · ii", h2: ["Colour – the accents", "Colour: the accents"] },
-  {
-    id: "color-rules",
-    n: "04 · iii",
-    h2: ["Colour – rules & tokens", "Colour: rules & tokens"],
-  },
-  { id: "type-scale", n: "05 · ii", h2: ["Typography – the scale", "Typography: the scale"] },
+  { id: "color-accents", n: "04 · ii", h2: "Colour: the accents" },
+  { id: "color-rules", n: "04 · iii", h2: "Colour: rules & tokens" },
+  { id: "type-scale", n: "05 · ii", h2: "Typography: the scale" },
 ];
 
 const LOCKUP_VARIANTS = [
@@ -149,25 +99,13 @@ describe("CVI - design contract", () => {
       expect(tld!.textContent).toBe(".ai");
     });
 
-    it("renders the SiteHeader nav (legacy 3-item apex menu OR removed for the location-label shape)", () => {
-      // Two accepted shapes for the SiteHeader after the chrome restructure:
-      // - LEGACY: 3 nav items (architecture / cultures / services)
-      // - LOCATION-LABEL: nav removed; top-left is a wayfinding label and
-      //   the wordmark moves to the top-right. ".topbar-nav" may be absent
-      //   entirely or empty.
+    it("SiteHeader is in the location-label shape (no .topbar-nav)", () => {
+      // The chrome restructure landed across all surfaces; the legacy
+      // 3-item apex menu is gone. Locking the assertion catches any
+      // regression to it.
       const dom = new JSDOM(cvi!.html);
       const navLinks = [...dom.window.document.querySelectorAll(".topbar-nav a")];
-      const labels = navLinks.map((a) => a.textContent?.trim());
-      const isLegacy =
-        labels.length === 3 &&
-        labels[0] === "architecture" &&
-        labels[1] === "cultures" &&
-        labels[2] === "services";
-      const isLocationLabel = labels.length === 0;
-      expect(
-        isLegacy || isLocationLabel,
-        `nav "${labels.join(" · ")}" matched neither the legacy apex menu nor the location-label removal`,
-      ).toBe(true);
+      expect(navLinks.length).toBe(0);
     });
 
     it("renders the SiteFooter with the global Privacy + CVI links", () => {
@@ -207,44 +145,34 @@ describe("CVI - design contract", () => {
   });
 
   describe("table of contents", () => {
-    it("has the canonical TOC entries in canonical order (legacy 8 / new 9 / overlay shape)", () => {
-      // Two structural shapes accepted (same chapters in either):
-      // - LEGACY FLAT: <nav class="cvi-toc"><a><span class="cvi-tn">…<span class="cvi-tt">…
-      // - OVERLAY:     <nav class="cvi-toc"><div class="cvi-toc-group"><a class="cvi-toc-link">
-      //                  <span class="cvi-toc-n">…<span class="cvi-toc-name">…
-      //   The overlay shape is the playbook chassis port — same chapter
-      //   data, wrapped inside a dialog with editorial role groups. The
-      //   strip + overlay is the navigation UI; tests only gate the
-      //   chapter contract (count, hrefs, numbers, titles).
+    it("has the 9 canonical TOC entries inside the overlay TOC, in canonical order", () => {
+      // The TOC lives inside the playbook-chassis overlay (#113):
+      //   <nav class="cvi-toc"><div class="cvi-toc-group">
+      //     <a class="cvi-toc-link">
+      //       <span class="cvi-toc-n">…</span>
+      //       <span class="cvi-toc-name">…</span>
+      //     </a>
+      //   </div></nav>
+      // The legacy flat shape (.cvi-toc > a + .cvi-tn/.cvi-tt) is gone.
       const dom = new JSDOM(cvi!.html);
-      const expected = pickToc(cvi!);
-      const overlayEntries = [
-        ...dom.window.document.querySelectorAll(".cvi-toc-link"),
-      ] as Element[];
-      const legacyEntries = [...dom.window.document.querySelectorAll(".cvi-toc > a")] as Element[];
-      const isOverlay = overlayEntries.length > 0;
-      const entries = isOverlay ? overlayEntries : legacyEntries;
-      const nSel = isOverlay ? ".cvi-toc-n" : ".cvi-tn";
-      const tSel = isOverlay ? ".cvi-toc-name" : ".cvi-tt";
-      expect(entries.length).toBe(expected.length);
+      const entries = [...dom.window.document.querySelectorAll(".cvi-toc-link")];
+      expect(entries.length).toBe(TOC.length);
       entries.forEach((a, i) => {
-        expect(a.getAttribute("href")).toBe(expected[i].href);
-        expect(a.querySelector(nSel)?.textContent?.trim()).toBe(expected[i].n);
-        expect(a.querySelector(tSel)?.textContent?.trim()).toBe(expected[i].title);
+        expect(a.getAttribute("href")).toBe(TOC[i].href);
+        expect(a.querySelector(".cvi-toc-n")?.textContent?.trim()).toBe(TOC[i].n);
+        expect(a.querySelector(".cvi-toc-name")?.textContent?.trim()).toBe(TOC[i].title);
       });
     });
   });
 
-  describe("canonical chapters (legacy 8 or new 9 with Writing)", () => {
+  describe("canonical chapters (9 with Writing as 06)", () => {
     it("each canonical chapter renders with the right n + h2", () => {
       const dom = new JSDOM(cvi!.html);
-      const expected = pickSections(cvi!);
-      for (const sec of expected) {
+      for (const sec of SECTIONS) {
         const section = dom.window.document.querySelector(`section#${sec.id}.cvi-section`);
         expect(section, `missing section#${sec.id}`).not.toBeNull();
         expect(section!.querySelector(".cvi-n")?.textContent?.trim()).toBe(sec.n);
-        const h2 = section!.querySelector(".cvi-h2")?.textContent?.trim() ?? "";
-        expect(sec.h2, `#${sec.id} h2 "${h2}" not in tolerated set`).toContain(h2);
+        expect(section!.querySelector(".cvi-h2")?.textContent?.trim()).toBe(sec.h2);
       }
     });
 
@@ -253,11 +181,10 @@ describe("CVI - design contract", () => {
       // are interspersed between canonical IDs; we filter to canonical
       // and assert THEIR order is preserved.
       const dom = new JSDOM(cvi!.html);
-      const expected = pickSections(cvi!);
       const allIds = [...dom.window.document.querySelectorAll("section.cvi-section")].map(
         (s) => s.id,
       );
-      const canonical = expected.map((s) => s.id);
+      const canonical = SECTIONS.map((s) => s.id);
       const filtered = allIds.filter((id) => canonical.includes(id));
       expect(filtered).toEqual(canonical);
     });
@@ -270,8 +197,7 @@ describe("CVI - design contract", () => {
         const section = dom.window.document.querySelector(`section#${sub.id}.cvi-section`);
         expect(section, `missing sub-panel section#${sub.id}`).not.toBeNull();
         expect(section!.querySelector(".cvi-n")?.textContent?.trim()).toBe(sub.n);
-        const h2 = section!.querySelector(".cvi-h2")?.textContent?.trim() ?? "";
-        expect(sub.h2, `#${sub.id} h2 "${h2}" not in tolerated set`).toContain(h2);
+        expect(section!.querySelector(".cvi-h2")?.textContent?.trim()).toBe(sub.h2);
       });
     }
 
@@ -344,32 +270,19 @@ describe("CVI - design contract", () => {
     });
 
     it("displays the 4 canonical group labels in canonical order", () => {
-      // Labels accept either the legacy en-dash form or the new colon
-      // form per the CVI Writing rule (no en-dashes). The label prefix
-      // (Surfaces / Ink / Rules / Accents) is the structural anchor —
-      // lock that strict; tolerate the punctuation that follows.
+      // Labels follow the no-en-dash CVI Writing rule (colon form).
+      // The legacy en-dash forms ("Surfaces – the ground" etc.) are
+      // gone since the en-dash sweep PR (#97).
       const dom = new JSDOM(cvi!.html);
       const labels = [
         ...dom.window.document.querySelectorAll('section[id^="color"].cvi-section .cvi-grouplabel'),
       ].map((g) => g.textContent?.trim() ?? "");
-      const canonical: { prefix: string; tolerated: string[] }[] = [
-        { prefix: "Surfaces", tolerated: ["Surfaces – the ground", "Surfaces: the ground"] },
-        { prefix: "Ink", tolerated: ["Ink – text", "Ink: text"] },
-        { prefix: "Rules", tolerated: ["Rules – hairlines", "Rules: hairlines"] },
-        {
-          prefix: "Accents",
-          tolerated: ["Accents – the regional hues", "Accents: the regional hues"],
-        },
-      ];
-      expect(labels.length).toBe(canonical.length);
-      labels.forEach((label, i) => {
-        expect(label.startsWith(canonical[i].prefix), `label[${i}] "${label}" wrong prefix`).toBe(
-          true,
-        );
-        expect(canonical[i].tolerated, `label[${i}] "${label}" not in tolerated set`).toContain(
-          label,
-        );
-      });
+      expect(labels).toEqual([
+        "Surfaces: the ground",
+        "Ink: text",
+        "Rules: hairlines",
+        "Accents: the regional hues",
+      ]);
     });
   });
 
@@ -382,7 +295,7 @@ describe("CVI - design contract", () => {
     });
   });
 
-  describe("§06 icon - sizes", () => {
+  describe("§07 icon - sizes", () => {
     it("renders 3 stepped-size tiles (64/32/16) plus the large hero", () => {
       const dom = new JSDOM(cvi!.html);
       const iconSection = dom.window.document.querySelector("section#icon");
@@ -393,7 +306,7 @@ describe("CVI - design contract", () => {
     });
   });
 
-  describe("§07 applications - do and don't", () => {
+  describe("§08 applications - do and don't", () => {
     it("renders exactly 5 dos and 5 don'ts", () => {
       const dom = new JSDOM(cvi!.html);
       const applySection = dom.window.document.querySelector("section#apply");
@@ -405,7 +318,7 @@ describe("CVI - design contract", () => {
     });
   });
 
-  describe("§08 voice", () => {
+  describe("§09 voice", () => {
     it("the voice paragraph stays the canonical sentence", () => {
       const dom = new JSDOM(cvi!.html);
       const voice = dom.window.document.querySelector(".cvi-voice")?.textContent ?? "";
