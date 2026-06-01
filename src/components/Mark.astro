@@ -1,0 +1,61 @@
+---
+// File-backed mark renderer. Inlines the canonical SVG from src/marks/
+// by variant name, so the .svg files are the single source of truth —
+// no hand-coded geometry to drift from them (which is exactly the bug
+// that produced a visible top-i stem on the lockup).
+//
+// Inline (not <img>) is deliberate: the full-lockup SVGs are live
+// Newsreader <text>, and an <img>-loaded SVG renders in an isolated
+// context with no access to the page's self-hosted @font-face. Inlining
+// keeps the lockup in Newsreader. The monogram and icon files are
+// outlined paths, so they render correctly either way.
+//
+// Props:
+//   name:  variant filename stem, e.g. "khai-mark", "khai-mark-sea",
+//          "khai-monogram-ink", "khai-icon-reverse"
+//   width: rendered width in px (height follows the file's viewBox)
+//   class: optional extra class on the wrapper
+
+interface Props {
+  name: string;
+  width: number;
+  class?: string;
+}
+
+const { name, width, class: className } = Astro.props;
+
+// Build-time map of every canonical mark. eager + ?raw inlines the file
+// contents as strings; the lookup is static.
+const files = import.meta.glob("../marks/*.svg", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+}) as Record<string, string>;
+
+const raw = files[`../marks/${name}.svg`];
+if (!raw) {
+  throw new Error(
+    `Mark: unknown variant "${name}". Available: ${Object.keys(files)
+      .map((p) => p.replace(/^.*\/(.*)\.svg$/, "$1"))
+      .join(", ")}`,
+  );
+}
+
+// Drop the file's fixed width/height so CSS controls size; viewBox keeps
+// the aspect ratio.
+const svg = raw.replace(/\s(width|height)="[^"]*"/g, "");
+---
+
+<span class:list={["mark", className]} style={`--mark-w:${width}px`} set:html={svg} />
+
+<style>
+  .mark {
+    display: inline-block;
+    line-height: 0;
+  }
+  .mark :global(svg) {
+    width: var(--mark-w);
+    height: auto;
+    display: block;
+  }
+</style>

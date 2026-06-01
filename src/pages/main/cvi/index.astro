@@ -2,7 +2,7 @@
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import SiteHeader from "../../../components/SiteHeader.astro";
 import SiteFooter from "../../../components/SiteFooter.astro";
-import KhaiMark from "../../../components/KhaiMark.astro";
+import Mark from "../../../components/Mark.astro";
 import { BRAND } from "../../../lib/brand";
 
 // Nine canonical chapters in three editorial groups (the mark, the
@@ -75,28 +75,28 @@ const writingDont = [
 // pair). Letters, layout, and proportions never change.
 const variants = [
   {
-    markProps: {},
+    name: "khai-mark",
     dark: false,
     title: "Primary · brick",
     tag: "khai-mark.svg",
     when: "The default, on light calm grounds.",
   },
   {
-    markProps: { dot: BRAND.sea },
+    name: "khai-mark-sea",
     dark: false,
     title: "Sea dot",
     tag: "khai-mark-sea.svg",
     when: "Structural / product / infrastructure surfaces.",
   },
   {
-    markProps: { dot: BRAND.amber },
+    name: "khai-mark-amber",
     dark: false,
     title: "Amber dot",
     tag: "khai-mark-amber.svg",
     when: "Warm emphasis; safest accent on dark grounds.",
   },
   {
-    markProps: { letter: BRAND.paper, ghost: "rgba(243,237,226,0.34)" },
+    name: "khai-mark-reverse",
     dark: true,
     title: "Reverse",
     tag: "khai-mark-reverse.svg",
@@ -137,7 +137,7 @@ const dos = [
 ];
 const donts = [
   "Don’t recolour the letters or use hues outside the palette.",
-  "Don’t drop the top i’s stem or give it a second dot; the brick dot is the dotless i’s tittle.",
+  "Don’t restore the top i’s stem on the lockup; the dot stands alone.",
   "Don’t set brick on a dark ground (low contrast); use amber or the reverse.",
   "Don’t render the flag; no stripes, no tricolour motif.",
   "Don’t crowd, stretch, rotate, or add effects to the mark.",
@@ -153,7 +153,7 @@ const donts = [
 
     <header class="cvi-mast">
       <div class="cvi-mast-grid">
-        <div class="cvi-mark"><KhaiMark size={132} /></div>
+        <div class="cvi-mark"><Mark name="khai-mark" width={132} /></div>
         <div class="cvi-copy">
           <div class="cvi-mono">
             <a href="../" class="cvi-back">kaihacks.ai</a> · colophon
@@ -252,7 +252,7 @@ const donts = [
       </div>
       <div class="cvi-twocol">
         <div class="cvi-card">
-          <div class="cvi-stage"><KhaiMark size={78} /></div>
+          <div class="cvi-stage"><Mark name="khai-mark" width={78} /></div>
           <div class="cvi-cardbody">
             <span class="cvi-tag">khai · lockup · brick</span>
             <h3 class="cvi-h3">Primary lockup</h3>
@@ -300,7 +300,7 @@ const donts = [
           variants.map((v) => (
             <div class="cvi-card">
               <div class={`cvi-stage ${v.dark ? "cvi-stage--dark" : ""}`}>
-                <KhaiMark size={70} {...v.markProps} />
+                <Mark name={v.name} width={70} />
               </div>
               <div class="cvi-cardbody">
                 <span class="cvi-tag">{v.tag}</span>
@@ -324,7 +324,7 @@ const donts = [
       <div class="cvi-twocol">
         <div class="cvi-card">
           <div class="cvi-stage">
-            <div class="cvi-clearfield"><KhaiMark size={56} /></div>
+            <div class="cvi-clearfield"><Mark name="khai-mark" width={56} /></div>
           </div>
           <div class="cvi-cardbody">
             <h3 class="cvi-h3">Clear space</h3>
@@ -337,8 +337,8 @@ const donts = [
         <div class="cvi-card">
           <div class="cvi-stage">
             <div class="cvi-minrow">
-              <KhaiMark size={40} />
-              <KhaiMark size={24} />
+              <Mark name="khai-mark" width={40} />
+              <Mark name="khai-mark" width={24} />
             </div>
           </div>
           <div class="cvi-cardbody">
