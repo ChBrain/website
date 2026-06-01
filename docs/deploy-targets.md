@@ -24,28 +24,40 @@ host - the `kaihacks.ai/` segment does not appear in the host path.
 
 ## Build outputs -> deploy targets
 
-| `dist/` subfolder    | Production rsync target                  | Staging rsync target                             |
-| -------------------- | ---------------------------------------- | ------------------------------------------------ |
-| `dist/architecture/` | `/public_html/architecture.kaihacks.ai/` | `/public_html/staging.kaihacks.ai/architecture/` |
-| `dist/main/`         | `/public_html/main/`                     | `/public_html/staging.kaihacks.ai/main/`         |
-| `dist/privacy/`      | `/public_html/privacy/`                  | `/public_html/staging.kaihacks.ai/privacy/`      |
-| `dist/cultures/`     | `/public_html/cultures.kaihacks.ai/`     | `/public_html/staging.kaihacks.ai/cultures/`     |
-| `dist/contact/`      | `/public_html/contact/` ⚠️               | `/public_html/staging.kaihacks.ai/contact/`      |
+| `dist/` subfolder    | Production rsync target                    | Staging rsync target                             |
+| -------------------- | ------------------------------------------ | ------------------------------------------------ |
+| `dist/architecture/` | `/public_html/architecture.kaihacks.ai/`   | `/public_html/staging.kaihacks.ai/architecture/` |
+| `dist/main/`         | `/public_html/` (apex root, no `--delete`) | `/public_html/staging.kaihacks.ai/main/`         |
+| `dist/privacy/`      | `/public_html/privacy/`                    | `/public_html/staging.kaihacks.ai/privacy/`      |
+| `dist/cultures/`     | `/public_html/cultures.kaihacks.ai/`       | `/public_html/staging.kaihacks.ai/cultures/`     |
+| `dist/contact/`      | `/public_html/contact/` ⚠️                 | `/public_html/staging.kaihacks.ai/contact/`      |
+
+⚠️ **`main` writes to the apex root WITHOUT `--delete`.** The apex
+`kaihacks.ai` serves from `/public_html/` itself, which is shared with every
+sibling (the subdomain dirs, `privacy/`, `contact/`, `staging.kaihacks.ai/`).
+`rsync --delete` there would wipe them all, so the `main`+production case drops
+`--delete` (see `deploy-surface.yml`). `main`'s build is top-level files plus
+`cvi/`, with no `privacy/`/`contact/` dirs, so the siblings sit safely
+alongside. The cost is a few stale content-hashed assets, harmless.
 
 ⚠️ **contact production root is unverified.** It follows the apex-subpath
-convention (`/public_html/contact/`, matching `main` and `privacy`), but
-unlike the other surfaces it has not been confirmed against the cPanel
-domain table. Confirm the vhost / document root exists before the first
-`contact-v*` production tag — the rsync uses `--delete`.
+convention (`/public_html/contact/`, matching `privacy`), but unlike the other
+surfaces it has not been confirmed against the cPanel domain table. Confirm the
+vhost / document root exists before the first `contact-v*` production tag — the
+rsync uses `--delete`.
 
 Production URLs:
 
 - `https://architecture.kaihacks.ai/` (subdomain root, clean URL)
-- `https://kaihacks.ai/main/` (apex `/main/` subpath)
-- `https://kaihacks.ai/main/cvi/` (the CVI colophon, nested under main)
+- `https://kaihacks.ai/` (apex root — the homepage / `main` surface)
+- `https://kaihacks.ai/cvi/` (the CVI colophon, under the apex)
 - `https://kaihacks.ai/privacy/` (apex `/privacy/` subpath; site-wide legal page)
 - `https://cultures.kaihacks.ai/` (subdomain root, clean URL)
 - `https://kaihacks.ai/contact/` (apex `/contact/` subpath)
+
+> The `urls.ts` helper still emits `/main/` and `/main/cvi/`; it is moved to the
+> apex (`/`, `/cvi/`) in a paired source change. Land that before the next
+> `main-v*` tag, or `main` ships at the apex with stale `/main` self-links.
 
 Staging URLs:
 
@@ -97,20 +109,24 @@ go to `/public_html/<subdomain>/` in production and
 `/public_html/staging.kaihacks.ai/<subdomain>/` in staging; apex
 subpaths go to `/public_html/<path>/` in production.
 
-## Why the apex uses a `/main/` subpath rather than the bare root
+## The apex root is shared with the `chbrain/kaihacks` placeholder
 
 The apex `kaihacks.ai/` document root (`/public_html/`) is also the
-cPanel home web root and is owned by the placeholder in
-`chbrain/kaihacks`. Putting the chbrain/website-built company front
-door at `/public_html/main/` (URL `kaihacks.ai/main/`) gives a
-scoped, stable namespace for apex pages without colliding with
-whatever else lives at the bare apex root.
+cPanel home web root, historically holding a placeholder owned by
+`chbrain/kaihacks`. `main` was originally scoped to `/public_html/main/`
+to avoid colliding with it; it now serves as the apex front door,
+deployed into `/public_html/` **without `--delete`** so it overlays its
+own files (`index.html`, `_astro/`, `cvi/`) without removing the
+placeholder's or any sibling's. If the placeholder is being retired,
+clean `/public_html/` of its leftovers once; otherwise `main`'s
+`index.html` takes the front door and unrelated files coexist.
 
 ## SSH
 
 Deploy workflows use `ssh -i ~/.ssh/kaihacksai` (key set up from
 `secrets.SSH_PRIVATE_KEY`) against `c216mkgp1lzk@92.205.150.56`.
-The `--delete` flag on each rsync means the deploy target is the
-source of truth; anything in the target that's not in the rsync
-source is removed. Never point a rsync with `--delete` at a target
-you don't fully own.
+Most rsyncs use `--delete` — the deploy target is the source of truth;
+anything in the target not in the rsync source is removed. The one
+exception is `main` in production: it writes to the shared apex root, so
+it drops `--delete` (see above). Never point a rsync with `--delete` at a
+target you don't fully own.

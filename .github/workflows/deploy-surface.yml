@@ -109,8 +109,20 @@ jobs:
             echo "::error::dist/$surface does not exist - build emitted no '$surface' surface"
             exit 1
           fi
+          # --delete is safe for every dedicated document root (subdomain vhosts
+          # and staging subpaths). The ONE exception is main in production: it
+          # serves from the apex root (/public_html/), which is SHARED with every
+          # sibling (the subdomains, privacy/, contact/, staging.kaihacks.ai/).
+          # --delete there would wipe them all, so main->apex deploys without it
+          # (a few stale, content-hashed assets are harmless; a wiped host is not).
+          del="--delete"
+          if [ "$surface" = "main" ] && [ "$env" = "production" ]; then
+            del=""
+            echo "main->apex (shared /public_html/): rsync WITHOUT --delete to protect siblings"
+          fi
           echo "target=$target" >> "$GITHUB_OUTPUT"
-          echo "Deploying dist/$surface/ -> $target ($env)"
+          echo "del=$del" >> "$GITHUB_OUTPUT"
+          echo "Deploying dist/$surface/ -> $target ($env)${del:+ }$del"
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
@@ -119,7 +131,7 @@ jobs:
           ssh-keyscan 92.205.150.56 >> ~/.ssh/known_hosts || true
       - name: Deploy surface via rsync
         run: |
-          rsync -avz --delete \
+          rsync -avz ${{ steps.target.outputs.del }} \
             -e "ssh -i ~/.ssh/kaihacksai" \
             "./dist/${{ inputs.surface }}/" \
             "c216mkgp1lzk@92.205.150.56:${{ steps.target.outputs.target }}"
