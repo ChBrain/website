@@ -116,7 +116,6 @@ const apps = [
                   </div>
                 ))
               }
-              <div class="services-domain services-domain--coda">…you name it</div>
             </div>
 
             <div class="services-col">
@@ -132,6 +131,8 @@ const apps = [
               }
             </div>
           </div>
+
+          <div class="services-domain services-domain--coda">…you name it</div>
 
           <div class="services-caption" aria-hidden="true">
             driving <span class="services-caption-aide">AIDE</span> | <span
@@ -543,12 +544,16 @@ const apps = [
       color: var(--color-ink-mute);
       text-transform: uppercase;
     }
+    /* The "…you name it" coda closes the two columns. It sits full-width
+     * below the grid (not inside the left column) so it centers on the
+     * card axis, bridging the 2×4 grid and the driving-AIDE caption. */
     .services-domain--coda {
       font-family: var(--font-prose);
       font-style: italic;
       font-size: 15px;
       color: var(--color-ink-mute);
       border-bottom: none;
+      margin-top: 14px;
       padding: 9px 0;
       text-align: center;
     }
