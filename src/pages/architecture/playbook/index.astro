@@ -2,7 +2,7 @@
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import SiteHeader from "../../../components/SiteHeader.astro";
 import SiteFooter from "../../../components/SiteFooter.astro";
-import KhaiMark from "../../../components/KhaiMark.astro";
+import Mark from "../../../components/Mark.astro";
 import { loadAllSpecs } from "../../../lib/load-specs";
 import { parseSpec, type ParsedSpec } from "../../../lib/parse-spec";
 
@@ -136,7 +136,7 @@ const total = spreads.length;
         the first cast file. */
     }
     <header id="cover" class="pb-cover">
-      <div class="pb-cover-mark" aria-hidden="true"><KhaiMark size={108} /></div>
+      <div class="pb-cover-mark" aria-hidden="true"><Mark name="khai-mark" width={108} /></div>
       <div class="pb-cover-body">
         <span class="pb-cover-overline">the specification · a field manual</span>
         <h1 class="pb-cover-title">
