@@ -15,7 +15,7 @@ const tocGroups = [
     label: "the mark",
     items: [
       { n: "01", t: "The mark", href: "#mark", sections: ["mark"] },
-      { n: "02", t: "The set", href: "#set", sections: ["set"] },
+      { n: "02", t: "The set", href: "#set", sections: ["set", "set-monogram", "set-icon"] },
       { n: "03", t: "Space & size", href: "#space", sections: ["space"] },
     ],
   },
@@ -96,11 +96,91 @@ const variants = [
     when: "Warm emphasis; safest accent on dark grounds.",
   },
   {
+    name: "khai-mark-ink",
+    dark: false,
+    title: "Ink dot",
+    tag: "khai-mark-ink.svg",
+    when: "Quiet, single-tone, mono contexts.",
+  },
+  {
     name: "khai-mark-reverse",
     dark: true,
     title: "Reverse",
     tag: "khai-mark-reverse.svg",
     when: "On ink, imagery, any dark ground. Dot stays brick (or amber).",
+  },
+];
+
+// §02 · ii — the kh monogram family (the lockup head, cropped). Outlined
+// paths, so font-independent; same dot system as the lockup.
+const monograms = [
+  {
+    name: "khai-monogram",
+    dark: false,
+    title: "Primary · brick",
+    tag: "khai-monogram.svg",
+    when: "The lockup head, cropped.",
+  },
+  {
+    name: "khai-monogram-sea",
+    dark: false,
+    title: "Sea dot",
+    tag: "khai-monogram-sea.svg",
+    when: "Structural surfaces.",
+  },
+  {
+    name: "khai-monogram-amber",
+    dark: false,
+    title: "Amber dot",
+    tag: "khai-monogram-amber.svg",
+    when: "Warm emphasis.",
+  },
+  {
+    name: "khai-monogram-ink",
+    dark: false,
+    title: "Ink dot",
+    tag: "khai-monogram-ink.svg",
+    when: "Mono / single-tone.",
+  },
+  {
+    name: "khai-monogram-reverse",
+    dark: true,
+    title: "Reverse",
+    tag: "khai-monogram-reverse.svg",
+    when: "Dark grounds.",
+  },
+];
+
+// §02 · iii — the app-icon tile (monogram in a rounded paper tile). The
+// most-used touchpoint: tabs, home screen, avatars.
+const icons = [
+  {
+    name: "khai-icon",
+    dark: false,
+    title: "Paper · brick",
+    tag: "khai-icon.svg",
+    when: "Default app icon / favicon.",
+  },
+  {
+    name: "khai-icon-sea",
+    dark: false,
+    title: "Paper · sea",
+    tag: "khai-icon-sea.svg",
+    when: "Product / infra apps.",
+  },
+  {
+    name: "khai-icon-amber",
+    dark: false,
+    title: "Paper · amber",
+    tag: "khai-icon-amber.svg",
+    when: "Warm variant.",
+  },
+  {
+    name: "khai-icon-reverse",
+    dark: true,
+    title: "Ink · reverse",
+    tag: "khai-icon-reverse.svg",
+    when: "Dark mode / contrast.",
   },
 ];
 
@@ -286,21 +366,79 @@ const donts = [
 
     <section id="set" class="cvi-section">
       <div class="cvi-seclabel">
-        <span class="cvi-n">02</span>
+        <span class="cvi-n">02 · i</span>
         <div class="cvi-seclabel-body">
-          <div class="cvi-sectop"><h2 class="cvi-h2">The set: which to use when</h2></div>
+          <div class="cvi-sectop"><h2 class="cvi-h2">The set: the full lockup</h2></div>
           <p>
-            Four authorised colourways of the same lockup. The letters never change; only the dot
+            Five authorised colourways of the same lockup. The letters never change; only the dot
             moves, and the ground decides which to reach for.
           </p>
         </div>
       </div>
-      <div class="cvi-grid4">
+      <div class="cvi-grid5">
         {
           variants.map((v) => (
             <div class="cvi-card">
               <div class={`cvi-stage ${v.dark ? "cvi-stage--dark" : ""}`}>
                 <Mark name={v.name} width={70} />
+              </div>
+              <div class="cvi-cardbody">
+                <span class="cvi-tag">{v.tag}</span>
+                <h3 class="cvi-h3">{v.title}</h3>
+                <p class="cvi-when">{v.when}</p>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <section id="set-monogram" class="cvi-section">
+      <div class="cvi-seclabel">
+        <span class="cvi-n">02 · ii</span>
+        <div class="cvi-seclabel-body">
+          <div class="cvi-sectop"><h2 class="cvi-h2">The set: the kh monogram</h2></div>
+          <p>
+            The lockup head, cropped to <em>kh</em> plus the dot. The brand’s compact face; outlined paths,
+            so it renders anywhere without the font.
+          </p>
+        </div>
+      </div>
+      <div class="cvi-grid5">
+        {
+          monograms.map((v) => (
+            <div class="cvi-card">
+              <div class={`cvi-stage ${v.dark ? "cvi-stage--dark" : ""}`}>
+                <Mark name={v.name} width={76} />
+              </div>
+              <div class="cvi-cardbody">
+                <span class="cvi-tag">{v.tag}</span>
+                <h3 class="cvi-h3">{v.title}</h3>
+                <p class="cvi-when">{v.when}</p>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <section id="set-icon" class="cvi-section">
+      <div class="cvi-seclabel">
+        <span class="cvi-n">02 · iii</span>
+        <div class="cvi-seclabel-body">
+          <div class="cvi-sectop"><h2 class="cvi-h2">The set: the app-icon tile</h2></div>
+          <p>
+            The monogram set in a rounded tile, the most-used touchpoint: browser tabs, home-screen
+            icon, social avatar. Ships as SVG with the raster favicons below (§07).
+          </p>
+        </div>
+      </div>
+      <div class="cvi-grid4">
+        {
+          icons.map((v) => (
+            <div class="cvi-card">
+              <div class={`cvi-stage ${v.dark ? "cvi-stage--dark" : ""}`}>
+                <Mark name={v.name} width={84} />
               </div>
               <div class="cvi-cardbody">
                 <span class="cvi-tag">{v.tag}</span>
@@ -1137,16 +1275,24 @@ const donts = [
       grid-template-columns: repeat(4, 1fr);
       gap: 18px;
     }
+    /* Five-up for the lockup + monogram families (§02·i/·ii). */
+    .cvi-grid5 {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+    }
     @media (max-width: 760px) {
       .cvi-grid3,
-      .cvi-grid4 {
+      .cvi-grid4,
+      .cvi-grid5 {
         grid-template-columns: 1fr 1fr;
       }
     }
     @media (max-width: 560px) {
       .cvi-grid2,
       .cvi-grid3,
-      .cvi-grid4 {
+      .cvi-grid4,
+      .cvi-grid5 {
         grid-template-columns: 1fr;
       }
     }
