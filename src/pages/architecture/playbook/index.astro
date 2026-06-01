@@ -7,6 +7,7 @@ import { loadAllSpecs } from "../../../lib/load-specs";
 import { parseSpec, type ParsedSpec } from "../../../lib/parse-spec";
 import { playbook } from "@chbrain/khai-arch";
 import pkg from "@chbrain/khai-arch/package.json";
+import { loadEngines } from "../../../lib/load-engines";
 
 // The canon edition, derived from the installed canon -- one source, no drift.
 const edition = `v${pkg.version}`;
@@ -24,13 +25,18 @@ for (const raw of allSpecs) {
 // The playbook spine is owned by the canon (@chbrain/khai-arch): each group
 // declares its label and its ordered members. We render that and never
 // re-declare the order or grouping here -- add a spec to the canon's model and
-// it appears, with no edit to this file. (Phase 3: the "enriched by" group's
-// items get one card per installed engine appended here.)
+// it appears, with no edit to this file.
+//
+// Phase 3: installed engines append to the "enriched by" group as WIRES cards.
+// Engines are extensions, not canon, so the canon never names them; we discover
+// them from node_modules (alphabetical) and render one card each, after the
+// engines type spread.
+const engines = loadEngines();
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
 let idx = 0;
-const tocGroups = playbook.map((group) => ({
-  key: group.id,
-  label: group.label,
-  items: group.members.map((slug) => {
+const tocGroups = playbook.map((group) => {
+  const items = group.members.map((slug) => {
     const parsed = bySlug.get(slug) ?? null;
     const fm = parsed?.frontmatter;
     const n = idx++;
@@ -38,7 +44,7 @@ const tocGroups = playbook.map((group) => ({
       slug,
       idx: n,
       n: String(n).padStart(2, "0"),
-      name: fm?.id ? fm.id.charAt(0).toUpperCase() + fm.id.slice(1) : null,
+      name: fm?.id ? cap(fm.id) : null,
       subtitle: fm?.subtitle ?? null,
       status: fm?.status ?? "draft",
       role: group.label,
@@ -47,9 +53,37 @@ const tocGroups = playbook.map((group) => ({
       coda: parsed?.coda ?? null,
       groupKey: group.id,
       written: !!parsed,
+      engine: false,
     };
-  }),
-}));
+  });
+
+  if (group.id === "enriched-by") {
+    for (const card of engines) {
+      const n = idx++;
+      items.push({
+        slug: card.id,
+        idx: n,
+        n: String(n).padStart(2, "0"),
+        name: cap(card.id),
+        subtitle: null,
+        status: "engine",
+        role: group.label,
+        roleLabel: group.label,
+        chapters: card.chapters.map((name) => ({
+          letter: name.charAt(0),
+          name,
+          body: card.sections[name],
+        })),
+        coda: null,
+        groupKey: group.id,
+        written: true,
+        engine: true,
+      });
+    }
+  }
+
+  return { key: group.id, label: group.label, items };
+});
 
 const spreads = tocGroups.flatMap((g) => g.items);
 const total = spreads.length;
@@ -136,7 +170,10 @@ const total = spreads.length;
     <main class="pb-spreads">
       {
         spreads.map((s) => (
-          <article id={s.slug} class={`pb-spread ${s.written ? "" : "pb-spread--draft"}`}>
+          <article
+            id={s.slug}
+            class={`pb-spread ${s.written ? "" : "pb-spread--draft"} ${s.engine ? "pb-spread--engine" : ""}`}
+          >
             <header class="pb-spread-head">
               <span class="pb-spread-no">
                 {s.n} · {s.roleLabel}
@@ -567,6 +604,11 @@ const total = spreads.length;
       text-transform: uppercase;
     }
     .pb-spread-state--published {
+      color: var(--color-brick);
+    }
+    /* Engine cards (installed extensions) read in brick, like published, so an
+     * instance wired through the seam stands apart from a draft canon spec. */
+    .pb-spread-state--engine {
       color: var(--color-brick);
     }
 
