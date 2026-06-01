@@ -73,7 +73,7 @@ single source of truth. Three ways to invoke it:
   only that surface with `env: production`.
 - **Manual** (`workflow_dispatch`): run `deploy-surface` from the
   Actions tab (or `gh workflow run deploy-surface.yml -f surface=main
-  -f env=staging`) to deploy any one surface to either environment on
+-f env=staging`) to deploy any one surface to either environment on
   demand.
 
 ## Versioning
