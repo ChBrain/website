@@ -61,7 +61,35 @@ const GROUP_LABELS = CANON
   ? ["production", "cast", "rests on", "enriched by"]
   : ["the system", "casts", "rests on"];
 const GROUP_COUNTS = CANON ? [2, 5, 2, 1] : [1, 5, 2];
-const TOTAL = String(SPINE.length).padStart(2, "0");
+
+// Engine cards (Phase 3, a third axis). Each installed engine renders as a
+// WIRES-card spread appended to the "enriched by" group, alphabetical, after
+// the engines type spread; marked with .pb-spread--engine. The website's
+// installed engine is gender, so that is the expected set when rendered. The
+// detection keeps the gate green on the pre-render build and locks the
+// placement + WIRES chapters once the render lands.
+const enginesRendered = playbookPage
+  ? new JSDOM(playbookPage.html).window.document.querySelectorAll("article.pb-spread--engine")
+      .length > 0
+  : false;
+const ENGINE_SLUGS = enginesRendered ? ["gender"] : [];
+
+type Spread = { n: string; slug: string; role: string; engine?: boolean };
+// FULL = the canon spine plus engine cards, numbered continuing from the canon.
+const FULL: Spread[] = [
+  ...SPINE,
+  ...ENGINE_SLUGS.map((slug, i) => ({
+    n: String(SPINE.length + i).padStart(2, "0"),
+    slug,
+    role: "enriched by",
+    engine: true,
+  })),
+];
+const TOTAL = String(FULL.length).padStart(2, "0");
+// The "enriched by" group (last) grows by one per installed engine.
+const FULL_GROUP_COUNTS =
+  CANON && ENGINE_SLUGS.length ? [2, 5, 2, 1 + ENGINE_SLUGS.length] : GROUP_COUNTS;
+const WIRES = ["Wire", "Issue", "Require", "Enforce", "Setup"];
 
 describe("architecture playbook - design contract", () => {
   it("page exists at architecture/playbook/index.html (build tripwire)", () => {
@@ -135,7 +163,7 @@ describe("architecture playbook - design contract", () => {
     it("renders one bar per spec; at most 1 .is-current at render", () => {
       const dom = new JSDOM(playbookPage!.html);
       const bars = [...dom.window.document.querySelectorAll(".pb-strip-bar")];
-      expect(bars.length).toBe(SPINE.length);
+      expect(bars.length).toBe(FULL.length);
       const current = bars.filter((b) => b.classList.contains("is-current"));
       expect(current.length).toBeLessThanOrEqual(1);
     });
@@ -178,16 +206,16 @@ describe("architecture playbook - design contract", () => {
       const dom = new JSDOM(playbookPage!.html);
       const groups = [...dom.window.document.querySelectorAll(".pb-toc-group")];
       const counts = groups.map((g) => g.querySelectorAll(".pb-toc-link").length);
-      expect(counts).toEqual(GROUP_COUNTS);
+      expect(counts).toEqual(FULL_GROUP_COUNTS);
     });
 
     it("renders one TOC link per spec, in canonical order, with #slug hrefs", () => {
       const dom = new JSDOM(playbookPage!.html);
       const links = [...dom.window.document.querySelectorAll(".pb-toc-link")];
-      expect(links.length).toBe(SPINE.length);
+      expect(links.length).toBe(FULL.length);
       links.forEach((a, i) => {
-        expect(a.getAttribute("href")).toBe(`#${SPINE[i].slug}`);
-        expect(a.querySelector(".pb-toc-n")?.textContent?.trim()).toBe(SPINE[i].n);
+        expect(a.getAttribute("href")).toBe(`#${FULL[i].slug}`);
+        expect(a.querySelector(".pb-toc-n")?.textContent?.trim()).toBe(FULL[i].n);
       });
     });
   });
@@ -196,16 +224,16 @@ describe("architecture playbook - design contract", () => {
     it("renders exactly one .pb-spread article per spec", () => {
       const dom = new JSDOM(playbookPage!.html);
       const spreads = dom.window.document.querySelectorAll("article.pb-spread");
-      expect(spreads.length).toBe(SPINE.length);
+      expect(spreads.length).toBe(FULL.length);
     });
 
     it("spread IDs appear in canonical order", () => {
       const dom = new JSDOM(playbookPage!.html);
       const ids = [...dom.window.document.querySelectorAll("article.pb-spread")].map((a) => a.id);
-      expect(ids).toEqual(SPINE.map((s) => s.slug));
+      expect(ids).toEqual(FULL.map((s) => s.slug));
     });
 
-    for (const spec of SPINE) {
+    for (const spec of FULL) {
       it(`§${spec.n} #${spec.slug}: head row + role label + title element`, () => {
         const dom = new JSDOM(playbookPage!.html);
         const spread = dom.window.document.querySelector(`article#${spec.slug}.pb-spread`);
@@ -215,10 +243,13 @@ describe("architecture playbook - design contract", () => {
         const no = spread!.querySelector(".pb-spread-no")?.textContent?.replace(/\s+/g, " ").trim();
         expect(no).toBe(`${spec.n} · ${spec.role}`);
 
-        // State pill exists (draft or published, we don't lock which)
+        // State pill exists. Canon specs read draft|published; an engine card
+        // reads "engine" (it is an installed instance, not a canon status).
         const state = spread!.querySelector(".pb-spread-state");
         expect(state).not.toBeNull();
-        expect(state!.textContent?.trim().toLowerCase()).toMatch(/^(draft|published)$/);
+        expect(state!.textContent?.trim().toLowerCase()).toMatch(
+          spec.engine ? /^engine$/ : /^(draft|published)$/,
+        );
 
         // Title with brick dot
         const title = spread!.querySelector(".pb-spread-title");
@@ -226,8 +257,35 @@ describe("architecture playbook - design contract", () => {
         const titleEm = title!.querySelector("em");
         expect(titleEm).not.toBeNull();
         expect(titleEm!.textContent?.trim()).toBe(".");
+
+        // An engine card carries the engine marker class and its five WIRES
+        // facets, in order (Wire, Issue, Require, Enforce, Setup).
+        if (spec.engine) {
+          expect(spread!.classList.contains("pb-spread--engine")).toBe(true);
+          const facets = [...spread!.querySelectorAll(".pb-facet-name")].map((h) =>
+            h.textContent?.replace(/\s+/g, "").trim(),
+          );
+          expect(facets).toEqual(WIRES);
+        }
       });
     }
+  });
+
+  describe("engine cards under 'enriched by' (Phase 3)", () => {
+    it("renders the installed engines alphabetically, right after the engines type", () => {
+      if (!enginesRendered) return; // additive: skipped until the render lands
+      const dom = new JSDOM(playbookPage!.html);
+      const ids = [...dom.window.document.querySelectorAll("article.pb-spread")].map((a) => a.id);
+      const engineIds = [...dom.window.document.querySelectorAll("article.pb-spread--engine")].map(
+        (a) => a.id,
+      );
+      // engine cards are exactly the expected set, in alphabetical order
+      expect(engineIds).toEqual([...ENGINE_SLUGS].sort());
+      // and they sit immediately after the `engines` type spread
+      expect(
+        ids.slice(ids.indexOf("engines") + 1, ids.indexOf("engines") + 1 + engineIds.length),
+      ).toEqual(engineIds);
+    });
   });
 
   describe("snap chassis (CVI parity)", () => {
