@@ -1,0 +1,40 @@
+name: deploy-worker
+
+# Deploys the edge smoke monitor (workers/smoke) to Cloudflare via wrangler.
+# Manual, plus on pushes to main that touch the worker or the shared harness it
+# bundles. Requires secrets.CLOUDFLARE_API_TOKEN (Workers Scripts:Edit). The
+# runtime WEBHOOK_URL / TRIGGER_TOKEN are set once out-of-band with
+# `wrangler secret put` (see workers/smoke/wrangler.toml). Issue 149.
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths:
+      - "workers/**"
+      - "smoke/**"
+      - "src/lib/urls.ts"
+      - ".github/workflows/deploy-worker.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # No-op (skipped cleanly) until the Cloudflare token exists.
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.WORKER_DEPLOY_ENABLED == 'true' }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: "npm"
+      - name: install
+        run: npm ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: deploy worker
+        run: npx --yes wrangler@4 deploy --config workers/smoke/wrangler.toml
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
