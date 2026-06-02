@@ -56,14 +56,49 @@ describe("runChecks", () => {
     expect(res[0].errors.join(" ")).toMatch(/status 404/);
   });
 
-  it("fails on a parked placeholder", async () => {
+  it("fails on a parked placeholder (unstamped)", async () => {
     const res = await runChecks([T("main", "https://m/", "main")], {
       fetchImpl: fakeFetch({
         "https://m/": { body: "<h1>This site is parked free, courtesy of GoDaddy</h1>" },
       }),
     });
     expect(res[0].ok).toBe(false);
-    expect(res[0].errors.join(" ")).toMatch(/placeholder|x-surface/);
+    expect(res[0].errors.join(" ")).toMatch(/placeholder/);
+    expect(res[0].errors.join(" ")).toMatch(/x-surface/);
+  });
+
+  it("does NOT flag a correctly-stamped page that names a host (privacy policy)", async () => {
+    // Regression: the real /privacy/ page lists GoDaddy + Cloudflare as data
+    // processors. A stamped page is ours - the placeholder heuristic must not
+    // fire on it. (This was a live false positive caught on staging.)
+    const body =
+      stamp("main") + "<p>We use GoDaddy as our host and Cloudflare as our reverse proxy.</p>";
+    const res = await runChecks([T("privacy", "https://kaihacks.ai/privacy/", "main")], {
+      fetchImpl: fakeFetch({ "https://kaihacks.ai/privacy/": { body } }),
+    });
+    expect(res[0].ok).toBe(true);
+    expect(res[0].errors).toEqual([]);
+  });
+
+  it("forwards extra headers (the X-Monitor bot-bypass token)", async () => {
+    let seen: Record<string, string> | undefined;
+    const capturing = (async (_input: string | URL, init?: RequestInit) => {
+      seen = init?.headers as Record<string, string>;
+      return {
+        status: 200,
+        url: "https://m/",
+        async text() {
+          return stamp("main");
+        },
+      } as unknown as Response;
+    }) as unknown as typeof fetch;
+
+    const res = await runChecks([T("main", "https://m/", "main")], {
+      fetchImpl: capturing,
+      headers: { "x-monitor": "s3cret" },
+    });
+    expect(res[0].ok).toBe(true);
+    expect(seen?.["x-monitor"]).toBe("s3cret");
   });
 
   it("flags a cross-host redirect", async () => {
