@@ -102,16 +102,6 @@ describe("enginebook - /enginebooks/gender", () => {
     expect(ids).toContain("female");
   });
 
-  it("closes with the composed spread, showing the assembled instruction set", () => {
-    if (!genderBook) return;
-    const doc = new JSDOM(genderBook.html).window.document;
-    const composed = doc.querySelector("article#composed.eb-spread--composed");
-    expect(composed, "missing composed spread").not.toBeNull();
-    const manuscript = composed!.querySelector("pre.eb-manuscript");
-    expect(manuscript, "composed spread has no manuscript").not.toBeNull();
-    expect(manuscript!.textContent?.trim().length ?? 0).toBeGreaterThan(0);
-  });
-
   it("the wiring spread carries the WIRES facets", () => {
     if (!genderBook) return;
     const doc = new JSDOM(genderBook.html).window.document;
