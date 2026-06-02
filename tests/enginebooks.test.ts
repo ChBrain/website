@@ -81,7 +81,10 @@ describe("enginebook - /enginebooks/gender", () => {
   it("cover names the engine (Gender) with the brick dot", () => {
     if (!genderBook) return;
     const doc = new JSDOM(genderBook.html).window.document;
-    const title = doc.querySelector(".eb-cover-title");
+    // The Enginebook now shares the Playbook's pb-* chassis; selectors below
+    // tolerate both pb-* (new) and eb-* (old) so the contract holds across the
+    // chassis migration (#167). See docs/enginebooks.md.
+    const title = doc.querySelector(".pb-cover-title, .eb-cover-title");
     expect(title?.textContent?.toLowerCase()).toContain("gender");
     expect(title?.querySelector("em")?.textContent?.trim()).toBe(".");
   });
@@ -89,15 +92,17 @@ describe("enginebook - /enginebooks/gender", () => {
   it("opens with the wiring (WIRES) spread, then the anchor", () => {
     if (!genderBook) return;
     const doc = new JSDOM(genderBook.html).window.document;
-    const ids = [...doc.querySelectorAll("article.eb-spread")].map((a) => a.id);
+    const ids = [...doc.querySelectorAll("article.pb-spread, article.eb-spread")].map((a) => a.id);
     expect(ids[0]).toBe("wiring");
     expect(ids[1]).toBe("anchor");
   });
 
-  it("renders one expression spread per expression (gender: male, female)", () => {
+  it("renders one spread per expression (gender: male, female)", () => {
     if (!genderBook) return;
     const doc = new JSDOM(genderBook.html).window.document;
-    const ids = [...doc.querySelectorAll("article.eb-spread--expression")].map((a) => a.id);
+    // The shared chassis drops the per-role class, so identify expression
+    // spreads by their id (the expression key) among the book's spreads.
+    const ids = [...doc.querySelectorAll("article.pb-spread, article.eb-spread")].map((a) => a.id);
     expect(ids).toContain("male");
     expect(ids).toContain("female");
   });
@@ -105,9 +110,9 @@ describe("enginebook - /enginebooks/gender", () => {
   it("the wiring spread carries the WIRES facets", () => {
     if (!genderBook) return;
     const doc = new JSDOM(genderBook.html).window.document;
-    const wiring = doc.querySelector("article#wiring.eb-spread");
-    const facets = [...(wiring?.querySelectorAll(".eb-facet-name") ?? [])].map((h) =>
-      h.textContent?.replace(/\s+/g, "").trim(),
+    const wiring = doc.querySelector("article#wiring");
+    const facets = [...(wiring?.querySelectorAll(".pb-facet-name, .eb-facet-name") ?? [])].map(
+      (h) => h.textContent?.replace(/\s+/g, "").trim(),
     );
     // Wire / Issue / Require / Enforce (+ Setup): at minimum the four WIRE letters.
     expect(facets).toEqual(expect.arrayContaining(["Wire", "Issue", "Require", "Enforce"]));
