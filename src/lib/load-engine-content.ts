@@ -15,7 +15,7 @@ export interface EngineBookFile {
   role: "anchor" | "expression";
   /** the source filename, e.g. "position_gender.md". */
   file: string;
-  /** raw file text, frontmatter intact, so parseSpec() can read it. */
+  /** raw file text, frontmatter intact, so parseEngineSpec() can read it. */
   text: string;
 }
 
