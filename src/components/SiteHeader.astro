@@ -1,5 +1,5 @@
 ---
-// SiteHeader — the global header. Used on every page on every surface
+// SiteHeader: the global header. Used on every page on every surface
 // (architecture, main, main/cvi, privacy, contact, cultures, future).
 //
 // Two layouts, picked by the props passed:
@@ -7,13 +7,13 @@
 // 1. LOCATION LAYOUT (new, magazine grammar): pass `location`.
 //      [where you are]                                    [kaihacks.ai]
 //    Wayfinding label sits top-left; wordmark anchors top-right and
-//    links back to URLS.main (or to `basePath` if overridden — useful
+//    links back to URLS.main (or to `basePath` if overridden (useful
 //    on subdomain surfaces where the wordmark should self-anchor).
 //
 // 2. LEGACY NAV LAYOUT (kept for backwards compat): pass `nav`.
 //      [wordmark]                          [nav · items · here]
 //    Wordmark left, nav links right. Used by privacy, architecture
-//    home, architecture/playbook, etc. — surfaces whose CVI-tier
+//    home; architecture/playbook, and others are surfaces whose CVI-tier
 //    tests strictly assert the nav. The chrome lift on those
 //    surfaces is a follow-up PR.
 //
