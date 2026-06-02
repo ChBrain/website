@@ -8,8 +8,8 @@ import { loadBuiltPages } from "./helpers/load-built-html";
  * Each installed @chbrain/khai-engine-* renders two surfaces, both manifest-
  * driven and reusing the canon Playbook chassis:
  *
- *   /engines           the shelf  (dist: architecture/engines/index.html)
- *   /engines/<name>    one book   (dist: architecture/engines/<name>/index.html)
+ *   /enginebooks           the shelf  (dist: architecture/enginebooks/index.html)
+ *   /enginebooks/<name>    one book   (dist: architecture/enginebooks/<name>/index.html)
  *
  * The shelf is a hard build tripwire (the route must exist). Per-engine book
  * assertions are guarded on that book being present, so the contract holds for
@@ -18,12 +18,12 @@ import { loadBuiltPages } from "./helpers/load-built-html";
  */
 
 const pages = loadBuiltPages(process.cwd());
-const shelf = pages.find((p) => p.path === "architecture/engines/index.html");
-const genderBook = pages.find((p) => p.path === "architecture/engines/gender/index.html");
+const shelf = pages.find((p) => p.path === "architecture/enginebooks/index.html");
+const genderBook = pages.find((p) => p.path === "architecture/enginebooks/gender/index.html");
 
-describe("enginebooks shelf - /engines", () => {
-  it("page exists at architecture/engines/index.html (build tripwire)", () => {
-    expect(shelf, "build did not emit dist/architecture/engines/index.html").toBeDefined();
+describe("enginebooks shelf - /enginebooks", () => {
+  it("page exists at architecture/enginebooks/index.html (build tripwire)", () => {
+    expect(shelf, "build did not emit dist/architecture/enginebooks/index.html").toBeDefined();
   });
 
   it("is titled Enginebooks", () => {
@@ -62,8 +62,8 @@ describe("enginebooks shelf - /engines", () => {
   });
 });
 
-describe("enginebook - /engines/gender", () => {
-  it("page exists at architecture/engines/gender/index.html", () => {
+describe("enginebook - /enginebooks/gender", () => {
+  it("page exists at architecture/enginebooks/gender/index.html", () => {
     // Guarded: only assert further if gender is the installed engine.
     if (!genderBook) return;
     expect(genderBook).toBeDefined();

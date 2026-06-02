@@ -22,40 +22,36 @@ Playbook   : canon
 Enginebook : extension
 ```
 
-The name is also branding, not addressing. It belongs on the page and in the
-megamenu, not in the URL (see Routes).
+The name is also the route. `engines` is already a canon type (`engines.md`), so
+the canon owns `/engines`; the books live at `/enginebooks` (see Routes).
 
 ## Routes
 
-The route names the _resource_ (the engine); "Enginebook" is how that resource
-is _presented_. The brand does the pluralizing so the route can stay a stable
-noun.
+| Path                     | Is                               | Page brand                |
+| ------------------------ | -------------------------------- | ------------------------- |
+| `/architecture`          | canon index                      | Architecture              |
+| `/architecture/playbook` | the one canon Playbook           | Playbook                  |
+| `/architecture/<slug>`   | one canon type (incl. `engines`) | (type name)               |
+| `/enginebooks`           | the shelf (card/engine)          | **Enginebooks**           |
+| `/enginebooks/<name>`    | one engine's book                | **`<Name>` · Enginebook** |
 
-| Path                     | Is                      | Page brand                |
-| ------------------------ | ----------------------- | ------------------------- |
-| `/architecture`          | canon index             | Architecture              |
-| `/architecture/playbook` | the one canon Playbook  | Playbook                  |
-| `/architecture/<slug>`   | one canon type          | (type name)               |
-| `/engines`               | the shelf (card/engine) | **Enginebooks**           |
-| `/engines/<name>`        | one engine's book       | **`<Name>` · Enginebook** |
+`/enginebooks/` renders `src/pages/architecture/enginebooks/index.astro`;
+`/enginebooks/<name>/` renders `src/pages/architecture/enginebooks/[engine]/index.astro`.
+(Source sits under `src/pages/architecture/` because only `dist/architecture/`
+deploys to the subdomain, so these serve at `/enginebooks` beside `/playbook`.)
 
-`/engines/` renders `src/pages/engines/index.astro` (a standard Astro index;
-no literal `enginebooks/` directory). `/engines/<name>/` renders the per-engine
-book from `src/pages/engines/[engine]/index.astro`.
+Rationale for `/enginebooks` (not `/engines`):
 
-Rationale for `engines` over `enginebooks` in the path:
+- **`engines` is taken by the canon.** It is a first-class type (`engines.md`),
+  rendered as a spec page at `/engines` by `architecture/[slug].astro`. The shelf
+  cannot live there without shadowing that page. So `/engines` is the canon type;
+  `/enginebooks` is the installed books -- two distinct things, two paths.
+- **Shelf and members share one root.** `/enginebooks` and `/enginebooks/<name>`
+  keep the collection and its members together.
+- **The brand carries.** `Enginebooks` (shelf) and `Enginebook` (book) name the
+  pages, and the route matches the brand.
 
-- **URLs name resources, not render formats.** A future non-book view (raw
-  manifest, references, a diff) hangs naturally off `/engines/<name>/...`;
-  baking the format into the path forecloses that.
-- **Clean collection/member shape.** `/engines` is the list, `/engines/<name>`
-  is a member, paralleling `/architecture` -> `/architecture/<slug>`.
-- **Singular/plural tell.** `playbook` is singular because the canon has one
-  book; "enginebooks" would be plural with a singular member underneath
-  (`/enginebooks/gender`), which is the slightly-off shape. `/engines/<name>`
-  is the conventional plural-collection / singular-member form.
-
-## The shelf: `/engines`
+## The shelf: `/enginebooks`
 
 A collection page that lists one **WIRES card per installed engine**, each
 linking into its Enginebook. This is nearly free: `loadEngines()`
@@ -67,7 +63,7 @@ the canon's `engineCard()`. The canon Playbook already uses it for its
 Today the shelf shows exactly one spine (`gender`). It grows to N untouched, in
 the alphabetical order `loadEngines()` already guarantees.
 
-## One Enginebook: `/engines/<name>`
+## One Enginebook: `/enginebooks/<name>`
 
 The spine is derived from the engine's `khai` manifest (`package.json`). The
 default shape for a position-type engine, in order:
@@ -95,24 +91,26 @@ Worked example, `gender`:
 
 ### The composed spread is the point
 
-The canon Playbook renders types in isolation. An Enginebook can call the
-engine's own `compose()` (gender's `index.mjs` exports it) to show the anchor
+The canon Playbook renders types in isolation. An Enginebook shows the anchor
 and a chosen expression **assembled into the instruction set a persona
-receives**. That is the thing a type page can never do, and it is what an engine
-exists to produce. This single spread is the argument for "Enginebook" being its
-own artifact rather than a second copy of Playbook.
+receives** -- mirroring the engine's own `compose()` contract (anchor body, then
+expression). The loader replicates that contract rather than importing each
+engine's `compose()`, so the `[engine]` route stays generic. That assembled view
+is the thing a type page can never do, and it is what an engine exists to
+produce. This single spread is the argument for "Enginebook" being its own
+artifact rather than a second copy of Playbook.
 
 ## What it reuses
 
-| Piece                          | From                                        | New?        |
-| ------------------------------ | ------------------------------------------- | ----------- |
-| spread/cover/TOC/snap chassis  | `architecture/playbook/index.astro`         | reuse       |
-| chapter -> facet parsing       | `parseSpec` (`src/lib/parse-spec.ts`)       | reuse       |
-| WIRES card                     | `engineCard()` (`@chbrain/khai-arch`)       | reuse       |
-| engine discovery               | `loadEngines()` (`src/lib/load-engines.ts`) | reuse       |
-| compose view                   | engine's `compose()`                        | reuse       |
-| `/engines` shelf               | `src/pages/engines/index.astro`             | new (small) |
-| `/engines/<name>` book + spine | `src/pages/engines/[engine]/index.astro`    | new (small) |
+| Piece                         | From                                                      | New?        |
+| ----------------------------- | --------------------------------------------------------- | ----------- |
+| spread/cover/TOC/snap chassis | `architecture/playbook/index.astro`                       | reuse       |
+| chapter -> facet parsing      | `parseSpec` (`src/lib/parse-spec.ts`)                     | reuse       |
+| WIRES card                    | `engineCard()` (`@chbrain/khai-arch`)                     | reuse       |
+| engine discovery              | `loadEngines()` (`src/lib/load-engines.ts`)               | reuse       |
+| compose view                  | engine's `compose()`                                      | reuse       |
+| `/enginebooks` shelf          | `src/pages/architecture/enginebooks/index.astro`          | new (small) |
+| `/enginebooks/<name>` book    | `src/pages/architecture/enginebooks/[engine]/index.astro` | new (small) |
 
 Engine content files (`position_male.md`, etc.) already carry frontmatter and
 canon chapters, so they parse and render through the existing facet path with no
