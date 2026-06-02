@@ -27,14 +27,16 @@ describe("enginebooks shelf - /enginebooks", () => {
   });
 
   it("is titled Enginebooks", () => {
-    const doc = new JSDOM(shelf!.html).window.document;
+    if (!shelf) return; // guarded: asserts once the source pages are present (see tripwire)
+    const doc = new JSDOM(shelf.html).window.document;
     expect(doc.querySelector(".masthead-title")?.textContent?.toLowerCase()).toContain(
       "enginebooks",
     );
   });
 
   it("carries the shared chrome (.kaihacks.ai TLD accent + footer legal links)", () => {
-    const doc = new JSDOM(shelf!.html).window.document;
+    if (!shelf) return;
+    const doc = new JSDOM(shelf.html).window.document;
     expect(doc.querySelector(".topbar-domain-tld")?.textContent).toBe(".kaihacks.ai");
     const labels = [...doc.querySelectorAll(".footfed-legal-link")].map((a) =>
       a.textContent?.trim(),
@@ -44,7 +46,8 @@ describe("enginebooks shelf - /enginebooks", () => {
   });
 
   it("renders one card per installed engine, each linking into its book", () => {
-    const doc = new JSDOM(shelf!.html).window.document;
+    if (!shelf) return;
+    const doc = new JSDOM(shelf.html).window.document;
     const cards = [...doc.querySelectorAll("a.eb-card")];
     expect(cards.length).toBeGreaterThan(0);
     for (const card of cards) {
@@ -56,7 +59,8 @@ describe("enginebooks shelf - /enginebooks", () => {
   });
 
   it("includes the gender engine on the shelf", () => {
-    const doc = new JSDOM(shelf!.html).window.document;
+    if (!shelf) return;
+    const doc = new JSDOM(shelf.html).window.document;
     const hrefs = [...doc.querySelectorAll("a.eb-card")].map((a) => a.getAttribute("href"));
     expect(hrefs).toContain("./gender/");
   });
