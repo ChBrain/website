@@ -6,21 +6,23 @@ shared cPanel host (`92.205.150.56`, user `c216mkgp1lzk`).
 
 ## Host layout
 
-The apex `kaihacks.ai` is the company front door and serves the `main`
-surface from its own dedicated document root. Each subdomain has its own
+The apex `kaihacks.ai` is the company front door. Its document root is fixed
+at `/public_html/` (cPanel won't repoint the primary domain), so the apex
+serves the `main` surface — deployed to `/public_html/main/` — via an
+`.htaccess` rewrite (see "The apex rewrite" below). Each subdomain has its own
 document root inside `/public_html/`. From the cPanel domain table:
 
 | Domain                     | Document root on host                    |
 | -------------------------- | ---------------------------------------- |
-| `kaihacks.ai` (main)       | `/public_html/main/`                     |
+| `kaihacks.ai` (apex)       | `/public_html/` (rewrites to `/main/`)   |
 | `architecture.kaihacks.ai` | `/public_html/architecture.kaihacks.ai/` |
 | `cultures.kaihacks.ai`     | `/public_html/cultures.kaihacks.ai/`     |
 | `staging.kaihacks.ai`      | `/public_html/staging.kaihacks.ai/`      |
 
-The apex doc root is `/public_html/main/` (a cPanel repoint from the old
-`/public_html/`), so `main` owns a dedicated root and `rsync --delete` is
-safe. `main`'s own pages — `cvi/`, `privacy/`, `contact/` — live inside
-that root and serve as `kaihacks.ai/cvi/`, `/privacy/`, `/contact/`.
+`main` deploys to its own dedicated root `/public_html/main/`, so `rsync
+--delete` is safe. Its own pages — `cvi/`, `privacy/`, `contact/` — live inside
+that root and serve as the clean `kaihacks.ai/cvi/`, `/privacy/`, `/contact/`
+(the rewrite hides the `/main/` prefix).
 
 ## Build outputs -> deploy targets
 
@@ -89,21 +91,38 @@ go to `/public_html/<subdomain>/` in production and
 belong under the apex are folded into the `main` surface rather than
 deployed separately, so the apex root stays owned by one surface.
 
-## The apex is owned by the `main` surface
+## The apex rewrite
 
-The apex `kaihacks.ai/` document root is `/public_html/main/`, owned
-solely by the `main` surface. `main` was historically scoped to a
-`/main/` subpath to avoid colliding with the `chbrain/kaihacks`
-placeholder at the bare `/public_html/` root; the apex doc root is now
-repointed to `/public_html/main/`, so `main` is the front door, the old
-placeholder is no longer served, and `--delete` is safe because nothing
-else writes to that root.
+cPanel won't repoint the primary domain, so `kaihacks.ai`'s document root
+stays `/public_html/`. The apex serves the `main` surface (at
+`/public_html/main/`) via `apex/.htaccess`, deployed to `/public_html/.htaccess`:
+
+```apache
+RewriteEngine On
+RewriteBase /
+RewriteCond %{REQUEST_URI} !^/main/
+RewriteRule ^(.*)$ /main/$1 [L]
+```
+
+Every apex request is internally rewritten to `/main/` — the URL stays clean
+(`kaihacks.ai/`, `/privacy/`, `/cvi/`), the old `chbrain/kaihacks` placeholder
+is never served (the rewrite runs before any apex directory index), and
+subdomains are unaffected (their own vhosts never read this file). `main` keeps
+a dedicated `/public_html/main/` root, so its `--delete` is safe.
+
+Deploy it with the `deploy-apex` workflow (`workflow_dispatch`), which rsyncs
+`apex/` to `/public_html/` **without** `--delete` (it only places the file and
+never touches the siblings sharing that root). It is static and set-and-forget;
+re-run only when `apex/` changes. Keep internal links trailing-slashed (the
+build does) so `mod_dir` never redirects in a way that exposes `/main/`.
 
 ## SSH
 
 Deploy workflows use `ssh -i ~/.ssh/kaihacksai` (key set up from
 `secrets.SSH_PRIVATE_KEY`) against `c216mkgp1lzk@92.205.150.56`.
-Every rsync uses `--delete` — each surface writes to a dedicated
+Surface rsyncs use `--delete` — each surface writes to a dedicated
 document root, so the target is the source of truth and anything in it
-not in the rsync source is removed. Never point a rsync with `--delete`
-at a target you don't fully own.
+not in the rsync source is removed. The one exception is `deploy-apex`,
+which writes to the shared `/public_html/` root and therefore runs
+**without** `--delete`. Never point a rsync with `--delete` at a target
+you don't fully own.

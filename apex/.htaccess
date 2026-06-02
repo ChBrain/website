@@ -1,0 +1,18 @@
+# Apex bootstrap for kaihacks.ai.
+#
+# The primary domain's document root is fixed at /public_html/ (cPanel won't
+# repoint it), so the bare apex serves the `main` surface (deployed to
+# /public_html/main/) via an internal rewrite. The URL stays clean
+# (kaihacks.ai/, /privacy/, /cvi/, ...) - this is a rewrite, not a redirect.
+#
+# Subdomains (architecture/cultures/staging.kaihacks.ai) have their own vhost
+# document roots and never read this file. The old apex placeholder is bypassed:
+# every apex request is rewritten to /main/ before Apache resolves a directory
+# index, so /public_html/index.html (if any) is never served.
+
+RewriteEngine On
+RewriteBase /
+
+# Already under /main/? leave it (prevents a rewrite loop).
+RewriteCond %{REQUEST_URI} !^/main/
+RewriteRule ^(.*)$ /main/$1 [L]
