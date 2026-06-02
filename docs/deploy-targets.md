@@ -6,55 +6,51 @@ shared cPanel host (`92.205.150.56`, user `c216mkgp1lzk`).
 
 ## Host layout
 
-The apex `kaihacks.ai` is the main domain and serves directly from
-`/public_html/`. Each subdomain has its own document root inside
-`/public_html/`. From the cPanel domain table:
+The apex `kaihacks.ai` is the company front door and serves the `main`
+surface from its own dedicated document root. Each subdomain has its own
+document root inside `/public_html/`. From the cPanel domain table:
 
 | Domain                     | Document root on host                    |
 | -------------------------- | ---------------------------------------- |
-| `kaihacks.ai` (main)       | `/public_html/`                          |
+| `kaihacks.ai` (main)       | `/public_html/main/`                     |
 | `architecture.kaihacks.ai` | `/public_html/architecture.kaihacks.ai/` |
 | `cultures.kaihacks.ai`     | `/public_html/cultures.kaihacks.ai/`     |
 | `staging.kaihacks.ai`      | `/public_html/staging.kaihacks.ai/`      |
 
-Note: the apex maps to `/public_html/` directly, NOT
-`/public_html/kaihacks.ai/`. Anything URL-pathed under the apex
-(e.g. `kaihacks.ai/main/`) lives at `/public_html/<path>/` on the
-host - the `kaihacks.ai/` segment does not appear in the host path.
+The apex doc root is `/public_html/main/` (a cPanel repoint from the old
+`/public_html/`), so `main` owns a dedicated root and `rsync --delete` is
+safe. `main`'s own pages — `cvi/`, `privacy/`, `contact/` — live inside
+that root and serve as `kaihacks.ai/cvi/`, `/privacy/`, `/contact/`.
 
 ## Build outputs -> deploy targets
 
+There are three surfaces: `main` (the apex, with its sub-pages inside it),
+and the two subdomains `architecture` and `cultures`.
+
 | `dist/` subfolder    | Production rsync target                  | Staging rsync target                             |
 | -------------------- | ---------------------------------------- | ------------------------------------------------ |
-| `dist/architecture/` | `/public_html/architecture.kaihacks.ai/` | `/public_html/staging.kaihacks.ai/architecture/` |
 | `dist/main/`         | `/public_html/main/`                     | `/public_html/staging.kaihacks.ai/main/`         |
-| `dist/privacy/`      | `/public_html/privacy/`                  | `/public_html/staging.kaihacks.ai/privacy/`      |
+| `dist/architecture/` | `/public_html/architecture.kaihacks.ai/` | `/public_html/staging.kaihacks.ai/architecture/` |
 | `dist/cultures/`     | `/public_html/cultures.kaihacks.ai/`     | `/public_html/staging.kaihacks.ai/cultures/`     |
-| `dist/contact/`      | `/public_html/contact/` ⚠️               | `/public_html/staging.kaihacks.ai/contact/`      |
 
-⚠️ **contact production root is unverified.** It follows the apex-subpath
-convention (`/public_html/contact/`, matching `main` and `privacy`), but
-unlike the other surfaces it has not been confirmed against the cPanel
-domain table. Confirm the vhost / document root exists before the first
-`contact-v*` production tag — the rsync uses `--delete`.
+`main`'s build includes its `cvi/`, `privacy/`, and `contact/` pages, so the
+whole apex ships as one surface and every rsync uses `--delete` against a
+dedicated root.
 
 Production URLs:
 
+- `https://kaihacks.ai/` (apex root — the `main` surface)
+- `https://kaihacks.ai/cvi/` (the CVI colophon)
+- `https://kaihacks.ai/privacy/` (site-wide legal page)
+- `https://kaihacks.ai/contact/`
 - `https://architecture.kaihacks.ai/` (subdomain root, clean URL)
-- `https://kaihacks.ai/main/` (apex `/main/` subpath)
-- `https://kaihacks.ai/main/cvi/` (the CVI colophon, nested under main)
-- `https://kaihacks.ai/privacy/` (apex `/privacy/` subpath; site-wide legal page)
 - `https://cultures.kaihacks.ai/` (subdomain root, clean URL)
-- `https://kaihacks.ai/contact/` (apex `/contact/` subpath)
 
-Staging URLs:
+Staging URLs (every surface under the single staging vhost):
 
+- `https://staging.kaihacks.ai/main/` (and `/main/cvi/`, `/main/privacy/`, `/main/contact/`)
 - `https://staging.kaihacks.ai/architecture/`
-- `https://staging.kaihacks.ai/main/`
-- `https://staging.kaihacks.ai/main/cvi/`
-- `https://staging.kaihacks.ai/privacy/`
 - `https://staging.kaihacks.ai/cultures/`
-- `https://staging.kaihacks.ai/contact/`
 
 ## How deploys are triggered
 
@@ -69,12 +65,10 @@ single source of truth. Three ways to invoke it:
   `env: staging`. Surfaces deploy independently (fail-fast disabled),
   so one failing surface never blocks the rest.
 - **Production tags** (`deploy-production.yml`): pushing a per-surface
-  tag (`main-v0.0.1`, `architecture-v0.0.3`, …) rebuilds and deploys
+  tag (`main-v0.1.0`, `architecture-v0.1.0`, …) rebuilds and deploys
   only that surface with `env: production`.
 - **Manual** (`workflow_dispatch`): run `deploy-surface` from the
-  Actions tab (or `gh workflow run deploy-surface.yml -f surface=main
--f env=staging`) to deploy any one surface to either environment on
-  demand.
+  Actions tab to deploy any one surface to either environment on demand.
 
 ## Versioning
 
@@ -82,10 +76,7 @@ Production tags are per-surface (`<surface>-v<semver>`) so each site
 releases on its own cadence. There is currently a single repo-level
 `package.json` version and **no per-surface version file**, so the
 production workflow does not gate on a version match — the tag is the
-release record. If independent per-surface version numbers become
-worth enforcing, add a version source per surface (e.g. a
-`surfaces/<name>/version` file or a manifest) and reinstate the
-tag-vs-version check in `deploy-surface.yml` for `env: production`.
+release record.
 
 ## Adding a surface
 
@@ -94,23 +85,25 @@ build, add it to the `surface` choice/matrix lists in the three deploy
 workflows, and add its production + staging targets to the `case`
 mapping in `deploy-surface.yml` (and to the table above). Subdomains
 go to `/public_html/<subdomain>/` in production and
-`/public_html/staging.kaihacks.ai/<subdomain>/` in staging; apex
-subpaths go to `/public_html/<path>/` in production.
+`/public_html/staging.kaihacks.ai/<subdomain>/` in staging. Pages that
+belong under the apex are folded into the `main` surface rather than
+deployed separately, so the apex root stays owned by one surface.
 
-## Why the apex uses a `/main/` subpath rather than the bare root
+## The apex is owned by the `main` surface
 
-The apex `kaihacks.ai/` document root (`/public_html/`) is also the
-cPanel home web root and is owned by the placeholder in
-`chbrain/kaihacks`. Putting the chbrain/website-built company front
-door at `/public_html/main/` (URL `kaihacks.ai/main/`) gives a
-scoped, stable namespace for apex pages without colliding with
-whatever else lives at the bare apex root.
+The apex `kaihacks.ai/` document root is `/public_html/main/`, owned
+solely by the `main` surface. `main` was historically scoped to a
+`/main/` subpath to avoid colliding with the `chbrain/kaihacks`
+placeholder at the bare `/public_html/` root; the apex doc root is now
+repointed to `/public_html/main/`, so `main` is the front door, the old
+placeholder is no longer served, and `--delete` is safe because nothing
+else writes to that root.
 
 ## SSH
 
 Deploy workflows use `ssh -i ~/.ssh/kaihacksai` (key set up from
 `secrets.SSH_PRIVATE_KEY`) against `c216mkgp1lzk@92.205.150.56`.
-The `--delete` flag on each rsync means the deploy target is the
-source of truth; anything in the target that's not in the rsync
-source is removed. Never point a rsync with `--delete` at a target
-you don't fully own.
+Every rsync uses `--delete` — each surface writes to a dedicated
+document root, so the target is the source of truth and anything in it
+not in the rsync source is removed. Never point a rsync with `--delete`
+at a target you don't fully own.

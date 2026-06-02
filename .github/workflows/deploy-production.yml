@@ -19,9 +19,7 @@ on:
     tags:
       - "architecture-v*"
       - "main-v*"
-      - "privacy-v*"
       - "cultures-v*"
-      - "contact-v*"
 
 permissions:
   contents: read
@@ -38,7 +36,7 @@ jobs:
           tag="${GITHUB_REF_NAME}"
           surface="${tag%%-v*}"
           case "$surface" in
-            architecture|main|privacy|cultures|contact) ;;
+            architecture|main|cultures) ;;
             *) echo "::error::tag '$tag' does not map to a known surface"; exit 1 ;;
           esac
           echo "surface=$surface" >> "$GITHUB_OUTPUT"
