@@ -142,3 +142,76 @@ optional `playbook:` block in its manifest; until then the default
   `cultures.kaihacks.ai/map` is that surface). When Cultures becomes an engine,
   the catalog shape reuses the same facet renderer with different navigation;
   that is a separate design, not this one.
+
+## v2 direction (next)
+
+v1 ships the content book (cover, wiring, anchor, expressions, composed). v2
+turns the Enginebook into the engine's **product page**: the Playbook is a spec,
+an engine is a shippable product, so it gains what products have -- a warrant, a
+license, and a way to take it home. Three moves, in priority order.
+
+### 1. Reference as warrant (the keystone, and a khai-canon change)
+
+The reference is not back-matter; it is **the justification for the engine to
+exist**, and it belongs near the front, framing the content. Gender's
+`REFERENCES.md` already proves the shape: it carries the grounding (Risman,
+West & Zimmerman, Manne, Connell, Bourdieu), a source -> constraint mapping per
+file, and -- the load-bearing part -- the **limits**: what the engine refuses to
+model and to whom it delegates (intersectionality -> Cultures). That refusal is
+the intellectual honesty a reader trusts.
+
+The move is **less is more, driven into khai**: today `REFERENCES.md` is rich
+but sprawling and will never fit a no-scroll spread. Give it canon discipline --
+a mnemonic and terse chapters, authored in khai and projected like the WIRES
+card (`engineCard`) -- so it fits one spread by construction and forces the
+author to earn the engine in four lines, not five sections. Candidate chapters
+(naming is khai's to coin):
+
+| Chapter     | Holds                                             |
+| ----------- | ------------------------------------------------- |
+| **Domain**  | what the engine models -- and what it isn't       |
+| **Grounds** | the sources it rests on                           |
+| **Mapping** | source -> constraint, per file                    |
+| **Limits**  | what it refuses to claim, and who it delegates to |
+
+The authorship note collapses to the one-line coda, exactly like the canon
+types. This is a **khai-canon change** (the reference discipline + its
+projector); website only renders the resulting spread, the same dumb facet path
+the content uses.
+
+### 2. Download as release link (no build step)
+
+The back-cover spread is a CTA to the engine's GitHub **release** zip -- the
+Cultures `releases/latest/download/<engine>.zip` pattern, release-based, derived
+from the manifest's repo + version. No build-time zipping; the release is the
+source of truth. This is what makes the Enginebook actionable: take the engine
+home and drop it into a project.
+
+### 3. License as colophon
+
+The `license` field (`CC-BY-NC-4.0`) renders as a small colophon spread before
+the back-cover, not a full page. Provenance (sources) lives in the warrant
+(move 1), so license stays a one-line term, not a wall of text.
+
+### Sequence (v2)
+
+The warrant reorders the book so the engine is earned before its parts are
+shown:
+
+```
+cover -> reference (warrant) -> wiring -> content -> composed -> colophon (license) -> back-cover (download)
+```
+
+### Deliberately dropped
+
+- **No standalone README page.** The README is generated from the manifest, and
+  the book already renders that manifest as the wiring (WIRES) spread; a README
+  page would re-show it flatter. Link out to the package README on GitHub/npm
+  instead.
+
+### Where the work lives
+
+The reference-as-warrant discipline is authored in **khai** (the canon owns the
+shape and its projector, as it owns the WIRES card); the **website** renders the
+new spread and adds the download/license spreads. The keystone is the khai
+change -- which is the right home for "less is more."
