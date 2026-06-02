@@ -30,7 +30,7 @@ interface Spread {
   title: string;
   subtitle: string | null;
   facets: Facet[];
-  /** raw assembled markdown, shown verbatim (the composed spread). */
+  /** raw markdown shown verbatim when a content file fails to parse (fallback). */
   manuscript: string | null;
   state: string;
 }
@@ -91,20 +91,6 @@ for (const expr of book.expressions) {
     facets: parsed?.facets ?? [],
     manuscript: parsed ? null : expr.text,
     state: "expression",
-  });
-}
-
-// 4. Composed: the assembled result a persona actually receives. The thing a
-// canon type page can never show.
-if (book.composed) {
-  spreads.push({
-    slug: "composed",
-    role: "composed",
-    title: "Composed",
-    subtitle: `${cap(book.id)} + ${book.composed.expression}: the read a persona holds`,
-    facets: [],
-    manuscript: book.composed.text,
-    state: "composed",
   });
 }
 
@@ -464,7 +450,7 @@ const title = `${cap(book.id)} · Enginebook · kaihacks`;
       text-wrap: pretty;
     }
 
-    /* composed: the assembled instruction set, shown verbatim */
+    /* manuscript: a content file shown verbatim when it fails to parse */
     .eb-manuscript {
       margin-top: 30px;
       padding: 22px 24px;

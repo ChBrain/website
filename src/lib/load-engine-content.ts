@@ -30,19 +30,6 @@ export interface EngineBook {
   card: EngineCard;
   anchor: EngineBookFile;
   expressions: EngineBookFile[];
-  /**
-   * The worked composition: the anchor and one expression assembled into the
-   * instruction set a persona actually holds. Mirrors the engine's own
-   * compose() contract (anchor body, then expression body); we replicate it
-   * here rather than dynamic-importing each engine so the [engine] route stays
-   * fully generic. Null when the engine ships no expressions.
-   */
-  composed: { expression: string; text: string } | null;
-}
-
-/** Strip a leading YAML frontmatter block, leaving the prose body. */
-function stripFrontmatter(md: string): string {
-  return md.replace(/^---\n[\s\S]*?\n---\n/, "").trim();
 }
 
 /**
@@ -84,15 +71,6 @@ export function loadEngineBook(id: string): EngineBook {
     text: read(file),
   }));
 
-  let composed: EngineBook["composed"] = null;
-  if (expressions.length > 0) {
-    const first = expressions[0];
-    composed = {
-      expression: first.key,
-      text: `${stripFrontmatter(anchor.text)}\n\n${stripFrontmatter(first.text)}\n`,
-    };
-  }
-
   return {
     id,
     tagline: manifest.tagline ?? null,
@@ -100,6 +78,5 @@ export function loadEngineBook(id: string): EngineBook {
     card: engineCard(manifest) as EngineCard,
     anchor,
     expressions,
-    composed,
   };
 }
