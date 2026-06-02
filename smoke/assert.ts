@@ -27,6 +27,13 @@ export interface CheckResult extends Target {
 export interface RunOptions {
   fetchImpl?: typeof fetch;
   userAgent?: string;
+  /**
+   * Extra request headers. Used to carry the monitor bypass token
+   * (`X-Monitor: <secret>`) so a Cloudflare WAF "skip" rule lets the checks
+   * through Bot Fight Mode - which otherwise 403s every datacenter-IP /
+   * non-browser client (GitHub runners, the Worker). See issue 149.
+   */
+  headers?: Record<string, string>;
 }
 
 const SURFACE_META = /<meta\s+name=["']x-surface["']\s+content=["']([^"']*)["']/i;
@@ -45,7 +52,7 @@ export async function runChecks(targets: Target[], opts: RunOptions = {}): Promi
     const errors: string[] = [];
     try {
       const res = await doFetch(t.url, {
-        headers: { "user-agent": ua, "cache-control": "no-cache" },
+        headers: { "user-agent": ua, "cache-control": "no-cache", ...opts.headers },
         redirect: "follow",
       });
 

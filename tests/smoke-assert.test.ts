@@ -66,6 +66,27 @@ describe("runChecks", () => {
     expect(res[0].errors.join(" ")).toMatch(/placeholder|x-surface/);
   });
 
+  it("forwards extra headers (the X-Monitor bot-bypass token)", async () => {
+    let seen: Record<string, string> | undefined;
+    const capturing = (async (_input: string | URL, init?: RequestInit) => {
+      seen = init?.headers as Record<string, string>;
+      return {
+        status: 200,
+        url: "https://m/",
+        async text() {
+          return stamp("main");
+        },
+      } as unknown as Response;
+    }) as unknown as typeof fetch;
+
+    const res = await runChecks([T("main", "https://m/", "main")], {
+      fetchImpl: capturing,
+      headers: { "x-monitor": "s3cret" },
+    });
+    expect(res[0].ok).toBe(true);
+    expect(seen?.["x-monitor"]).toBe("s3cret");
+  });
+
   it("flags a cross-host redirect", async () => {
     const res = await runChecks([T("main", "https://m/", "main")], {
       fetchImpl: fakeFetch({
