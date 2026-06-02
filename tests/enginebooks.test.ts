@@ -46,7 +46,8 @@ describe("enginebooks shelf - /enginebooks", () => {
   });
 
   it("renders one card per installed engine, each linking into its book", () => {
-    if (!shelf) return;
+    // needs at least one engine installed; genderBook is the proxy for that.
+    if (!shelf || !genderBook) return;
     const doc = new JSDOM(shelf.html).window.document;
     const cards = [...doc.querySelectorAll("a.eb-card")];
     expect(cards.length).toBeGreaterThan(0);
@@ -59,7 +60,7 @@ describe("enginebooks shelf - /enginebooks", () => {
   });
 
   it("includes the gender engine on the shelf", () => {
-    if (!shelf) return;
+    if (!shelf || !genderBook) return; // only when the gender engine is installed
     const doc = new JSDOM(shelf.html).window.document;
     const hrefs = [...doc.querySelectorAll("a.eb-card")].map((a) => a.getAttribute("href"));
     expect(hrefs).toContain("./gender/");
