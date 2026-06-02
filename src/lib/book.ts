@@ -34,6 +34,9 @@ export interface BookSpread {
   written?: boolean;
   /** installed-extension card -- adds the engine modifier class */
   engine?: boolean;
+  /** optional click-through at the foot of the spread (the Playbook's
+   *  enriched-by engine card links into its full Enginebook) */
+  deepLink?: { href: string; label: string } | null;
 }
 
 /** A TOC group: a labelled run of spreads, used to build the overlay. */
