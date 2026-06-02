@@ -1,5 +1,5 @@
 ---
-// SiteFooter — the one global colophon for every surface.
+// SiteFooter: the one global colophon for every surface.
 //
 // Three-column rhythm:
 //
@@ -26,7 +26,7 @@
 import { URLS } from "../lib/urls";
 
 interface Props {
-  /** True on the /contact/ page itself — suppresses the center Contact link to avoid self-reference. */
+  /** True on the /contact/ page itself (suppresses the center Contact link to avoid self-reference. */
   hideContact?: boolean;
 }
 
@@ -55,13 +55,13 @@ const { hideContact = false } = Astro.props;
 </footer>
 
 <style is:global>
-  /* On snap-enabled pages the SiteFooter becomes the final snap stop —
+  /* On snap-enabled pages the SiteFooter becomes the final snap stop.
    * sticky-bottom fights mandatory snap (the footer pinned to viewport
    * bottom appears to "snap back" out of view because mandatory snap
    * forces the resting scroll position to align with the last
    * section's snap-stop, so the colophon is unreachable as a resting
    * state). Switching to position: relative + scroll-snap-align: start
-   * makes the footer the FINAL chapter — one wheel-tick past §N lands
+   * makes the footer the FINAL chapter; one wheel-tick past §N lands
    * the colophon as its own snap-stop, stable at rest. Scoped to the
    * three snap pages so non-snap pages keep their sticky-bottom
    * behaviour. */
@@ -103,7 +103,7 @@ const { hideContact = false } = Astro.props;
   /* Pin each child to its own grid column so the layout stays
    * symmetrical even when the center Contact link is suppressed via
    * hideContact (the /contact/ page). Without the explicit columns,
-   * auto-flow places identity in column 1 and legal in column 2 —
+   * auto-flow places identity in column 1 and legal in column 2.
    * which makes the legal links appear centered instead of right-edge
    * aligned. */
   .footfed-identity {
@@ -133,7 +133,7 @@ const { hideContact = false } = Astro.props;
   }
 
   /* Mobile: collapse the three-column grid into a stack (identity,
-   * contact, legal — top to bottom). The center column would otherwise
+   * contact, legal (top to bottom). The center column would otherwise
    * be too squeezed on narrow viewports. */
   @media (max-width: 640px) {
     .footfed {
