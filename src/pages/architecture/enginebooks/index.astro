@@ -1,0 +1,297 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import SiteHeader from "../../../components/SiteHeader.astro";
+import SiteFooter from "../../../components/SiteFooter.astro";
+import pkg from "@chbrain/khai-arch/package.json";
+import { loadEngines } from "../../../lib/load-engines";
+import { loadEngineBook } from "../../../lib/load-engine-content";
+
+// The canon edition, derived from the installed canon -- one source, no drift.
+const edition = `v${pkg.version}`;
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+// The shelf. loadEngines() discovers every installed @chbrain/khai-engine-*
+// (alphabetical, deterministic); loadEngineBook() adds the canon tagline. The
+// canon never names engines, so this list is whatever is installed -- today,
+// just gender.
+const shelf = loadEngines().map((card) => ({ card, book: loadEngineBook(card.id) }));
+---
+
+<BaseLayout
+  title="Enginebooks · architecture · kaihacks"
+  description="The installed khai engines, each as an Enginebook: the extension wired through the canon's seam."
+>
+  <div class="eb-shelf">
+    <SiteHeader domain="architecture" tld=".kaihacks.ai" basePath="../" location="enginebooks" />
+
+    <section class="masthead">
+      <div class="section-label">§ · the extensions</div>
+      <h1 class="masthead-title">Enginebooks<em>.</em></h1>
+      <p class="masthead-subline">
+        What comes through the canon's seam. Each engine binds at one root and offers its parts as
+        one named whole; an Enginebook is that whole, rendered.
+      </p>
+    </section>
+
+    <section class="section">
+      <h2 class="section-heading">
+        <span class="section-no">§1</span>
+        <span class="section-title">Installed engines</span>
+        <span class="section-note">canon {edition} · enriched by</span>
+      </h2>
+
+      {
+        shelf.length === 0 ? (
+          <p class="eb-empty">No engines installed.</p>
+        ) : (
+          <div class="eb-cards">
+            {shelf.map(({ card, book }) => (
+              <a href={`./${card.id}/`} class="eb-card">
+                <div class="eb-card-hue" aria-hidden="true" />
+                <div class="eb-card-body">
+                  <div class="eb-card-row">
+                    <span class="eb-card-url">architecture.kaihacks.ai/enginebooks/{card.id}</span>
+                    <span class="eb-card-state">engine · wires at {card.type ?? "?"}</span>
+                  </div>
+                  <div class="eb-card-title">{cap(card.id)}</div>
+                  <p class="eb-card-note">{book.tagline ?? card.sections[card.chapters[0]]}</p>
+                  <span class="eb-card-cta">Open the enginebook →</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        )
+      }
+    </section>
+
+    <SiteFooter />
+  </div>
+
+  <style is:global>
+    body:has(.eb-shelf) {
+      padding: 0;
+    }
+    body:has(.eb-shelf) main {
+      max-width: none;
+      margin: 0;
+    }
+  </style>
+
+  <style>
+    .eb-shelf {
+      max-width: var(--width-page);
+      margin: 0 auto;
+      padding: 0 1.25rem;
+      background: var(--color-paper);
+      color: var(--color-ink);
+      font-family: var(--font-prose);
+    }
+    @media (min-width: 641px) {
+      .eb-shelf {
+        padding: 0 3.5rem;
+      }
+    }
+
+    .masthead {
+      padding: 1.875rem 0 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    @media (min-width: 641px) {
+      .masthead {
+        padding: 4rem 0 2.5rem;
+      }
+    }
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.26em;
+      color: var(--color-ink-soft);
+      text-transform: uppercase;
+    }
+    .masthead-title {
+      margin: 1.125rem 0 0;
+      font-family: var(--font-display);
+      font-weight: 350;
+      font-size: 54px;
+      line-height: 0.94;
+      letter-spacing: -0.03em;
+      color: var(--color-ink);
+    }
+    @media (min-width: 641px) {
+      .masthead-title {
+        font-size: 120px;
+      }
+    }
+    .masthead-title em {
+      color: var(--color-brick);
+      font-style: normal;
+    }
+    .masthead-subline {
+      margin: 1.375rem 0 0;
+      max-width: 680px;
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 17px;
+      line-height: 1.4;
+      color: var(--color-ink-soft);
+      text-wrap: pretty;
+    }
+    @media (min-width: 641px) {
+      .masthead-subline {
+        margin-top: 1.75rem;
+        font-size: 22px;
+      }
+    }
+
+    .section {
+      padding: 0.5rem 0 2rem;
+    }
+    .section-heading {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      border-bottom: 1px solid var(--color-rule);
+      padding-bottom: 10px;
+      margin: 0;
+      font-weight: normal;
+    }
+    @media (min-width: 641px) {
+      .section-heading {
+        flex-direction: row;
+        align-items: baseline;
+        gap: 0;
+      }
+    }
+    .section-no {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--color-brick);
+      text-transform: uppercase;
+      margin-right: 14px;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      color: var(--color-ink);
+    }
+    @media (min-width: 641px) {
+      .section-title {
+        font-size: 26px;
+      }
+    }
+    .section-note {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      color: var(--color-ink-soft);
+      text-transform: uppercase;
+      margin-left: auto;
+    }
+
+    .eb-empty {
+      margin-top: 24px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      color: var(--color-ink-mute);
+      text-transform: uppercase;
+    }
+
+    .eb-cards {
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    @media (min-width: 721px) {
+      .eb-cards {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .eb-card {
+      display: block;
+      text-decoration: none;
+      color: var(--color-ink);
+      border: 1px solid var(--color-ink);
+      background: var(--color-paper-warm);
+      overflow: hidden;
+      transition:
+        transform 0.16s,
+        box-shadow 0.16s;
+    }
+    .eb-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px -16px var(--color-ink);
+    }
+    .eb-card-hue {
+      height: 6px;
+      background: var(--color-brick);
+    }
+    .eb-card-body {
+      padding: 18px 20px 20px;
+    }
+    @media (min-width: 641px) {
+      .eb-card-body {
+        padding: 24px 26px;
+      }
+    }
+    .eb-card-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .eb-card-url {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: -0.01em;
+      color: var(--color-ink);
+    }
+    .eb-card-state {
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      letter-spacing: 0.18em;
+      color: var(--color-brick);
+      text-transform: uppercase;
+    }
+    .eb-card-title {
+      font-family: var(--font-display);
+      font-size: 32px;
+      line-height: 1.06;
+      margin-top: 8px;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+    }
+    @media (min-width: 641px) {
+      .eb-card-title {
+        font-size: 40px;
+      }
+    }
+    .eb-card-note {
+      margin: 8px 0 0;
+      max-width: 640px;
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 15px;
+      color: var(--color-ink-soft);
+      line-height: 1.45;
+    }
+    .eb-card-cta {
+      display: inline-block;
+      margin-top: 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--color-ink);
+      padding-bottom: 3px;
+      border-bottom: 1px solid var(--color-rule);
+    }
+  </style>
+</BaseLayout>
