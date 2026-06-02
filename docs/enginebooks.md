@@ -161,11 +161,15 @@ model and to whom it delegates (intersectionality -> Cultures). That refusal is
 the intellectual honesty a reader trusts.
 
 The move is **less is more, driven into khai**: today `REFERENCES.md` is rich
-but sprawling and will never fit a no-scroll spread. Give it canon discipline --
-a mnemonic and terse chapters, authored in khai and projected like the WIRES
-card (`engineCard`) -- so it fits one spread by construction and forces the
-author to earn the engine in four lines, not five sections. Candidate chapters
-(naming is khai's to coin):
+but sprawling. Give it canon discipline -- **predefined chapters** (a fixed
+schema, no mnemonic: every engine's reference carries the same chapters in the
+same order) authored in khai and projected like the WIRES card (`engineCard`).
+Unlike a type's chapters, the reference is **not** squeezed onto one spread:
+**one chapter, one snap** -- each predefined chapter is its own snap-scroll
+panel, terse enough to need no scroll. "Less is more" applies per chapter, not
+to the set.
+
+The predefined chapters (no mnemonic; the canon fixes the set and order):
 
 | Chapter     | Holds                                             |
 | ----------- | ------------------------------------------------- |
@@ -174,10 +178,9 @@ author to earn the engine in four lines, not five sections. Candidate chapters
 | **Mapping** | source -> constraint, per file                    |
 | **Limits**  | what it refuses to claim, and who it delegates to |
 
-The authorship note collapses to the one-line coda, exactly like the canon
-types. This is a **khai-canon change** (the reference discipline + its
-projector); website only renders the resulting spread, the same dumb facet path
-the content uses.
+The authorship note collapses to a one-line coda on the last reference snap.
+This is a **khai-canon change** (the fixed reference schema + its projector);
+website only renders the snaps, the same dumb path the content uses.
 
 ### 2. Download as release link (no build step)
 
@@ -196,10 +199,16 @@ the back-cover, not a full page. Provenance (sources) lives in the warrant
 ### Sequence (v2)
 
 The warrant reorders the book so the engine is earned before its parts are
-shown:
+shown. The reference is not one spread but one snap per predefined chapter:
 
 ```
-cover -> reference (warrant) -> wiring -> content -> composed -> colophon (license) -> back-cover (download)
+cover
+-> reference: Domain -> Grounds -> Mapping -> Limits   (one chapter, one snap)
+-> wiring
+-> content: anchor -> expressions
+-> composed
+-> colophon (license)
+-> back-cover (download)
 ```
 
 ### Deliberately dropped
