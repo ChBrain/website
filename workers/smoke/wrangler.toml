@@ -1,0 +1,18 @@
+name = "kaihacks-smoke"
+main = "index.ts"
+compatibility_date = "2025-06-01"
+# nodejs_compat provides `process` so importing src/lib/urls.ts (which reads
+# process.env.DEPLOY_ENV at module load) is safe in workerd. The checks select
+# the env explicitly via targetsFor(), so the value itself is irrelevant.
+compatibility_flags = ["nodejs_compat"]
+
+# Continuous monitor: every 15 minutes.
+[triggers]
+crons = ["*/15 * * * *"]
+
+[vars]
+SMOKE_ENVS = "production"
+
+# Secrets (set once, NOT committed):
+#   npx wrangler secret put WEBHOOK_URL    --config workers/smoke/wrangler.toml
+#   npx wrangler secret put TRIGGER_TOKEN  --config workers/smoke/wrangler.toml

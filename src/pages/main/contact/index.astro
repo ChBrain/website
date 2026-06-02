@@ -52,7 +52,7 @@ import SiteFooter from "../../../components/SiteFooter.astro";
     /* Flex column + full-viewport min-height so the sticky SiteFooter
      * pins to the bottom of the viewport on short content. <main>
      * grows to fill the gap between header and footer, AND vertical-
-     * centers its content (masthead + card) — without justify-content:
+     * centers its content (masthead + card); no justify-content:
      * center the content top-aligned inside the grown main, which read
      * as the page floating off-balance on tall viewports. */
     .contact-page {
@@ -136,7 +136,7 @@ import SiteFooter from "../../../components/SiteFooter.astro";
         padding: 36px 38px;
       }
     }
-    /* Card rows are left-aligned — the key column at fixed 70px gives
+    /* Card rows are left-aligned; the key column is fixed at 70px gives
      * the data a tidy edge. (The masthead is centred; the card stays
      * left-aligned for legibility.) */
     .ct-row {
