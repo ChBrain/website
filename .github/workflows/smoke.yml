@@ -1,0 +1,59 @@
+name: smoke
+
+# Black-box verification of the DEPLOYED origin: for every canonical URL,
+# assert host -> surface via the x-surface stamp (200 + expected surface + no
+# stray cross-host redirect + not a parked placeholder). This catches routing
+# failures that CI and rsync-success cannot see - the class that shipped two
+# broken deploys this session (apex serving the placeholder; subdomains 404ing
+# after the apex .htaccess leaked into them). See issue 149.
+#
+# Phase 2: auto-run after a successful STAGING deploy - the canary, so staging
+# fails loudly before any production tag is cut. Also runnable on demand
+# against staging or production. (Phase 3 will add an auto prod run after the
+# production deploys.)
+#
+# This is a post-deploy signal, not a merge gate: a red run means the live
+# origin is wrong, not that a PR is blocked.
+
+on:
+  workflow_run:
+    workflows: [deploy-staging]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      env:
+        description: Which deployed environment to smoke
+        type: choice
+        required: true
+        default: staging
+        options:
+          - staging
+          - production
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  smoke:
+    # Auto-run only when the staging deploy actually succeeded; a manual
+    # dispatch always runs.
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: "npm"
+      - name: install
+        run: npm ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # `npm run smoke` hits the live origin (no build) and asserts host ->
+      # surface. SMOKE_ENV picks the URL set from src/lib/urls.ts.
+      - name: smoke ${{ github.event_name == 'workflow_dispatch' && inputs.env || 'staging' }}
+        run: npm run smoke
+        env:
+          SMOKE_ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.env || 'staging' }}
