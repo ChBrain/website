@@ -1,0 +1,9 @@
+# Security contact for kaihacks.ai and its surfaces (RFC 9116).
+# https://www.rfc-editor.org/rfc/rfc9116
+
+Contact: mailto:security@kaihacks.ai
+Expires: 2027-06-01T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://kaihacks.ai/.well-known/security.txt
+Canonical: https://architecture.kaihacks.ai/.well-known/security.txt
+Canonical: https://cultures.kaihacks.ai/.well-known/security.txt

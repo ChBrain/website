@@ -1,14 +1,14 @@
 // Astro emits `public/` files at `dist/` root, but each surface
-// (`dist/main/`, `dist/architecture/`) deploys to its own doc root
-// via rsync — the root files never come along. This script copies
-// the shared static assets into each surface's dist subdir so they
-// resolve at `<surface>/favicon.svg` etc. on the served site.
+// (`dist/main/`, `dist/architecture/`, `dist/cultures/`) deploys to its own
+// doc root via rsync — the root files never come along. This script copies
+// the shared static assets into each surface's dist subdir so they resolve at
+// `<surface>/favicon.svg`, `<surface>/.well-known/security.txt`, etc.
 
 import { cp, stat } from "node:fs/promises";
 import { join } from "node:path";
 
 const DIST = "dist";
-const SURFACES = ["main", "architecture", "privacy"];
+const SURFACES = ["main", "architecture", "cultures"];
 // Only copy real shared assets — not the per-surface HTML/JS that Astro
 // already routed correctly.
 const SHARED = [
@@ -21,6 +21,10 @@ const SHARED = [
   "icon-512.png",
   "site.webmanifest",
 ];
+// Shared directories copied recursively (e.g. RFC 9116 security.txt). On the
+// apex these resolve via the .htaccess rewrite (kaihacks.ai/.well-known/... ->
+// /main/.well-known/...); on the subdomains they're served from their own root.
+const SHARED_DIRS = [".well-known"];
 
 async function exists(path) {
   try {
@@ -52,7 +56,14 @@ async function main() {
       await cp(src, dest);
       copied++;
     }
-    console.log(`[copy-public-to-surfaces] ${surface}: copied ${copied}/${SHARED.length}`);
+    for (const dir of SHARED_DIRS) {
+      const src = join(DIST, dir);
+      if (!(await exists(src))) continue;
+      await cp(src, join(surfaceDir, dir), { recursive: true });
+      copied++;
+    }
+    const total = SHARED.length + SHARED_DIRS.length;
+    console.log(`[copy-public-to-surfaces] ${surface}: copied ${copied}/${total}`);
   }
 }
 
