@@ -5,14 +5,19 @@
 # /public_html/main/) via an internal rewrite. The URL stays clean
 # (kaihacks.ai/, /privacy/, /cvi/, ...) - this is a rewrite, not a redirect.
 #
-# Subdomains (architecture/cultures/staging.kaihacks.ai) have their own vhost
-# document roots and never read this file. The old apex placeholder is bypassed:
-# every apex request is rewritten to /main/ before Apache resolves a directory
-# index, so /public_html/index.html (if any) is never served.
+# IMPORTANT: the subdomain docroots (architecture/cultures/staging.kaihacks.ai)
+# are nested *inside* /public_html/, so on cPanel they INHERIT this file. The
+# rewrite must therefore be scoped to the bare apex host - without the HTTP_HOST
+# guard below it also fires on the subdomains, rewriting them to a /main/ that
+# does not exist in their docroot (-> 404). The host guard is what keeps the
+# subdomains untouched. The old apex placeholder is bypassed because every apex
+# request is rewritten to /main/ before Apache resolves a directory index.
 
 RewriteEngine On
 RewriteBase /
 
+# Only the bare apex (kaihacks.ai / www) - never the inherited subdomains.
+RewriteCond %{HTTP_HOST} ^(www\.)?kaihacks\.ai$ [NC]
 # Already under /main/? leave it (prevents a rewrite loop).
 RewriteCond %{REQUEST_URI} !^/main/
 RewriteRule ^(.*)$ /main/$1 [L]
