@@ -2,24 +2,25 @@ name: smoke
 
 # Black-box verification of the DEPLOYED origin: for every canonical URL,
 # assert host -> surface via the x-surface stamp (200 + expected surface + no
-# stray cross-host redirect + not a parked placeholder). This catches routing
+# stray cross-host redirect + not a parked placeholder). Catches routing
 # failures that CI and rsync-success cannot see - the class that shipped two
-# broken deploys this session (apex serving the placeholder; subdomains 404ing
-# after the apex .htaccess leaked into them). See issue 149.
+# broken deploys this session. See issue 149.
 #
-# Phase 2: auto-run after a successful STAGING deploy - the canary, so staging
-# fails loudly before any production tag is cut. Also runnable on demand
-# against staging or production. (Phase 3 will add an auto prod run after the
-# production deploys.)
+# Tolerant of staggered stamp adoption: a not-yet-stamped surface passes on
+# liveness alone (surfaces are independently versioned by design), and
+# surface-identity coverage strengthens as each ships its stamp. No release is
+# cut for monitoring.
 #
-# This is a post-deploy signal, not a merge gate: a red run means the live
-# origin is wrong, not that a PR is blocked.
+# Auto-runs after a successful deploy:
+#   - deploy-staging            -> smoke staging     (the canary, before prod)
+#   - deploy-production / -apex -> smoke production  (post-deploy verify)
+# Also runnable on demand against either env. Post-deploy signal, not a merge
+# gate: a red run means the live origin is wrong, not that a PR is blocked.
 
 on:
   workflow_run:
-    workflows: [deploy-staging]
+    workflows: [deploy-staging, deploy-production, deploy-apex]
     types: [completed]
-    branches: [main]
   workflow_dispatch:
     inputs:
       env:
@@ -37,8 +38,8 @@ permissions:
 
 jobs:
   smoke:
-    # Auto-run only when the staging deploy actually succeeded; a manual
-    # dispatch always runs.
+    # Auto-run only when the upstream deploy succeeded; a manual dispatch
+    # always runs.
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
@@ -52,11 +53,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # `npm run smoke` hits the live origin (no build) and asserts host ->
-      # surface. SMOKE_ENV picks the URL set from src/lib/urls.ts.
-      - name: smoke ${{ github.event_name == 'workflow_dispatch' && inputs.env || 'staging' }}
+      # surface. SMOKE_ENV picks the URL set from src/lib/urls.ts: a manual
+      # dispatch chooses; deploy-staging -> staging; prod deploys -> production.
+      - name: smoke
         run: npm run smoke
         env:
-          SMOKE_ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.env || 'staging' }}
-          # Sent as `X-Monitor` so the Cloudflare WAF "skip" rule lets the
-          # checks through Bot Fight Mode (which 403s datacenter-IP clients).
-          MONITOR_TOKEN: ${{ secrets.MONITOR_TOKEN }}
+          SMOKE_ENV: >-
+            ${{ github.event_name == 'workflow_dispatch' && inputs.env
+            || github.event.workflow_run.name == 'deploy-staging' && 'staging'
+            || 'production' }}
