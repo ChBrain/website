@@ -1,9 +1,11 @@
 // Surface URLs, switched by the DEPLOY_ENV env var at build time.
 //
-// Production (default): subdomain split - architecture lives at
-// architecture.kaihacks.ai, main lives at the apex kaihacks.ai/main/.
-// Staging: collapsed onto staging.kaihacks.ai with per-surface subpaths
-// (staging.kaihacks.ai/architecture/, /main/, /privacy/...).
+// Production (default): main is the apex (kaihacks.ai/), with its cvi,
+// privacy, and contact pages under it (/cvi/, /privacy/, /contact/);
+// architecture and cultures are subdomains.
+// Staging: collapsed onto staging.kaihacks.ai with main under /main/ and
+// its pages nested there (/main/cvi/, /main/privacy/, /main/contact/);
+// the subdomains stage at /architecture/, /cultures/.
 //
 // The set of canonical cross-surface URLs that any chrome or page can
 // link to. Read this constant in components/pages instead of hardcoding
@@ -26,8 +28,8 @@ export interface SurfaceUrls {
 
 const PRODUCTION: SurfaceUrls = {
   architecture: "https://architecture.kaihacks.ai/",
-  main: "https://kaihacks.ai/main/",
-  cvi: "https://kaihacks.ai/main/cvi/",
+  main: "https://kaihacks.ai/",
+  cvi: "https://kaihacks.ai/cvi/",
   privacy: "https://kaihacks.ai/privacy/",
   cultures: "https://cultures.kaihacks.ai/",
   contact: "https://kaihacks.ai/contact/",
@@ -39,9 +41,9 @@ const STAGING: SurfaceUrls = {
   architecture: `${STAGING_BASE}/architecture/`,
   main: `${STAGING_BASE}/main/`,
   cvi: `${STAGING_BASE}/main/cvi/`,
-  privacy: `${STAGING_BASE}/privacy/`,
+  privacy: `${STAGING_BASE}/main/privacy/`,
   cultures: `${STAGING_BASE}/cultures/`,
-  contact: `${STAGING_BASE}/contact/`,
+  contact: `${STAGING_BASE}/main/contact/`,
 };
 
 export const URLS: SurfaceUrls = process.env.DEPLOY_ENV === "staging" ? STAGING : PRODUCTION;
