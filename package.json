@@ -19,6 +19,7 @@
     "preview": "astro preview",
     "test": "npm run build && vitest run",
     "test:watch": "vitest",
+    "smoke": "vitest run --config vitest.smoke.config.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky && chmod +x .husky/pre-commit .husky/pre-push"
