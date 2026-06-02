@@ -46,4 +46,12 @@ const STAGING: SurfaceUrls = {
   contact: `${STAGING_BASE}/main/contact/`,
 };
 
-export const URLS: SurfaceUrls = process.env.DEPLOY_ENV === "staging" ? STAGING : PRODUCTION;
+// Resolve the URL set for an environment. Exported (alongside the URLS
+// constant) so the live smoke checks and the Cloudflare monitor Worker can
+// derive the exact same canonical URLs the site builds with - one source of
+// truth for "what should be reachable". See smoke/ and issue 149.
+export function urlsFor(env?: string): SurfaceUrls {
+  return env === "staging" ? STAGING : PRODUCTION;
+}
+
+export const URLS: SurfaceUrls = urlsFor(process.env.DEPLOY_ENV);

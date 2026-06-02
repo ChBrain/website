@@ -33,6 +33,14 @@ const { title, description = "kaihacks. An experimental writing system." } = Ast
 //   /architecture/plot/ → 1 hop up → "../"
 const segments = Astro.url.pathname.split("/").filter(Boolean);
 const toSurfaceRoot = "../".repeat(Math.max(0, segments.length - 1)) || "./";
+
+// Surface self-identification. Each page is built under its surface folder
+// (dist/architecture|main|cultures/...), so the first path segment IS the
+// surface; the bare apex placeholder (dist/index.html) has none -> "root".
+// Live smoke checks (smoke/) and the CF monitor assert host -> surface using
+// this stamp, which is how a future routing leak (a subdomain serving the
+// wrong surface) gets caught instead of silently 200ing. See issue 149.
+const surface = segments[0] ?? "root";
 ---
 
 <!doctype html>
@@ -41,6 +49,7 @@ const toSurfaceRoot = "../".repeat(Math.max(0, segments.length - 1)) || "./";
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
+    <meta name="x-surface" content={surface} />
     <title>{title}</title>
     <link rel="icon" href={`${toSurfaceRoot}favicon.ico`} sizes="any" />
     <link rel="icon" href={`${toSurfaceRoot}favicon.svg`} type="image/svg+xml" />
