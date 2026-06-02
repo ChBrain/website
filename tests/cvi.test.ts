@@ -116,7 +116,15 @@ describe("CVI - design contract", () => {
       const links = [...dom.window.document.querySelectorAll(".footfed-legal-link")];
       const hrefs = links.map((a) => a.getAttribute("href"));
       expect(hrefs).toContain("https://kaihacks.ai/privacy/");
-      expect(hrefs).toContain("https://kaihacks.ai/main/cvi/");
+      // The CVI colophon moves from kaihacks.ai/main/cvi/ to the apex
+      // kaihacks.ai/cvi/ when main becomes the apex surface; accept either
+      // while the move lands.
+      expect(
+        hrefs.some(
+          (h) => h === "https://kaihacks.ai/main/cvi/" || h === "https://kaihacks.ai/cvi/",
+        ),
+        "footer must link the CVI colophon (/main/cvi/ or apex /cvi/)",
+      ).toBe(true);
     });
   });
 
