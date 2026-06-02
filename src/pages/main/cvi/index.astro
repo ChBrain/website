@@ -7,7 +7,7 @@ import { BRAND } from "../../../lib/brand";
 
 // Nine canonical chapters in three editorial groups (the mark, the
 // system, the application). Each chapter exposes the list of section
-// IDs it owns — Colour and Typography each fan out into sub-panels
+// IDs it owns; Colour and Typography each fan out into sub-panels
 // (04·i/ii/iii, 05·i/ii) that all light the same chapter bar in the
 // strip when scrolled into view. Order is the design contract.
 const tocGroups = [
@@ -29,7 +29,7 @@ const tocGroups = [
         sections: ["color", "color-accents", "color-rules"],
       },
       { n: "05", t: "Typography", href: "#type", sections: ["type", "type-scale"] },
-      // §06 Writing: voice & punctuation — promoted from a tucked-under-
+      // §06 Writing: voice & punctuation (promoted from a tucked-under-
       // Typography sub-panel to its own top-level chapter. Bumps Icon /
       // Applications / In one breath to 07 / 08 / 09.
       { n: "06", t: "Writing", href: "#writing", sections: ["writing"] },
@@ -111,7 +111,7 @@ const variants = [
   },
 ];
 
-// §02 · ii — the kh monogram family (the lockup head, cropped). Outlined
+// §02 · ii: the kh monogram family (the lockup head, cropped). Outlined
 // paths, so font-independent; same dot system as the lockup.
 const monograms = [
   {
@@ -151,7 +151,7 @@ const monograms = [
   },
 ];
 
-// §02 · iii — the app-icon tile (monogram in a rounded paper tile). The
+// §02 · iii: the app-icon tile (monogram in a rounded paper tile). The
 // most-used touchpoint: tabs, home screen, avatars.
 const icons = [
   {
@@ -267,7 +267,7 @@ const donts = [
     </header>
 
     {
-      /* Collapsed-strip indicator on the left edge — click to open the
+      /* Collapsed-strip indicator on the left edge (click to open the
         rail overlay. One bar per chapter (9 total); the brick one is
         the current. Hidden on narrow viewports where the long-scroll
         is the navigation. Mirrors the playbook chassis pattern. */
@@ -1075,7 +1075,7 @@ const donts = [
     /* ── strip indicator (left edge, always visible on desktop) ────────────
      * Ported from src/pages/architecture/playbook/index.astro. One bar
      * per chapter (9 total). Click opens the overlay TOC. Hidden on
-     * narrow viewports — the long-scroll is the navigation. */
+     * narrow viewports (the long-scroll is the navigation. */
     .cvi-strip {
       position: fixed;
       top: 50%;
@@ -1370,7 +1370,7 @@ const donts = [
     /* Inset rim so paper-tone chips (paper, paperWarm, paperDeep, ice)
      * don't melt into the surrounding paper background. Uses
      * --color-rule (the "standard divider" token) rather than
-     * --color-rule-soft — the soft tone was too close to paper itself
+     * --color-rule-soft: the soft tone was too close to paper itself
      * and the rim disappeared. Standard rule is canonical, stays inside
      * the brand contract, and is visible across all chip tones (the
      * vibrant chips read it as a subtle warm tan accent; the paper
@@ -1684,12 +1684,12 @@ const donts = [
     }
 
     /* ── voice ──────────────────────────────────────────────────────────── */
-    /* §09 "In one breath" — centered + balanced wrap so the sentence
+    /* §09 "In one breath" (centered + balanced wrap so the sentence
      * sits as a single composed editorial statement rather than a
      * left-edge body paragraph. text-wrap: balance evens the line
      * breaks visually so the closing clauses don't orphan. The §09
      * heading row (number + title) is also centered so it shares the
-     * vertical axis with the body — the seclabel flex row needs the
+     * vertical axis with the body; the seclabel flex row needs the
      * explicit justify so the §09 marker doesn't orphan to the left.
      *
      * Defensive: re-state display:flex + flex-direction:column +
@@ -1697,7 +1697,7 @@ const donts = [
      * specificity than the .cvi-section rule) so the chapter reliably
      * vertical-centers even if something in the cascade weakens the
      * .cvi-section flex. Drop padding-block: this section is the
-     * editorial closer — short content — and the standard 70px top/
+     * editorial closer (short content); the standard 70px top/
      * bottom padding was pulling content above viewport centre. */
     @media (min-width: 641px) {
       #voice.cvi-section {
@@ -1719,7 +1719,7 @@ const donts = [
      * out-specifics the generic .cvi p rule above which would otherwise
      * win on margin / color / text-wrap. Without the bump, margin: 0
      * auto is overridden by margin: 0, the block hugs the flex parent's
-     * left edge and only the text inside centres — block stays off-axis
+     * left edge and only the text inside centres; block stays off-axis
      * horizontally even though text-align does its job. */
     .cvi p.cvi-voice {
       max-width: 760px;
