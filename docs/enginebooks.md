@@ -175,8 +175,12 @@ The predefined chapters (no mnemonic; the canon fixes the set and order):
 | ----------- | ------------------------------------------------- |
 | **Domain**  | what the engine models -- and what it isn't       |
 | **Grounds** | the sources it rests on                           |
-| **Mapping** | source -> constraint, per file                    |
 | **Limits**  | what it refuses to claim, and who it delegates to |
+| **Mapping** | source -> constraint, per file                    |
+
+**Mapping comes last on purpose**: it ties each source to a component file, so
+it hands off directly into the content spreads (anchor, expressions) that
+follow. The warrant ends pointing at the parts.
 
 The authorship note collapses to a one-line coda on the last reference snap.
 This is a **khai-canon change** (the fixed reference schema + its projector);
@@ -203,10 +207,10 @@ shown. The reference is not one spread but one snap per predefined chapter:
 
 ```
 cover
--> reference: Domain -> Grounds -> Mapping -> Limits   (one chapter, one snap)
--> wiring
--> content: anchor -> expressions
+-> reference: Domain -> Grounds -> Limits -> Mapping   (one chapter, one snap)
+-> content: anchor -> expressions          (Mapping hands off straight to these)
 -> composed
+-> wiring
 -> colophon (license)
 -> back-cover (download)
 ```
