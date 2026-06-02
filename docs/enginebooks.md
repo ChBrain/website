@@ -6,8 +6,8 @@ own `khai` manifest instead of the canon's `model.md`. The **Enginebooks**
 collection is the shelf above them.
 
 Where the Playbook renders the canon (static types), an Enginebook renders an
-_extension_ and can show the one thing a type page never can: the engine's parts
-**composed** into what a persona actually receives.
+_extension_ -- and treats it as a shippable **product**, not just a spec: its
+warrant, its parts, its terms, and a way to take it home.
 
 ## Why a separate name
 
@@ -73,32 +73,32 @@ cover      <name> + tagline               (manifest.tagline)
 wiring     the WIRES card                  (engineCard(manifest))
 anchor     manifest.anchor                 (one spread)
 <expr>     manifest.expressions[*]         (one spread each)
-composed   compose({ expression })         (the assembled result)
 ```
 
 Worked example, `gender`:
 
-| Spread   | Source                    | Renders as                                       |
-| -------- | ------------------------- | ------------------------------------------------ |
-| cover    | `khai.tagline`            | title page                                       |
-| wiring   | `engineCard(manifest)`    | WIRE / ISSUE / REQUIRE / ENFORCE / SETUP facets  |
-| anchor   | `position_gender.md`      | HOLD facets                                      |
-| male     | `position_male.md`        | HOLD facets                                      |
-| female   | `position_female.md`      | HOLD facets                                      |
-| composed | `compose({ expression })` | the anchor + expression a persona actually holds |
+| Spread | Source                 | Renders as                                      |
+| ------ | ---------------------- | ----------------------------------------------- |
+| cover  | `khai.tagline`         | title page                                      |
+| wiring | `engineCard(manifest)` | WIRE / ISSUE / REQUIRE / ENFORCE / SETUP facets |
+| anchor | `position_gender.md`   | HOLD facets                                     |
+| male   | `position_male.md`     | HOLD facets                                     |
+| female | `position_female.md`   | HOLD facets                                     |
 
-~6 spreads. Linear, snap-scrolling, identical chassis to the Playbook.
+~5 spreads. Linear, snap-scrolling, identical chassis to the Playbook.
 
-### The composed spread is the point
+### Why an Enginebook is its own artifact (not a second Playbook)
 
-The canon Playbook renders types in isolation. An Enginebook shows the anchor
-and a chosen expression **assembled into the instruction set a persona
-receives** -- mirroring the engine's own `compose()` contract (anchor body, then
-expression). The loader replicates that contract rather than importing each
-engine's `compose()`, so the `[engine]` route stays generic. That assembled view
-is the thing a type page can never do, and it is what an engine exists to
-produce. This single spread is the argument for "Enginebook" being its own
-artifact rather than a second copy of Playbook.
+The Playbook is a spec; an engine is a shippable **product**. The Enginebook is
+the product page: it carries the engine's warrant (reference), its parts
+(content), its terms (license), and a way to take it home (download) -- none of
+which a canon type page has. That product shape, not any single spread, is what
+distinguishes it.
+
+(The v1 ship included a generated `composed` spread -- the anchor and one
+expression concatenated. It is **dropped**: it only re-shows bytes already on
+the anchor/expression spreads, and the download is the real take-home assembly.
+See "Deliberately dropped" below.)
 
 ## What it reuses
 
@@ -130,7 +130,7 @@ The engine's `khai` manifest owns the spine (anchor + expression order). The
 renderer never restates the order or grouping, exactly as the Playbook never
 restates `model.md`. An engine that later needs custom grouping can declare an
 optional `playbook:` block in its manifest; until then the default
-`wiring -> anchor -> expressions -> composed` shape is derived generically.
+`wiring -> anchor -> expressions` shape is derived generically.
 
 ## Scope (deliberate)
 
@@ -142,3 +142,94 @@ optional `playbook:` block in its manifest; until then the default
   `cultures.kaihacks.ai/map` is that surface). When Cultures becomes an engine,
   the catalog shape reuses the same facet renderer with different navigation;
   that is a separate design, not this one.
+
+## v2 direction (next)
+
+v1 ships the content book (cover, wiring, anchor, expressions). v2
+turns the Enginebook into the engine's **product page**: the Playbook is a spec,
+an engine is a shippable product, so it gains what products have -- a warrant, a
+license, and a way to take it home. Three moves, in priority order.
+
+### 1. Reference as warrant (the keystone, and a khai-canon change)
+
+The reference is not back-matter; it is **the justification for the engine to
+exist**, and it belongs near the front, framing the content. Gender's
+`REFERENCES.md` already proves the shape: it carries the grounding (Risman,
+West & Zimmerman, Manne, Connell, Bourdieu), a source -> constraint mapping per
+file, and -- the load-bearing part -- the **limits**: what the engine refuses to
+model and to whom it delegates (intersectionality -> Cultures). That refusal is
+the intellectual honesty a reader trusts.
+
+The move is **less is more, driven into khai**: today `REFERENCES.md` is rich
+but sprawling. Give it canon discipline -- **predefined chapters** (a fixed
+schema, no mnemonic: every engine's reference carries the same chapters in the
+same order) authored in khai and projected like the WIRES card (`engineCard`).
+Unlike a type's chapters, the reference is **not** squeezed onto one spread:
+**one chapter, one snap** -- each predefined chapter is its own snap-scroll
+panel, terse enough to need no scroll. "Less is more" applies per chapter, not
+to the set.
+
+The predefined chapters (no mnemonic; the canon fixes the set and order):
+
+| Chapter     | Holds                                             |
+| ----------- | ------------------------------------------------- |
+| **Domain**  | what the engine models -- and what it isn't       |
+| **Grounds** | the sources it rests on                           |
+| **Limits**  | what it refuses to claim, and who it delegates to |
+| **Mapping** | source -> constraint, per file                    |
+
+**Mapping comes last on purpose**: it ties each source to a component file, so
+it hands off directly into the content spreads (anchor, expressions) that
+follow. The warrant ends pointing at the parts.
+
+The authorship note collapses to a one-line coda on the last reference snap.
+This is a **khai-canon change** (the fixed reference schema + its projector);
+website only renders the snaps, the same dumb path the content uses.
+
+### 2. Download as release link (no build step)
+
+The back-cover spread is a CTA to the engine's GitHub **release** zip -- the
+Cultures `releases/latest/download/<engine>.zip` pattern, release-based, derived
+from the manifest's repo + version. No build-time zipping; the release is the
+source of truth. This is what makes the Enginebook actionable: take the engine
+home and drop it into a project.
+
+### 3. License as colophon
+
+The `license` field (`CC-BY-NC-4.0`) renders as a small colophon spread before
+the back-cover, not a full page. Provenance (sources) lives in the warrant
+(move 1), so license stays a one-line term, not a wall of text.
+
+### Sequence (v2)
+
+The warrant reorders the book so the engine is earned before its parts are
+shown. The reference is not one spread but one snap per predefined chapter:
+
+```
+cover
+-> reference: Domain -> Grounds -> Limits -> Mapping   (one chapter, one snap)
+-> content: anchor -> expressions          (Mapping hands off straight to these)
+-> wiring
+-> colophon (license)
+-> back-cover (download)
+```
+
+### Deliberately dropped
+
+- **The `composed` spread.** v1 generated it (anchor + one expression,
+  concatenated). It only re-shows bytes already on the anchor/expression
+  spreads, and the download is the real take-home assembly. Dropping it removes
+  a generated, derivative panel. (Code cleanup: remove the `composed` block from
+  `[engine]/index.astro`, the `composed` builder from `load-engine-content.ts`,
+  and its assertion from `enginebooks.test.ts`.)
+- **No standalone README page.** The README is generated from the manifest, and
+  the book already renders that manifest as the wiring (WIRES) spread; a README
+  page would re-show it flatter. Link out to the package README on GitHub/npm
+  instead.
+
+### Where the work lives
+
+The reference-as-warrant discipline is authored in **khai** (the canon owns the
+shape and its projector, as it owns the WIRES card); the **website** renders the
+new spread and adds the download/license spreads. The keystone is the khai
+change -- which is the right home for "less is more."
