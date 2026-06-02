@@ -1,0 +1,37 @@
+name: deploy-apex
+
+# Places the apex bootstrap at /public_html/.htaccess, which rewrites the bare
+# kaihacks.ai apex onto the main surface at /public_html/main/. The primary
+# domain's document root is fixed at /public_html/ (cPanel won't repoint it), so
+# the apex serves main via this rewrite instead of a doc-root change.
+#
+# Static and set-and-forget; run by hand when apex/ changes. The rsync runs
+# WITHOUT --delete: it only places apex/'s files at /public_html/ and must never
+# touch the sibling dirs that share that root (the subdomain vhosts, staging,
+# and main/ itself).
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/kaihacksai
+          chmod 600 ~/.ssh/kaihacksai
+          ssh-keyscan 92.205.150.56 >> ~/.ssh/known_hosts || true
+      - name: rsync apex bootstrap (NO --delete; places files only)
+        run: |
+          # -a copies dotfiles (.htaccess) by default. No --delete: siblings in
+          # the shared /public_html/ root are never removed.
+          rsync -avz \
+            -e "ssh -i ~/.ssh/kaihacksai" \
+            ./apex/ \
+            "c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/"
