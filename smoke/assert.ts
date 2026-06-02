@@ -2,13 +2,17 @@
 //
 // Runs in BOTH Node (vitest, via `npm run smoke`) and a Cloudflare Worker
 // (workerd, the scheduled monitor) - so it leans on nothing but `fetch`,
-// strings, and regex: no jsdom, no node:* imports. Issue #149.
+// strings, and regex: no jsdom, no node:* imports. Issue 149.
 //
-// The core assertion is host -> surface: each canonical URL must answer 200
-// with the <meta name="x-surface"> its surface stamps (BaseLayout.astro).
-// That is what catches a routing leak - e.g. a subdomain that silently serves
-// `main`, or an apex that falls back to the parked placeholder - which a bare
-// status check would wave through as a 200.
+// Tolerant by design. Surfaces are independently versioned and adopt the
+// x-surface stamp (BaseLayout.astro) on their own release cadence, so the
+// checks must not assume lockstep or punish a not-yet-stamped surface:
+//   - always:   reachable (200), no stray cross-host redirect, not a parked page
+//   - stamped:  assert it's the RIGHT surface (catches a routing leak)
+//   - unstamped (pre-stamp build): tolerate - note "unverified", do not fail
+// The two failures we actually hit still trip it: an apex placeholder (parked
+// page) and a subdomain leak (404). Surface-identity coverage strengthens
+// automatically as each surface ships its stamp - no release is forced for it.
 
 export interface Target {
   /** label for reporting, e.g. "cvi" */
@@ -22,41 +26,36 @@ export interface Target {
 export interface CheckResult extends Target {
   ok: boolean;
   errors: string[];
+  /** non-failing observations (e.g. a surface not yet carrying its stamp) */
+  notes: string[];
 }
 
 export interface RunOptions {
   fetchImpl?: typeof fetch;
   userAgent?: string;
-  /**
-   * Extra request headers. Used to carry the monitor bypass token
-   * (`X-Monitor: <secret>`) so a Cloudflare WAF "skip" rule lets the checks
-   * through Bot Fight Mode - which otherwise 403s every datacenter-IP /
-   * non-browser client (GitHub runners, the Worker). See issue 149.
-   */
-  headers?: Record<string, string>;
 }
 
 const SURFACE_META = /<meta\s+name=["']x-surface["']\s+content=["']([^"']*)["']/i;
 
-// Signature of a cPanel/host default-parked page. Only consulted when a page
-// is NOT correctly stamped (see below) - a stamped page is ours by definition,
-// and this must never fire on real content. Note: brand/host names like
-// "godaddy" are deliberately NOT here - they legitimately appear in e.g. the
-// privacy policy's data-processor list.
+// Signature of a cPanel/host default-parked page - never legitimate content.
+// Consulted only when a page carries no stamp, to tell a parked page apart from
+// a pre-stamp build. Brand/host names like "godaddy" are deliberately absent:
+// they appear legitimately in e.g. the privacy policy's data-processor list.
 const PLACEHOLDER =
   /(this (web ?)?site is parked|coming soon|under construction|default web ?page|future home of)/i;
 
 export async function runChecks(targets: Target[], opts: RunOptions = {}): Promise<CheckResult[]> {
   const doFetch = opts.fetchImpl ?? fetch;
-  // Browser-ish UA: the shared host 403s unknown bots.
+  // Browser-ish UA, in case the origin ever filters unknown clients.
   const ua = opts.userAgent ?? "kaihacks-smoke/1 (+https://kaihacks.ai)";
   const results: CheckResult[] = [];
 
   for (const t of targets) {
     const errors: string[] = [];
+    const notes: string[] = [];
     try {
       const res = await doFetch(t.url, {
-        headers: { "user-agent": ua, "cache-control": "no-cache", ...opts.headers },
+        headers: { "user-agent": ua, "cache-control": "no-cache" },
         redirect: "follow",
       });
 
@@ -75,24 +74,23 @@ export async function runChecks(targets: Target[], opts: RunOptions = {}): Promi
       const body = await res.text();
       const got = body.match(SURFACE_META)?.[1];
 
-      // The stamp is the authoritative signal: a page carrying its expected
-      // x-surface IS the real, deployed page. Only when that's missing or wrong
-      // do we diagnose further (and only then is the placeholder heuristic safe
-      // to run - it must never flag legitimate stamped content).
       if (got === t.surface) {
-        // correct surface served - good.
-      } else if (!got) {
-        errors.push("missing <meta name=x-surface>");
-        if (PLACEHOLDER.test(body)) {
-          errors.push("served a parked/placeholder page");
-        }
-      } else {
+        // Correct, stamped surface - fully verified.
+      } else if (got) {
+        // Stamped, but the WRONG surface answered - a routing leak.
         errors.push(`x-surface "${got}" != expected "${t.surface}"`);
+      } else if (PLACEHOLDER.test(body)) {
+        // No stamp AND parked-page text - the origin is serving a placeholder.
+        errors.push("served a parked/placeholder page");
+      } else {
+        // No stamp, but live and not parked: a pre-stamp build. Tolerated -
+        // identity is unverifiable until this surface ships its stamp.
+        notes.push("no x-surface yet (pre-stamp build); surface identity unverified");
       }
     } catch (err) {
       errors.push(`fetch failed: ${(err as Error).message}`);
     }
-    results.push({ ...t, ok: errors.length === 0, errors });
+    results.push({ ...t, ok: errors.length === 0, errors, notes });
   }
 
   return results;
@@ -101,11 +99,13 @@ export async function runChecks(targets: Target[], opts: RunOptions = {}): Promi
 /** Human-readable pass/fail block for CI logs and alert payloads. */
 export function formatResults(results: CheckResult[]): string {
   return results
-    .map(
-      (r) =>
+    .map((r) => {
+      const lines = [...r.errors.map((e) => `- ${e}`), ...r.notes.map((n) => `~ ${n}`)];
+      return (
         `${r.ok ? "OK  " : "FAIL"} ${r.name} (${r.surface})\t${r.url}` +
-        (r.errors.length ? "\n      - " + r.errors.join("\n      - ") : ""),
-    )
+        (lines.length ? "\n      " + lines.join("\n      ") : "")
+      );
+    })
     .join("\n");
 }
 

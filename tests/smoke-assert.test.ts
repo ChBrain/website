@@ -3,7 +3,7 @@ import { runChecks, type Target } from "../smoke/assert";
 import { targetsFor } from "../smoke/targets";
 
 // Offline unit test for the smoke ASSERTION LOGIC (hermetic - mock fetch, no
-// network). The live run lives in smoke/checks.smoke.ts. #149.
+// network). The live run lives in smoke/checks.smoke.ts. Issue 149.
 
 function fakeFetch(
   table: Record<string, { status?: number; finalUrl?: string; body?: string }>,
@@ -64,7 +64,19 @@ describe("runChecks", () => {
     });
     expect(res[0].ok).toBe(false);
     expect(res[0].errors.join(" ")).toMatch(/placeholder/);
-    expect(res[0].errors.join(" ")).toMatch(/x-surface/);
+  });
+
+  it("tolerates a pre-stamp build (live, unstamped, not parked)", async () => {
+    // Surfaces adopt the stamp on their own release cadence; one that hasn't
+    // yet must pass on liveness, with a note that identity is unverified.
+    const res = await runChecks([T("cultures", "https://c/", "cultures")], {
+      fetchImpl: fakeFetch({
+        "https://c/": { body: "<!doctype html><h1>Cultures</h1><p>older build, no stamp</p>" },
+      }),
+    });
+    expect(res[0].ok).toBe(true);
+    expect(res[0].errors).toEqual([]);
+    expect(res[0].notes.join(" ")).toMatch(/pre-stamp/);
   });
 
   it("does NOT flag a correctly-stamped page that names a host (privacy policy)", async () => {
@@ -78,27 +90,6 @@ describe("runChecks", () => {
     });
     expect(res[0].ok).toBe(true);
     expect(res[0].errors).toEqual([]);
-  });
-
-  it("forwards extra headers (the X-Monitor bot-bypass token)", async () => {
-    let seen: Record<string, string> | undefined;
-    const capturing = (async (_input: string | URL, init?: RequestInit) => {
-      seen = init?.headers as Record<string, string>;
-      return {
-        status: 200,
-        url: "https://m/",
-        async text() {
-          return stamp("main");
-        },
-      } as unknown as Response;
-    }) as unknown as typeof fetch;
-
-    const res = await runChecks([T("main", "https://m/", "main")], {
-      fetchImpl: capturing,
-      headers: { "x-monitor": "s3cret" },
-    });
-    expect(res[0].ok).toBe(true);
-    expect(seen?.["x-monitor"]).toBe("s3cret");
   });
 
   it("flags a cross-host redirect", async () => {
