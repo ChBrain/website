@@ -1,8 +1,7 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
-import SiteHeader from "../../../components/SiteHeader.astro";
-import SiteFooter from "../../../components/SiteFooter.astro";
-import Mark from "../../../components/Mark.astro";
+import Book from "../../../components/Book.astro";
+import type { BookSpread, BookTocGroup } from "../../../lib/book";
 import { loadAllSpecs } from "../../../lib/load-specs";
 import { parseSpec, type ParsedSpec } from "../../../lib/parse-spec";
 import { playbook } from "@chbrain/khai-arch";
@@ -34,800 +33,91 @@ for (const raw of allSpecs) {
 const engines = loadEngines();
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
+// Build the spreads grouped by the canon spine, then flatten. Each group
+// becomes a labelled run in the Book's contents overlay.
 let idx = 0;
-const tocGroups = playbook.map((group) => {
-  const items = group.members.map((slug) => {
+const tocGroups: BookTocGroup[] = [];
+const spreads: BookSpread[] = [];
+
+for (const group of playbook) {
+  const items: BookTocGroup["items"] = [];
+
+  for (const slug of group.members) {
     const parsed = bySlug.get(slug) ?? null;
     const fm = parsed?.frontmatter;
     const n = idx++;
-    return {
+    const nStr = String(n).padStart(2, "0");
+    const name = fm?.id ? cap(fm.id) : slug;
+    const written = !!parsed;
+    spreads.push({
       slug,
-      idx: n,
-      n: String(n).padStart(2, "0"),
-      name: fm?.id ? cap(fm.id) : null,
-      subtitle: fm?.subtitle ?? null,
+      n: nStr,
+      groupLabel: group.label,
       status: fm?.status ?? "draft",
-      role: group.label,
-      roleLabel: group.label,
-      chapters: parsed?.chapters ?? [],
+      title: name,
+      subtitle: fm?.subtitle ?? null,
+      facets: (parsed?.chapters ?? []).map((c) => ({
+        letter: c.letter,
+        name: c.name,
+        body: c.body,
+      })),
       coda: parsed?.coda ?? null,
-      groupKey: group.id,
-      written: !!parsed,
-      engine: false,
-    };
-  });
+      written,
+    });
+    items.push({ slug, idx: n, n: nStr, name, written });
+  }
 
   if (group.id === "enriched-by") {
     for (const card of engines) {
       const n = idx++;
-      items.push({
+      const nStr = String(n).padStart(2, "0");
+      const name = cap(card.id);
+      spreads.push({
         slug: card.id,
-        idx: n,
-        n: String(n).padStart(2, "0"),
-        name: cap(card.id),
-        subtitle: null,
+        n: nStr,
+        groupLabel: group.label,
         status: "engine",
-        role: group.label,
-        roleLabel: group.label,
-        chapters: card.chapters.map((name) => ({
-          letter: name.charAt(0),
-          name,
-          body: card.sections[name],
+        title: name,
+        subtitle: null,
+        facets: card.chapters.map((cn) => ({
+          letter: cn.charAt(0),
+          name: cn,
+          body: card.sections[cn],
         })),
         coda: null,
-        groupKey: group.id,
         written: true,
         engine: true,
       });
+      items.push({ slug: card.id, idx: n, n: nStr, name, written: true });
     }
   }
 
-  return { key: group.id, label: group.label, items };
-});
-
-const spreads = tocGroups.flatMap((g) => g.items);
-const total = spreads.length;
+  tocGroups.push({ key: group.id, label: group.label, items });
+}
 ---
 
 <BaseLayout
   title="Playbook · architecture · kaihacks"
   description="The KAI HACKS AI playbook: Plot, the five elements that Plot casts, and the substrate that holds and enriches it."
 >
-  <div class="playbook">
-    <SiteHeader domain="architecture" tld=".kaihacks.ai" basePath="../" location="playbook" />
-
-    {
-      /* Collapsed-strip indicator on the left edge. Click to expand the
-        rail overlay (full contents). Each horizontal bar is one spread;
-        the brick one is the current. Hidden on mobile (long scroll). */
-    }
-    <button class="pb-strip" type="button" aria-label="Open contents" aria-expanded="false">
-      <span class="pb-strip-pos"
-        ><span class="pb-strip-cur">00</span>/{String(total).padStart(2, "0")}</span
-      >
-      <span class="pb-strip-bars" aria-hidden="true">
-        {spreads.map((_, i) => <span class="pb-strip-bar" data-idx={i} />)}
-      </span>
-      <span class="pb-strip-label">Contents</span>
-    </button>
-
-    {
-      /* Rail overlay (TOC). Hidden by default; opens via the strip
-        click. Esc closes. Groups by role so the system / casts / rests-on
-        hierarchy reads. */
-    }
-    <div class="pb-overlay" role="dialog" aria-modal="true" aria-label="Playbook contents" hidden>
-      <div class="pb-overlay-card">
-        <div class="pb-overlay-head">
-          <span class="pb-overlay-eyebrow">The Specification</span>
-          <button class="pb-overlay-close" type="button" aria-label="Close contents">×</button>
-        </div>
-        <nav class="pb-toc" aria-label="Spreads">
-          {
-            tocGroups.map((g) => (
-              <div class="pb-toc-group">
-                <div class="pb-toc-grouplabel">{g.label}</div>
-                {g.items.map((s) => (
-                  <a
-                    href={`#${s.slug}`}
-                    class={`pb-toc-link ${s.written ? "" : "pb-toc-link--draft"}`}
-                    data-idx={s.idx}
-                  >
-                    <span class="pb-toc-n">{s.n}</span>
-                    <span class="pb-toc-name">{s.name ?? s.slug}</span>
-                  </a>
-                ))}
-              </div>
-            ))
-          }
-        </nav>
-      </div>
-    </div>
-
-    {
-      /* Front cover. First snap-stop, before the spec spine. Theatre
-        framing: title page of a playbook. The CTA scrolls into Plot,
-        the first cast file. */
-    }
-    <header id="cover" class="pb-cover">
-      <div class="pb-cover-mark" aria-hidden="true"><Mark name="khai-mark" width={108} /></div>
-      <div class="pb-cover-body">
-        <span class="pb-cover-overline">the specification · a field manual</span>
-        <h1 class="pb-cover-title">
-          Playbook<em>.</em>
-        </h1>
-        {/* prettier-ignore */}
-        <p class="pb-cover-sub">The elements of how a world is moved, <br />one file at a time.</p>
-        <div class="pb-cover-actions">
-          <a href="#plot" class="pb-cover-cta">Open the playbook →</a>
-          <span class="pb-cover-hint">or press →</span>
-        </div>
-      </div>
-      {/* Edition stamp, bottom-center of the cover. Derived from the canon. */}
-      <span class="pb-cover-edition">khai · {edition}</span>
-    </header>
-
-    {/* The spreads. One snap-stop per spec; mobile scrolls naturally. */}
-    <main class="pb-spreads">
-      {
-        spreads.map((s) => (
-          <article
-            id={s.slug}
-            class={`pb-spread ${s.written ? "" : "pb-spread--draft"} ${s.engine ? "pb-spread--engine" : ""}`}
-          >
-            <header class="pb-spread-head">
-              <span class="pb-spread-no">
-                {s.n} · {s.roleLabel}
-              </span>
-              <span class={`pb-spread-state pb-spread-state--${s.status}`}>{s.status}</span>
-            </header>
-
-            {/* prettier-ignore */}
-            <h2 class="pb-spread-title">{s.name ?? s.slug}<em>.</em></h2>
-
-            {s.subtitle && <p class="pb-spread-sub">{s.subtitle}</p>}
-
-            {s.written && s.chapters.length > 0 && (
-              <div class="pb-facets">
-                {s.chapters.map((ch) => (
-                  <article class="pb-facet">
-                    {/* prettier-ignore */}
-                    <h3 class="pb-facet-name"><span class="pb-facet-initial">{ch.letter}</span>{ch.name.slice(1)}</h3>
-                    <p class="pb-facet-body">{ch.body}</p>
-                  </article>
-                ))}
-              </div>
-            )}
-
-            {s.written && s.coda && (
-              <>
-                <span class="pb-spread-rule" aria-hidden="true" />
-                <p class="pb-spread-coda">{s.coda}</p>
-              </>
-            )}
-
-            {!s.written && (
-              <div class="pb-spread-stub">
-                <span class="pb-spread-stub-label">coming</span>
-              </div>
-            )}
-          </article>
-        ))
-      }
-    </main>
-
-    <SiteFooter />
-  </div>
-
-  <style is:global>
-    /* Full-bleed override + snap chassis, scoped to .playbook. */
-    body:has(.playbook) {
-      padding: 0;
-    }
-    body:has(.playbook) main {
-      max-width: none;
-      margin: 0;
-    }
-    html:has(.playbook) {
-      scroll-snap-type: y mandatory;
-      scroll-padding-top: 4rem;
-      scroll-padding-bottom: 4rem;
-      scroll-behavior: smooth;
-    }
-    @media (max-width: 640px) {
-      html:has(.playbook) {
-        scroll-snap-type: none;
-      }
-    }
-    /* Lock body scroll when the overlay is open. */
-    body:has(.pb-overlay:not([hidden])) {
-      overflow: hidden;
-    }
-  </style>
-
-  <style>
-    .playbook {
-      max-width: var(--width-page);
-      margin: 0 auto;
-      padding: 0 1.25rem;
-      background: var(--color-paper);
-      color: var(--color-ink);
-      font-family: var(--font-prose);
-    }
-    @media (min-width: 641px) {
-      .playbook {
-        padding: 0 3.5rem;
-      }
-    }
-
-    /* ── strip indicator (left edge, always visible on desktop) ──────────── */
-    .pb-strip {
-      position: fixed;
-      top: 50%;
-      left: 14px;
-      transform: translateY(-50%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      background: transparent;
-      border: none;
-      padding: 14px 4px;
-      cursor: pointer;
-      z-index: 40;
-      font-family: var(--font-mono);
-      color: var(--color-ink-mute);
-    }
-    .pb-strip:focus-visible {
-      outline: 2px solid var(--color-brick);
-      outline-offset: 4px;
-    }
-    .pb-strip-pos {
-      font-size: 10px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-    }
-    .pb-strip-cur {
-      color: var(--color-brick);
-      font-weight: 600;
-    }
-    .pb-strip-bars {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .pb-strip-bar {
-      width: 18px;
-      height: 2px;
-      background: var(--color-rule);
-      transition: background 0.16s;
-    }
-    .pb-strip-bar.is-current {
-      background: var(--color-brick);
-    }
-    .pb-strip-label {
-      writing-mode: vertical-rl;
-      transform: rotate(180deg);
-      font-size: 9.5px;
-      letter-spacing: 0.24em;
-      text-transform: uppercase;
-      margin-top: 6px;
-    }
-    @media (max-width: 760px) {
-      .pb-strip {
-        display: none;
-      }
-    }
-
-    /* ── overlay (TOC) ───────────────────────────────────────────────────── */
-    .pb-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(22, 19, 15, 0.32);
-      z-index: 50;
-      display: flex;
-      align-items: stretch;
-    }
-    .pb-overlay[hidden] {
-      display: none;
-    }
-    .pb-overlay-card {
-      background: var(--color-paper);
-      border-right: 1px solid var(--color-ink);
-      width: min(420px, 86vw);
-      padding: 28px 32px 36px;
-      display: flex;
-      flex-direction: column;
-      gap: 22px;
-    }
-    .pb-overlay-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-    }
-    .pb-overlay-eyebrow {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--color-brick);
-    }
-    .pb-overlay-close {
-      background: transparent;
-      border: none;
-      cursor: pointer;
-      color: var(--color-ink);
-      font-size: 24px;
-      line-height: 1;
-      padding: 0 4px;
-    }
-    .pb-toc {
-      display: flex;
-      flex-direction: column;
-      gap: 22px;
-    }
-    .pb-toc-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .pb-toc-grouplabel {
-      font-family: var(--font-mono);
-      font-size: 9.5px;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--color-ink-mute);
-      padding-bottom: 6px;
-      border-bottom: 1px solid var(--color-rule-soft);
-      margin-bottom: 4px;
-    }
-    .pb-toc-link {
-      display: flex;
-      align-items: baseline;
-      gap: 14px;
-      padding: 6px 0;
-      text-decoration: none;
-      color: var(--color-ink);
-      font-family: var(--font-display);
-      font-size: 22px;
-      letter-spacing: -0.005em;
-      transition: color 0.12s;
-    }
-    .pb-toc-link:hover {
-      color: var(--color-brick);
-    }
-    .pb-toc-n {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      letter-spacing: 0.16em;
-      color: var(--color-ink-mute);
-      flex: 0 0 30px;
-    }
-    .pb-toc-link--draft {
-      color: var(--color-ink-mute);
-    }
-    .pb-toc-link.is-current .pb-toc-name {
-      font-weight: 500;
-      color: var(--color-brick);
-    }
-
-    /* ── cover (front matter, first snap-stop) ──────────────────────────── */
-    /* khai mark sits top-left as the brand presence; the editorial hero
-     * (overline · title · subline · CTA) is centred in the viewport.
-     * Mark + hero are deliberately independent layout elements so the
-     * mark doesn't push the hero off-centre. */
-    .pb-cover {
-      position: relative;
-      scroll-snap-align: start;
-      scroll-snap-stop: always;
-      padding: 1.75rem 0 1.5rem;
-    }
-    @media (min-width: 641px) {
-      .pb-cover {
-        min-height: calc(100vh - 8rem);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        padding: 2.25rem 0;
-      }
-      /* Optical nudge: a centered hero reads slightly high in a tall
-       * viewport, so bias it toward the lower third to balance the
-       * empty band below. The mark (absolute, top-left) is untouched. */
-      .pb-cover-body {
-        transform: translateY(10vh);
-      }
-    }
-    @media (max-width: 640px) {
-      .pb-cover {
-        scroll-snap-align: none;
-        scroll-snap-stop: normal;
-      }
-    }
-    .pb-cover-mark {
-      position: absolute;
-      top: 1.25rem;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-    @media (max-width: 640px) {
-      .pb-cover-mark {
-        position: static;
-        transform: none;
-        text-align: center;
-        margin-bottom: 28px;
-      }
-    }
-    /* Edition stamp: bottom-center of the cover, small. A colophon, not a
-     * heading; centered to sit under the title column. */
-    .pb-cover-edition {
-      position: absolute;
-      bottom: 1.25rem;
-      left: 50%;
-      transform: translateX(-50%);
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--color-ink-soft);
-    }
-    @media (max-width: 640px) {
-      .pb-cover-edition {
-        position: static;
-        transform: none;
-        display: block;
-        text-align: center;
-        margin-top: 24px;
-      }
-    }
-    .pb-cover-body {
-      max-width: 760px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .pb-cover-overline {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.26em;
-      color: var(--color-brick);
-      text-transform: uppercase;
-    }
-    .pb-cover-title {
-      margin: 22px 0 0;
-      font-family: var(--font-display);
-      font-weight: 380;
-      font-size: 96px;
-      line-height: 0.94;
-      letter-spacing: -0.03em;
-      color: var(--color-ink);
-    }
-    @media (min-width: 641px) {
-      .pb-cover-title {
-        font-size: 168px;
-      }
-    }
-    .pb-cover-title em {
-      color: var(--color-brick);
-      font-style: normal;
-    }
-    .pb-cover-sub {
-      margin: 22px 0 0;
-      max-width: 540px;
-      font-family: var(--font-prose);
-      font-style: italic;
-      font-size: 18px;
-      line-height: 1.4;
-      color: var(--color-ink-soft);
-      text-wrap: pretty;
-    }
-    @media (min-width: 641px) {
-      .pb-cover-sub {
-        font-size: 24px;
-      }
-    }
-    .pb-cover-actions {
-      margin-top: 36px;
-      display: flex;
-      align-items: center;
-      gap: 18px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .pb-cover-cta {
-      display: inline-flex;
-      align-items: center;
-      gap: 12px;
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--color-ink);
-      text-decoration: none;
-      border-bottom: 1px solid var(--color-brick);
-      padding-bottom: 4px;
-    }
-    .pb-cover-cta:hover {
-      color: var(--color-brick);
-    }
-    .pb-cover-hint {
-      font-family: var(--font-mono);
-      font-size: 9.5px;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--color-ink-mute);
-    }
-
-    /* ── spreads ─────────────────────────────────────────────────────────── */
-    .pb-spreads {
-      display: flex;
-      flex-direction: column;
-    }
-    .pb-spread {
-      scroll-snap-align: start;
-      scroll-snap-stop: always;
-      padding: 1.75rem 0 1.5rem;
-      border-bottom: 1px solid var(--color-rule-soft);
-    }
-    @media (min-width: 641px) {
-      .pb-spread {
-        min-height: calc(100vh - 8rem);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        padding: 2.25rem 0;
-      }
-    }
-    @media (max-width: 640px) {
-      .pb-spread {
-        scroll-snap-align: none;
-        scroll-snap-stop: normal;
-      }
-    }
-    .pb-spread:last-child {
-      border-bottom: none;
-    }
-
-    .pb-spread-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--color-rule);
-    }
-    .pb-spread-no {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.2em;
-      color: var(--color-brick);
-      text-transform: uppercase;
-    }
-    .pb-spread-state {
-      font-family: var(--font-mono);
-      font-size: 9.5px;
-      letter-spacing: 0.22em;
-      color: var(--color-ink-mute);
-      text-transform: uppercase;
-    }
-    .pb-spread-state--published {
-      color: var(--color-brick);
-    }
-    /* Engine cards (installed extensions) read in brick, like published, so an
-     * instance wired through the seam stands apart from a draft canon spec. */
-    .pb-spread-state--engine {
-      color: var(--color-brick);
-    }
-
-    .pb-spread-title {
-      font-family: var(--font-display);
-      font-weight: 380;
-      font-size: 64px;
-      line-height: 0.94;
-      letter-spacing: -0.02em;
-      margin: 22px 0 0;
-      color: var(--color-ink);
-    }
-    @media (min-width: 641px) {
-      .pb-spread-title {
-        font-size: 84px;
-      }
-    }
-    .pb-spread-title em {
-      color: var(--color-brick);
-      font-style: normal;
-    }
-    .pb-spread-sub {
-      margin: 14px 0 0;
-      max-width: 720px;
-      font-family: var(--font-prose);
-      font-style: italic;
-      font-size: 17px;
-      line-height: 1.4;
-      color: var(--color-ink-soft);
-      text-wrap: pretty;
-    }
-    @media (min-width: 641px) {
-      .pb-spread-sub {
-        font-size: 21px;
-      }
-    }
-
-    /* facets grid: 2x2 by default, 2x3 for instructions later */
-    .pb-facets {
-      margin-top: 30px;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 18px;
-    }
-    @media (min-width: 641px) {
-      .pb-facets {
-        grid-template-columns: 1fr 1fr;
-        gap: 22px;
-      }
-      /* Odd count: the last card spans both columns, so the grid never ends on
-       * a lonely half-row (WIRES = 5, HACKS = 5, any odd spec). */
-      .pb-facet:last-child:nth-child(odd) {
-        grid-column: 1 / -1;
-      }
-    }
-    .pb-facet {
-      background: var(--color-paper-warm);
-      border: 1px solid var(--color-rule-soft);
-      border-radius: 3px;
-      padding: 18px 22px 20px;
-    }
-    .pb-facet-name {
-      margin: 0 0 8px;
-      font-family: var(--font-display);
-      font-weight: 420;
-      font-size: 22px;
-      letter-spacing: -0.005em;
-      color: var(--color-ink);
-    }
-    .pb-facet-initial {
-      color: var(--color-brick);
-    }
-    .pb-facet-body {
-      margin: 0;
-      font-family: var(--font-prose);
-      font-size: 15px;
-      line-height: 1.5;
-      color: var(--color-ink-soft);
-      text-wrap: pretty;
-    }
-
-    .pb-spread-rule {
-      display: block;
-      width: 100%;
-      height: 1px;
-      background: var(--color-rule-soft);
-      margin: 26px 0 16px;
-    }
-    .pb-spread-coda {
-      margin: 0;
-      font-family: var(--font-prose);
-      font-size: 15px;
-      line-height: 1.55;
-      color: var(--color-ink-soft);
-      text-wrap: pretty;
-    }
-
-    /* draft stub: spec exists in the spine but hasn't been authored yet */
-    .pb-spread--draft .pb-spread-title {
-      color: var(--color-ink-mute);
-    }
-    .pb-spread-stub {
-      margin-top: 30px;
-      padding: 22px 26px;
-      border: 1px dashed var(--color-rule);
-      background: transparent;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .pb-spread-stub-label {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      color: var(--color-ink-mute);
-    }
-  </style>
-
-  <script>
-    (function () {
-      const strip = document.querySelector(".pb-strip") as HTMLButtonElement | null;
-      const overlay = document.querySelector(".pb-overlay") as HTMLElement | null;
-      const closeBtn = document.querySelector(".pb-overlay-close") as HTMLButtonElement | null;
-      const bars = Array.from(document.querySelectorAll(".pb-strip-bar")) as HTMLElement[];
-      const tocLinks = Array.from(document.querySelectorAll(".pb-toc-link")) as HTMLAnchorElement[];
-      const cover = document.querySelector(".pb-cover") as HTMLElement | null;
-      const spreads = Array.from(document.querySelectorAll(".pb-spread")) as HTMLElement[];
-      const curEl = document.querySelector(".pb-strip-cur") as HTMLElement | null;
-
-      // All navigable stops in document order: cover first, then the 8
-      // spec spreads. Index 0 = cover (no spec bar lit, counter "00");
-      // index 1..N = spreads (bar[idx-1] lit, counter "0idx").
-      const stops: HTMLElement[] = cover ? [cover, ...spreads] : [...spreads];
-      let curIdx = 0;
-
-      function setCurrent(idx: number) {
-        curIdx = idx;
-        const barIdx = idx - 1;
-        bars.forEach((b, i) => b.classList.toggle("is-current", i === barIdx));
-        tocLinks.forEach((l, i) => l.classList.toggle("is-current", i === barIdx));
-        if (curEl) curEl.textContent = String(Math.max(0, idx)).padStart(2, "0");
-      }
-
-      function openOverlay() {
-        if (!overlay || !strip) return;
-        overlay.hidden = false;
-        strip.setAttribute("aria-expanded", "true");
-      }
-      function closeOverlay() {
-        if (!overlay || !strip) return;
-        overlay.hidden = true;
-        strip.setAttribute("aria-expanded", "false");
-      }
-
-      if (strip) strip.addEventListener("click", openOverlay);
-      if (closeBtn) closeBtn.addEventListener("click", closeOverlay);
-      if (overlay) {
-        overlay.addEventListener("click", (e) => {
-          if (e.target === overlay) closeOverlay();
-        });
-      }
-      tocLinks.forEach((link) => {
-        link.addEventListener("click", () => {
-          // Let the hash navigation run, then collapse the overlay.
-          setTimeout(closeOverlay, 0);
-        });
-      });
-
-      // Keyboard navigation: ←/→ and ↑/↓ step between stops. Skipped
-      // when the overlay is open (Esc closes that instead) and when
-      // focus is in a form field. The hash CTAs on cover + TOC handle
-      // direct jumps; this gives the book a one-keystroke turn.
-      document.addEventListener("keydown", (e) => {
-        if (overlay && !overlay.hidden) {
-          if (e.key === "Escape") closeOverlay();
-          return;
-        }
-        const active = document.activeElement as HTMLElement | null;
-        if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
-
-        if (e.key === "ArrowDown" || e.key === "ArrowRight") {
-          const next = stops[Math.min(curIdx + 1, stops.length - 1)];
-          if (next) next.scrollIntoView({ behavior: "smooth", block: "start" });
-          e.preventDefault();
-        } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
-          const prev = stops[Math.max(curIdx - 1, 0)];
-          if (prev) prev.scrollIntoView({ behavior: "smooth", block: "start" });
-          e.preventDefault();
-        }
-      });
-
-      // IntersectionObserver: track the most-visible stop, update strip.
-      if ("IntersectionObserver" in window && stops.length) {
-        const obs = new IntersectionObserver(
-          (entries) => {
-            let best: IntersectionObserverEntry | null = null;
-            for (const e of entries) {
-              if (e.isIntersecting && (!best || e.intersectionRatio > best.intersectionRatio)) {
-                best = e;
-              }
-            }
-            if (best) {
-              const idx = stops.indexOf(best.target as HTMLElement);
-              if (idx >= 0) setCurrent(idx);
-            }
-          },
-          { threshold: [0.5, 0.75] },
-        );
-        stops.forEach((s) => obs.observe(s));
-      }
-    })();
-  </script>
+  <Book
+    header={{
+      domain: "architecture",
+      tld: ".kaihacks.ai",
+      basePath: "../",
+      location: "playbook",
+    }}
+    cover={{
+      overline: "the specification · a field manual",
+      title: "Playbook",
+      subtitle: "The elements of how a world is moved, <br />one file at a time.",
+      edition: `khai · ${edition}`,
+      ctaHref: "#plot",
+      ctaLabel: "Open the playbook →",
+      hint: "or press →",
+    }}
+    spreads={spreads}
+    tocGroups={tocGroups}
+    tocEyebrow="The Specification"
+  />
 </BaseLayout>

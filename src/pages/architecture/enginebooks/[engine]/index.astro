@@ -1,11 +1,10 @@
 ---
 import BaseLayout from "../../../../layouts/BaseLayout.astro";
-import SiteHeader from "../../../../components/SiteHeader.astro";
-import SiteFooter from "../../../../components/SiteFooter.astro";
-import Mark from "../../../../components/Mark.astro";
+import Book from "../../../../components/Book.astro";
+import type { BookSpread } from "../../../../lib/book";
 import { loadEngines } from "../../../../lib/load-engines";
 import { loadEngineBook, type EngineBook } from "../../../../lib/load-engine-content";
-import { parseSpec } from "../../../../lib/parse-spec";
+import { parseEngineSpec } from "../../../../lib/parse-engine-spec";
 
 // One static path per installed engine (today: just gender). The canon never
 // names engines; loadEngines() discovers them from node_modules.
@@ -19,44 +18,20 @@ export async function getStaticPaths() {
 const { book } = Astro.props as { book: EngineBook };
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-interface Facet {
-  letter: string;
-  name: string;
-  body: string;
-}
-interface Spread {
-  slug: string;
-  role: string;
-  title: string;
-  subtitle: string | null;
-  facets: Facet[];
-  /** raw markdown shown verbatim when a content file fails to parse (fallback). */
-  manuscript: string | null;
-  state: string;
-}
-
-// Engine content files are canon instances, so they parse with the same
-// parseSpec the canon Playbook uses -- chapters become facet cards, no new
-// rendering logic. If a file ever fails to parse we fall back to showing it
-// verbatim rather than dropping the spread.
-function toFacets(text: string): { facets: Facet[]; subtitle: string | null } | null {
-  try {
-    const spec = parseSpec(text);
-    return {
-      facets: spec.chapters.map((c) => ({ letter: c.letter, name: c.name, body: c.body })),
-      subtitle: spec.frontmatter.subtitle ?? null,
-    };
-  } catch {
-    return null;
-  }
-}
-
-const spreads: Spread[] = [];
+// An Enginebook is the same book as the Playbook -- same chassis (Book.astro),
+// only the spreads differ. We feed it: the WIRES card the canon projects, the
+// anchor the engine wires at, and one spread per expression hung beneath it.
+// Engine files parse with parseEngineSpec (position/instance format), NOT the
+// canon parseSpec; their substantive H2 sections become the facet cards.
+const spreads: BookSpread[] = [];
+const n = () => String(spreads.length).padStart(2, "0");
 
 // 1. Wiring: the WIRES card the canon projects from the manifest.
 spreads.push({
   slug: "wiring",
-  role: "wiring",
+  n: n(),
+  groupLabel: "wiring",
+  status: book.card.mnemonic,
   title: "Wiring",
   subtitle: "how the engine binds to the canon",
   facets: book.card.chapters.map((name) => ({
@@ -64,406 +39,59 @@ spreads.push({
     name,
     body: book.card.sections[name],
   })),
-  manuscript: null,
-  state: book.card.mnemonic,
+  coda: null,
 });
 
 // 2. Anchor: the root the engine wires at.
-const anchorParsed = toFacets(book.anchor.text);
+const anchor = parseEngineSpec(book.anchor.text);
 spreads.push({
   slug: "anchor",
-  role: "anchor",
+  n: n(),
+  groupLabel: "anchor",
+  status: `anchor · ${book.type ?? "?"}`,
   title: cap(book.id),
-  subtitle: anchorParsed?.subtitle ?? "the anchor",
-  facets: anchorParsed?.facets ?? [],
-  manuscript: anchorParsed ? null : book.anchor.text,
-  state: `anchor · ${book.type ?? "?"}`,
+  subtitle: anchor.subtitle ?? "the anchor",
+  facets: anchor.facets,
+  coda: null,
 });
 
 // 3. Each expression hung beneath the anchor.
 for (const expr of book.expressions) {
-  const parsed = toFacets(expr.text);
+  const parsed = parseEngineSpec(expr.text);
   spreads.push({
     slug: expr.key,
-    role: "expression",
+    n: n(),
+    groupLabel: "expression",
+    status: "expression",
     title: cap(expr.key),
-    subtitle: parsed?.subtitle ?? "expression",
-    facets: parsed?.facets ?? [],
-    manuscript: parsed ? null : expr.text,
-    state: "expression",
+    subtitle: parsed.subtitle ?? "expression",
+    facets: parsed.facets,
+    coda: null,
   });
 }
 
-const total = spreads.length;
 const title = `${cap(book.id)} · Enginebook · kaihacks`;
 ---
 
 <BaseLayout title={title} description={book.tagline ?? `The ${book.id} engine, rendered.`}>
-  <div class="enginebook">
-    <SiteHeader
-      domain="architecture"
-      tld=".kaihacks.ai"
-      basePath="../../"
-      location={`enginebook · ${book.id}`}
-    />
-
-    {/* Front cover. */}
-    <header id="cover" class="eb-cover">
-      <div class="eb-cover-mark" aria-hidden="true"><Mark name="khai-mark" width={108} /></div>
-      <div class="eb-cover-body">
-        <span class="eb-cover-overline">the extension · an enginebook</span>
-        <h1 class="eb-cover-title">{cap(book.id)}<em>.</em></h1>
-        {book.tagline && <p class="eb-cover-sub">{book.tagline}</p>}
-        <div class="eb-cover-actions">
-          <a href="#wiring" class="eb-cover-cta">Open the enginebook →</a>
-          <a href="../" class="eb-cover-back">← all enginebooks</a>
-        </div>
-      </div>
-      <span class="eb-cover-edition">{total} spreads · wires at {book.type ?? "?"}</span>
-    </header>
-
-    {/* The spreads. One snap-stop each. */}
-    <main class="eb-spreads">
-      {
-        spreads.map((s) => (
-          <article id={s.slug} class={`eb-spread eb-spread--${s.role}`}>
-            <header class="eb-spread-head">
-              <span class="eb-spread-no">{s.role}</span>
-              <span class="eb-spread-state">{s.state}</span>
-            </header>
-
-            <h2 class="eb-spread-title">
-              {s.title}
-              <em>.</em>
-            </h2>
-
-            {s.subtitle && <p class="eb-spread-sub">{s.subtitle}</p>}
-
-            {s.facets.length > 0 && (
-              <div class="eb-facets">
-                {s.facets.map((f) => (
-                  <article class="eb-facet">
-                    <h3 class="eb-facet-name">
-                      <span class="eb-facet-initial">{f.letter}</span>
-                      {f.name.slice(1)}
-                    </h3>
-                    <p class="eb-facet-body">{f.body}</p>
-                  </article>
-                ))}
-              </div>
-            )}
-
-            {s.manuscript && <pre class="eb-manuscript">{s.manuscript}</pre>}
-          </article>
-        ))
-      }
-    </main>
-
-    <SiteFooter />
-  </div>
-
-  <style is:global>
-    body:has(.enginebook) {
-      padding: 0;
-    }
-    body:has(.enginebook) main {
-      max-width: none;
-      margin: 0;
-    }
-    html:has(.enginebook) {
-      scroll-snap-type: y proximity;
-      scroll-padding-top: 4rem;
-      scroll-padding-bottom: 4rem;
-      scroll-behavior: smooth;
-    }
-    @media (max-width: 640px) {
-      html:has(.enginebook) {
-        scroll-snap-type: none;
-      }
-    }
-  </style>
-
-  <style>
-    .enginebook {
-      max-width: var(--width-page);
-      margin: 0 auto;
-      padding: 0 1.25rem;
-      background: var(--color-paper);
-      color: var(--color-ink);
-      font-family: var(--font-prose);
-    }
-    @media (min-width: 641px) {
-      .enginebook {
-        padding: 0 3.5rem;
-      }
-    }
-
-    /* cover */
-    .eb-cover {
-      position: relative;
-      scroll-snap-align: start;
-      padding: 1.75rem 0 1.5rem;
-    }
-    @media (min-width: 641px) {
-      .eb-cover {
-        min-height: calc(100vh - 8rem);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        padding: 2.25rem 0;
-      }
-      .eb-cover-body {
-        transform: translateY(8vh);
-      }
-    }
-    .eb-cover-mark {
-      position: absolute;
-      top: 1.25rem;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-    @media (max-width: 640px) {
-      .eb-cover-mark {
-        position: static;
-        transform: none;
-        text-align: center;
-        margin-bottom: 28px;
-      }
-    }
-    .eb-cover-edition {
-      position: absolute;
-      bottom: 1.25rem;
-      left: 50%;
-      transform: translateX(-50%);
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--color-ink-soft);
-    }
-    @media (max-width: 640px) {
-      .eb-cover-edition {
-        position: static;
-        transform: none;
-        display: block;
-        text-align: center;
-        margin-top: 24px;
-      }
-    }
-    .eb-cover-body {
-      max-width: 760px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .eb-cover-overline {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.26em;
-      color: var(--color-brick);
-      text-transform: uppercase;
-    }
-    .eb-cover-title {
-      margin: 22px 0 0;
-      font-family: var(--font-display);
-      font-weight: 380;
-      font-size: 88px;
-      line-height: 0.94;
-      letter-spacing: -0.03em;
-      color: var(--color-ink);
-    }
-    @media (min-width: 641px) {
-      .eb-cover-title {
-        font-size: 150px;
-      }
-    }
-    .eb-cover-title em {
-      color: var(--color-brick);
-      font-style: normal;
-    }
-    .eb-cover-sub {
-      margin: 22px 0 0;
-      max-width: 560px;
-      font-family: var(--font-prose);
-      font-style: italic;
-      font-size: 18px;
-      line-height: 1.4;
-      color: var(--color-ink-soft);
-      text-wrap: pretty;
-    }
-    @media (min-width: 641px) {
-      .eb-cover-sub {
-        font-size: 23px;
-      }
-    }
-    .eb-cover-actions {
-      margin-top: 36px;
-      display: flex;
-      align-items: center;
-      gap: 22px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .eb-cover-cta {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--color-ink);
-      text-decoration: none;
-      border-bottom: 1px solid var(--color-brick);
-      padding-bottom: 4px;
-    }
-    .eb-cover-cta:hover {
-      color: var(--color-brick);
-    }
-    .eb-cover-back {
-      font-family: var(--font-mono);
-      font-size: 10px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--color-ink-mute);
-      text-decoration: none;
-    }
-    .eb-cover-back:hover {
-      color: var(--color-brick);
-    }
-
-    /* spreads */
-    .eb-spreads {
-      display: flex;
-      flex-direction: column;
-    }
-    .eb-spread {
-      scroll-snap-align: start;
-      padding: 1.75rem 0 1.5rem;
-      border-bottom: 1px solid var(--color-rule-soft);
-    }
-    @media (min-width: 641px) {
-      .eb-spread {
-        min-height: calc(100vh - 8rem);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        padding: 2.25rem 0;
-      }
-    }
-    .eb-spread:last-child {
-      border-bottom: none;
-    }
-    .eb-spread-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--color-rule);
-    }
-    .eb-spread-no {
-      font-family: var(--font-mono);
-      font-size: 11px;
-      letter-spacing: 0.2em;
-      color: var(--color-brick);
-      text-transform: uppercase;
-    }
-    .eb-spread-state {
-      font-family: var(--font-mono);
-      font-size: 9.5px;
-      letter-spacing: 0.22em;
-      color: var(--color-ink-mute);
-      text-transform: uppercase;
-    }
-    .eb-spread-title {
-      font-family: var(--font-display);
-      font-weight: 380;
-      font-size: 60px;
-      line-height: 0.94;
-      letter-spacing: -0.02em;
-      margin: 22px 0 0;
-      color: var(--color-ink);
-    }
-    @media (min-width: 641px) {
-      .eb-spread-title {
-        font-size: 80px;
-      }
-    }
-    .eb-spread-title em {
-      color: var(--color-brick);
-      font-style: normal;
-    }
-    .eb-spread-sub {
-      margin: 14px 0 0;
-      max-width: 720px;
-      font-family: var(--font-prose);
-      font-style: italic;
-      font-size: 17px;
-      line-height: 1.4;
-      color: var(--color-ink-soft);
-      text-wrap: pretty;
-    }
-    @media (min-width: 641px) {
-      .eb-spread-sub {
-        font-size: 21px;
-      }
-    }
-
-    .eb-facets {
-      margin-top: 30px;
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 18px;
-    }
-    @media (min-width: 641px) {
-      .eb-facets {
-        grid-template-columns: 1fr 1fr;
-        gap: 22px;
-      }
-      .eb-facet:last-child:nth-child(odd) {
-        grid-column: 1 / -1;
-      }
-    }
-    .eb-facet {
-      background: var(--color-paper-warm);
-      border: 1px solid var(--color-rule-soft);
-      border-radius: 3px;
-      padding: 18px 22px 20px;
-    }
-    .eb-facet-name {
-      margin: 0 0 8px;
-      font-family: var(--font-display);
-      font-weight: 420;
-      font-size: 22px;
-      letter-spacing: -0.005em;
-      color: var(--color-ink);
-    }
-    .eb-facet-initial {
-      color: var(--color-brick);
-    }
-    .eb-facet-body {
-      margin: 0;
-      font-family: var(--font-prose);
-      font-size: 15px;
-      line-height: 1.5;
-      color: var(--color-ink-soft);
-      text-wrap: pretty;
-    }
-
-    /* manuscript: a content file shown verbatim when it fails to parse */
-    .eb-manuscript {
-      margin-top: 30px;
-      padding: 22px 24px;
-      background: var(--color-paper-warm);
-      border: 1px solid var(--color-rule);
-      border-left: 3px solid var(--color-brick);
-      border-radius: 3px;
-      font-family: var(--font-mono);
-      font-size: 13px;
-      line-height: 1.6;
-      color: var(--color-ink);
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-    }
-  </style>
+  <Book
+    header={{
+      domain: "architecture",
+      tld: ".kaihacks.ai",
+      basePath: "../../",
+      location: `enginebook · ${book.id}`,
+    }}
+    cover={{
+      overline: "the extension · an enginebook",
+      title: cap(book.id),
+      subtitle: book.tagline,
+      edition: `khai · ${book.id}`,
+      ctaHref: "#wiring",
+      ctaLabel: "Open the enginebook →",
+      backHref: "../",
+      backLabel: "← all enginebooks",
+    }}
+    spreads={spreads}
+    tocEyebrow={`enginebook · ${book.id}`}
+  />
 </BaseLayout>
