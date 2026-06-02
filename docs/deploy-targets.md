@@ -8,9 +8,10 @@ shared cPanel host (`92.205.150.56`, user `c216mkgp1lzk`).
 
 The apex `kaihacks.ai` is the company front door. Its document root is fixed
 at `/public_html/` (cPanel won't repoint the primary domain), so the apex
-serves the `main` surface — deployed to `/public_html/main/` — via an
-`.htaccess` rewrite (see "The apex rewrite" below). Each subdomain has its own
-document root inside `/public_html/`. From the cPanel domain table:
+serves the `main` surface — deployed to `/public_html/main/` — via a path
+rewrite (a Cloudflare edge rule, with an origin `.htaccess` fallback; see
+"Apex routing" below). Each subdomain has its own document root inside
+`/public_html/`. From the cPanel domain table:
 
 | Domain                     | Document root on host                    |
 | -------------------------- | ---------------------------------------- |
@@ -91,30 +92,46 @@ go to `/public_html/<subdomain>/` in production and
 belong under the apex are folded into the `main` surface rather than
 deployed separately, so the apex root stays owned by one surface.
 
-## The apex rewrite
+## Apex routing
 
-cPanel won't repoint the primary domain, so `kaihacks.ai`'s document root
-stays `/public_html/`. The apex serves the `main` surface (at
-`/public_html/main/`) via `apex/.htaccess`, deployed to `/public_html/.htaccess`:
+`kaihacks.ai`'s document root is fixed at `/public_html/` (cPanel won't repoint
+the primary domain), so the bare apex serves the `main` surface (deployed to
+`/public_html/main/`) by rewriting the path to `/main/…`. The visitor URL stays
+clean (`kaihacks.ai/`, `/privacy/`, `/cvi/`, `/contact/`).
+
+**Primary — Cloudflare Transform Rule (Rewrite URL), at the edge.** This is the
+source of truth for apex routing:
+
+- _When:_ `(http.host eq "kaihacks.ai" or http.host eq "www.kaihacks.ai") and not starts_with(http.request.uri.path, "/main/")`
+- _Then:_ Path → Rewrite to → Dynamic → `concat("/main", http.request.uri.path)`
+
+Being matched on `http.host`, it can only ever affect the apex — never the
+`architecture` / `cultures` subdomains.
+
+**Fallback — origin `apex/.htaccess`**, deployed to `/public_html/.htaccess` by
+the `deploy-apex` workflow. Kept as a redundant origin-level rewrite in case the
+edge rule is ever removed. It is **host-scoped** so the nested subdomain
+docroots that inherit this file are left untouched (an earlier unscoped version
+leaked into them and 404'd the subdomains — see #148):
 
 ```apache
 RewriteEngine On
 RewriteBase /
+RewriteCond %{HTTP_HOST} ^(www\.)?kaihacks\.ai$ [NC]
 RewriteCond %{REQUEST_URI} !^/main/
 RewriteRule ^(.*)$ /main/$1 [L]
 ```
 
-Every apex request is internally rewritten to `/main/` — the URL stays clean
-(`kaihacks.ai/`, `/privacy/`, `/cvi/`), the old `chbrain/kaihacks` placeholder
-is never served (the rewrite runs before any apex directory index), and
-subdomains are unaffected (their own vhosts never read this file). `main` keeps
-a dedicated `/public_html/main/` root, so its `--delete` is safe.
+The two **coexist safely**: the edge rule rewrites `kaihacks.ai/x` to origin
+`/main/x`; the `.htaccess` then sees `^/main/` and leaves it (no double
+rewrite). `main` keeps a dedicated `/public_html/main/` root, so its `--delete`
+is safe.
 
-Deploy it with the `deploy-apex` workflow (`workflow_dispatch`), which rsyncs
-`apex/` to `/public_html/` **without** `--delete` (it only places the file and
-never touches the siblings sharing that root). It is static and set-and-forget;
-re-run only when `apex/` changes. Keep internal links trailing-slashed (the
-build does) so `mod_dir` never redirects in a way that exposes `/main/`.
+`deploy-apex` (`workflow_dispatch`) rsyncs `apex/` to `/public_html/` **without**
+`--delete` (it only places the file, never touching the siblings sharing that
+root). Static and set-and-forget; re-run only when `apex/` changes. Keep
+internal links trailing-slashed (the build does) so `mod_dir` never redirects in
+a way that exposes `/main/`.
 
 ## SSH
 
