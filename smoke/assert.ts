@@ -38,9 +38,13 @@ export interface RunOptions {
 
 const SURFACE_META = /<meta\s+name=["']x-surface["']\s+content=["']([^"']*)["']/i;
 
-// The cPanel/GoDaddy default parked page - must never be served by any surface.
+// Signature of a cPanel/host default-parked page. Only consulted when a page
+// is NOT correctly stamped (see below) - a stamped page is ours by definition,
+// and this must never fire on real content. Note: brand/host names like
+// "godaddy" are deliberately NOT here - they legitimately appear in e.g. the
+// privacy policy's data-processor list.
 const PLACEHOLDER =
-  /(this (web ?)?site is parked|godaddy|coming soon|under construction|default web ?page|future home)/i;
+  /(this (web ?)?site is parked|coming soon|under construction|default web ?page|future home of)/i;
 
 export async function runChecks(targets: Target[], opts: RunOptions = {}): Promise<CheckResult[]> {
   const doFetch = opts.fetchImpl ?? fetch;
@@ -69,15 +73,20 @@ export async function runChecks(targets: Target[], opts: RunOptions = {}): Promi
       }
 
       const body = await res.text();
-
-      if (PLACEHOLDER.test(body)) {
-        errors.push("served a parked/placeholder page");
-      }
-
       const got = body.match(SURFACE_META)?.[1];
-      if (!got) {
-        errors.push("missing <meta name=x-surface> (wrong or placeholder page?)");
-      } else if (got !== t.surface) {
+
+      // The stamp is the authoritative signal: a page carrying its expected
+      // x-surface IS the real, deployed page. Only when that's missing or wrong
+      // do we diagnose further (and only then is the placeholder heuristic safe
+      // to run - it must never flag legitimate stamped content).
+      if (got === t.surface) {
+        // correct surface served - good.
+      } else if (!got) {
+        errors.push("missing <meta name=x-surface>");
+        if (PLACEHOLDER.test(body)) {
+          errors.push("served a parked/placeholder page");
+        }
+      } else {
         errors.push(`x-surface "${got}" != expected "${t.surface}"`);
       }
     } catch (err) {
