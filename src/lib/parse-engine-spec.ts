@@ -62,6 +62,11 @@ export interface ParsedEngineSpec {
   facets: EngineFacet[];
   /** the spread subtitle if the frontmatter declares one; otherwise null */
   subtitle: string | null;
+  /** the `## Taxonomy` meta value -- the group the position reports into, a
+   *  name (linked where it has a file), per the position template. Surfaced
+   *  (e.g. in a spread's corner) rather than rendered as a facet; null when
+   *  the file carries no Taxonomy section. */
+  taxonomy: string | null;
 }
 
 /**
@@ -84,6 +89,7 @@ export function parseEngineSpec(text: string): ParsedEngineSpec {
   const parts = body.split(/^##[ \t]+/m);
 
   const facets: EngineFacet[] = [];
+  let taxonomy: string | null = null;
   // parts[0] is everything before the first "## " (the H1). Skip it; sections
   // start at index 1.
   for (let i = 1; i < parts.length; i++) {
@@ -91,7 +97,12 @@ export function parseEngineSpec(text: string): ParsedEngineSpec {
     const nl = chunk.indexOf("\n");
     const name = (nl === -1 ? chunk : chunk.slice(0, nl)).trim();
     const sectionBody = (nl === -1 ? "" : chunk.slice(nl + 1)).trim();
-    if (!name || META_SECTIONS.has(name)) continue;
+    if (!name || META_SECTIONS.has(name)) {
+      // Capture the Taxonomy meta value for surfacing; both meta sections stay
+      // out of the facet grid.
+      if (name === "Taxonomy" && sectionBody) taxonomy = sectionBody;
+      continue;
+    }
     facets.push({ letter: name.charAt(0), name, body: sectionBody });
   }
 
@@ -105,5 +116,5 @@ export function parseEngineSpec(text: string): ParsedEngineSpec {
     }
   }
 
-  return { facets, subtitle };
+  return { facets, subtitle, taxonomy };
 }
