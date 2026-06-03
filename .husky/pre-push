@@ -5,8 +5,7 @@ npx khai-guard
 
 # KHAI-Guard branch-scope: the branch NAME must classify into a website lane
 # (see docs/BRANCHING.md), and the branch's diff range must stay inside that
-# lane's owned paths. ADVISORY for now (--warn prints violations but exits 0)
-# while the live claude/* branches are renamed to the lane scheme. Same engine
-# as khai; this repo's policy lives in khai-guard.config.json (branchScope).
-# To enforce: drop --warn (see docs/BRANCHING.md "flip to hard-fail").
-npx khai-guard branch-check --warn
+# lane's owned paths. ENFORCED: a violation exits non-zero and blocks the push.
+# Same engine as khai; this repo's policy lives in khai-guard.config.json
+# (branchScope). Name the branch for its subject before you start.
+npx khai-guard branch-check
