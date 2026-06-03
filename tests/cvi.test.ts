@@ -30,6 +30,13 @@ import { BRAND } from "../src/lib/brand";
 const pages = loadBuiltPages(process.cwd());
 const cvi = pages.find((p) => p.path === "main/cvi/index.html");
 
+// The numbered section head migrated to the shared khaibook classes
+// (.book-secno / .book-h2, book.css) from its page-private .cvi-n / .cvi-h2.
+// These selectors accept either, so this contract stays green across the
+// migration (on old-class main and after the surface PR lands). See #176.
+const SECNO = ".cvi-n, .book-secno";
+const SECH2 = ".cvi-h2, .book-h2";
+
 // Canonical TOC: 9 chapters with Writing inserted as 06 between
 // Typography and Icon. The legacy 8-chapter shape (no Writing peer)
 // is gone — Writing is a top-level peer to Typography and the
@@ -182,8 +189,8 @@ describe("CVI - design contract", () => {
       for (const sec of SECTIONS) {
         const section = dom.window.document.querySelector(`section#${sec.id}.cvi-section`);
         expect(section, `missing section#${sec.id}`).not.toBeNull();
-        expect(section!.querySelector(".cvi-n")?.textContent?.trim()).toBe(sec.n);
-        expect(section!.querySelector(".cvi-h2")?.textContent?.trim()).toBe(sec.h2);
+        expect(section!.querySelector(SECNO)?.textContent?.trim()).toBe(sec.n);
+        expect(section!.querySelector(SECH2)?.textContent?.trim()).toBe(sec.h2);
       }
     });
 
@@ -207,8 +214,8 @@ describe("CVI - design contract", () => {
         const dom = new JSDOM(cvi!.html);
         const section = dom.window.document.querySelector(`section#${sub.id}.cvi-section`);
         expect(section, `missing sub-panel section#${sub.id}`).not.toBeNull();
-        expect(section!.querySelector(".cvi-n")?.textContent?.trim()).toBe(sub.n);
-        expect(section!.querySelector(".cvi-h2")?.textContent?.trim()).toBe(sub.h2);
+        expect(section!.querySelector(SECNO)?.textContent?.trim()).toBe(sub.n);
+        expect(section!.querySelector(SECH2)?.textContent?.trim()).toBe(sub.h2);
       });
     }
 
