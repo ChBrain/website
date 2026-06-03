@@ -152,7 +152,11 @@ const groups: BookTocGroup[] = tocGroups ?? [
               <span class="pb-spread-no">
                 {s.n} · {s.groupLabel}
               </span>
-              <span class={`pb-spread-state pb-spread-state--${s.status}`}>{s.status}</span>
+              {s.statusHtml ? (
+                <span class="pb-spread-state" set:html={s.statusHtml} />
+              ) : (
+                <span class={`pb-spread-state pb-spread-state--${s.status}`}>{s.status}</span>
+              )}
             </header>
 
             {/* Title row: the hero title stands on its own line; the optional
@@ -613,6 +617,17 @@ const groups: BookTocGroup[] = tocGroups ?? [
    * instance wired through the seam stands apart from a draft canon spec. */
   .pb-spread-state--engine {
     color: var(--color-brick);
+  }
+  /* A linked status corner (an engine spread's parent / Taxonomy, linked to
+   * the anchor snap). Brick, underlined on hover -- subtle in the mono slot. */
+  .pb-spread-state :global(a) {
+    color: var(--color-brick);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.12s;
+  }
+  .pb-spread-state :global(a:hover) {
+    border-bottom-color: var(--color-brick);
   }
 
   /* Title row: the hero title and, when present, the "open" CTA pinned to
