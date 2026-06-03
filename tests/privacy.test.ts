@@ -24,6 +24,13 @@ import { loadBuiltPages } from "./helpers/load-built-html";
  * shape can be changed (or dropped) without a test-PR alongside it.
  */
 
+// The numbered section head migrated to the shared khaibook classes
+// (.book-secno / .book-h2, book.css) from its page-private .p-n / .p-h2. These
+// selectors accept either, so this contract stays green across the migration
+// (on old-class main and after the surface PR lands). See chassis #176.
+const SECNO = ".p-n, .book-secno";
+const SECH2 = ".p-h2, .book-h2";
+
 const pages = loadBuiltPages(process.cwd());
 // Privacy folds under the main surface (dist/main/privacy/) when main becomes
 // the apex; accept either build path while the move lands.
@@ -142,11 +149,11 @@ describe("privacy statement - design contract", () => {
         const dom = new JSDOM(privacy!.html);
         const allSections = [...dom.window.document.querySelectorAll("section.p-section")];
         const section = allSections.find((s) => {
-          const n = s.querySelector(".p-n")?.textContent?.trim();
+          const n = s.querySelector(SECNO)?.textContent?.trim();
           return n === sec.n;
         });
         expect(section, `missing §${sec.n}`).toBeDefined();
-        expect(section!.querySelector(".p-h2")?.textContent?.trim()).toBe(sec.h2);
+        expect(section!.querySelector(SECH2)?.textContent?.trim()).toBe(sec.h2);
         if (sec.id) {
           expect(section!.id).toBe(sec.id);
         }
@@ -155,8 +162,8 @@ describe("privacy statement - design contract", () => {
 
     it("sections appear in canonical 01-08 order", () => {
       const dom = new JSDOM(privacy!.html);
-      const nums = [...dom.window.document.querySelectorAll("section.p-section .p-n")].map((n) =>
-        n.textContent?.trim(),
+      const nums = [...dom.window.document.querySelectorAll(`section.p-section :is(${SECNO})`)].map(
+        (n) => n.textContent?.trim(),
       );
       expect(nums).toEqual(SECTIONS.map((s) => s.n));
     });
@@ -172,7 +179,7 @@ describe("privacy statement - design contract", () => {
     it("has both subheadings (auto + on-consent)", () => {
       const dom = new JSDOM(privacy!.html);
       const sections = [...dom.window.document.querySelectorAll("section.p-section")];
-      const sec02 = sections.find((s) => s.querySelector(".p-n")?.textContent?.trim() === "02")!;
+      const sec02 = sections.find((s) => s.querySelector(SECNO)?.textContent?.trim() === "02")!;
       const h3s = [...sec02.querySelectorAll(".p-h3")].map((h) => h.textContent?.trim());
       expect(h3s).toEqual(["Automatically, when you visit", "Only when you give it to us"]);
     });
@@ -180,7 +187,7 @@ describe("privacy statement - design contract", () => {
     it("auto-collection list has IP / browser / date", () => {
       const dom = new JSDOM(privacy!.html);
       const sections = [...dom.window.document.querySelectorAll("section.p-section")];
-      const sec02 = sections.find((s) => s.querySelector(".p-n")?.textContent?.trim() === "02")!;
+      const sec02 = sections.find((s) => s.querySelector(SECNO)?.textContent?.trim() === "02")!;
       const items = [...sec02.querySelectorAll("ul.p-list li")].map((li) =>
         (li.textContent ?? "").toLowerCase(),
       );
@@ -193,7 +200,7 @@ describe("privacy statement - design contract", () => {
     it("declares legitimate interest (GDPR Art. 6(1)(f))", () => {
       const dom = new JSDOM(privacy!.html);
       const sections = [...dom.window.document.querySelectorAll("section.p-section")];
-      const sec02 = sections.find((s) => s.querySelector(".p-n")?.textContent?.trim() === "02")!;
+      const sec02 = sections.find((s) => s.querySelector(SECNO)?.textContent?.trim() === "02")!;
       const text = sec02.textContent ?? "";
       expect(text).toContain("legitimate interest");
       expect(text).toContain("Art. 6(1)(f)");
@@ -259,7 +266,7 @@ describe("privacy statement - design contract", () => {
     it("names the Cloudflare __cf_bm essential security cookie", () => {
       const dom = new JSDOM(privacy!.html);
       const sections = [...dom.window.document.querySelectorAll("section.p-section")];
-      const sec05 = sections.find((s) => s.querySelector(".p-n")?.textContent?.trim() === "05")!;
+      const sec05 = sections.find((s) => s.querySelector(SECNO)?.textContent?.trim() === "05")!;
       const text = sec05.textContent ?? "";
       expect(text).toContain("__cf_bm");
       expect(text.toLowerCase()).toContain("strictly necessary");
@@ -270,7 +277,7 @@ describe("privacy statement - design contract", () => {
     it("the unsubscribe bullet explicitly frames it as withdrawing consent", () => {
       const dom = new JSDOM(privacy!.html);
       const sections = [...dom.window.document.querySelectorAll("section.p-section")];
-      const sec07 = sections.find((s) => s.querySelector(".p-n")?.textContent?.trim() === "07")!;
+      const sec07 = sections.find((s) => s.querySelector(SECNO)?.textContent?.trim() === "07")!;
       const items = [...sec07.querySelectorAll("ul.p-list li")].map((li) =>
         (li.textContent ?? "").toLowerCase(),
       );
@@ -281,7 +288,7 @@ describe("privacy statement - design contract", () => {
     it("the access/delete bullet points at the contact email", () => {
       const dom = new JSDOM(privacy!.html);
       const sections = [...dom.window.document.querySelectorAll("section.p-section")];
-      const sec07 = sections.find((s) => s.querySelector(".p-n")?.textContent?.trim() === "07")!;
+      const sec07 = sections.find((s) => s.querySelector(SECNO)?.textContent?.trim() === "07")!;
       const mailto = [...sec07.querySelectorAll("a")].find((a) =>
         a.getAttribute("href")?.startsWith("mailto:"),
       );
@@ -292,7 +299,7 @@ describe("privacy statement - design contract", () => {
     it("names Datatilsynet as the supervisory authority + GDPR rights", () => {
       const dom = new JSDOM(privacy!.html);
       const sections = [...dom.window.document.querySelectorAll("section.p-section")];
-      const sec07 = sections.find((s) => s.querySelector(".p-n")?.textContent?.trim() === "07")!;
+      const sec07 = sections.find((s) => s.querySelector(SECNO)?.textContent?.trim() === "07")!;
       const text = sec07.textContent ?? "";
       expect(text).toContain("GDPR");
       expect(text).toContain("Datatilsynet");
