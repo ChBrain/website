@@ -22,6 +22,7 @@
     "smoke": "vitest run --config vitest.smoke.config.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "deps:sync": "node scripts/deps-sync.mjs",
     "prepare": "husky && chmod +x .husky/pre-commit .husky/pre-push"
   },
   "dependencies": {
