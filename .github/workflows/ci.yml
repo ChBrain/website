@@ -45,3 +45,36 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: source/test separation gate
         run: npx khai-guard --base "${{ github.event.pull_request.base.sha }}" --head "${{ github.event.pull_request.head.sha }}"
+
+  branch-scope:
+    # The branch-NAME-to-lane gate (see docs/BRANCHING.md). ADVISORY for now:
+    # KHAI_GUARD_BRANCH_ADVISORY=1 makes branch-check print violations but exit
+    # 0, so this job never fails the build while the live claude/* branches are
+    # being renamed to the lane scheme. It also does NOT fail the build because
+    # it is not (yet) a required status check.
+    #
+    # TO ENFORCE once branches are renamed (see docs/BRANCHING.md "flip to
+    # hard-fail"): (1) remove the KHAI_GUARD_BRANCH_ADVISORY env below so a
+    # violation exits 1, and (2) add "branch-scope" to the required status
+    # checks in branch protection. No change to @chbrain/khai-guard is needed.
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    env:
+      KHAI_GUARD_BRANCH_ADVISORY: "1"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: "npm"
+      - name: install
+        run: npm ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: branch-scope lane gate (advisory)
+        # On a PR, actions/checkout leaves a detached HEAD (the merge commit),
+        # so pass the PR head ref via --branch for the lane classification and
+        # the PR base/head as the diff range (matching the source/test gate).
+        run: npx khai-guard branch-check --branch "${{ github.head_ref }}" --base "${{ github.event.pull_request.base.sha }}" --head "${{ github.event.pull_request.head.sha }}"
