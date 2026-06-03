@@ -4,7 +4,7 @@ import { createRequire } from "node:module";
 import type { EngineCard } from "./load-engines";
 // The canon owns the WIRES card shape; we never restate it here.
 // @ts-expect-error -- the canon export is plain ESM (no .d.ts).
-import { engineCard } from "@chbrain/khai-arch";
+import { engineCard, referenceCard } from "@chbrain/khai-arch";
 
 const _require = createRequire(import.meta.url);
 
@@ -19,6 +19,34 @@ export interface EngineBookFile {
   text: string;
 }
 
+/** One `### ` subchapter inside a reference chapter. */
+export interface ReferenceSubchapter {
+  /** the subchapter heading, e.g. "Intersectionality". */
+  name: string;
+  /** the subchapter's prose (markdown). */
+  body: string;
+}
+
+/** One LORE chapter, projected by the canon from REFERENCES.md. */
+export interface ReferenceSection {
+  /** the chapter's prose (markdown; may be "" when it only has subchapters). */
+  body: string;
+  /** author `### ` splits; often empty. */
+  subchapters: ReferenceSubchapter[];
+}
+
+/** The LORE reference warrant, projected by the canon from REFERENCES.md. */
+export interface Reference {
+  /** always "LORE"; the canon owns the mnemonic. */
+  mnemonic: string;
+  /** the chapter names in order, e.g. ["Line of Work", "Origin", ...]. */
+  chapters: string[];
+  /** the chapters, keyed by name. */
+  sections: Record<string, ReferenceSection>;
+  /** a trailing one-line note (markdown); null when absent. */
+  coda: string | null;
+}
+
 /** The full content model behind one Enginebook, derived from the manifest. */
 export interface EngineBook {
   id: string;
@@ -30,6 +58,9 @@ export interface EngineBook {
   card: EngineCard;
   anchor: EngineBookFile;
   expressions: EngineBookFile[];
+  /** the LORE reference warrant; null when the engine ships no conforming
+   *  REFERENCES.md (the canon's khai-tests gate conformance, not us). */
+  references: Reference | null;
 }
 
 /**
@@ -71,6 +102,17 @@ export function loadEngineBook(id: string): EngineBook {
     text: read(file),
   }));
 
+  // The LORE reference warrant. We render whatever the canon projects and
+  // degrade to null on any failure -- a missing REFERENCES.md or a
+  // non-conforming one (the canon throws). Conformance is the canon's
+  // contract to enforce; the website just renders what's there.
+  let references: Reference | null = null;
+  try {
+    references = referenceCard(read("REFERENCES.md")) as Reference;
+  } catch {
+    references = null;
+  }
+
   return {
     id,
     tagline: manifest.tagline ?? null,
@@ -78,5 +120,6 @@ export function loadEngineBook(id: string): EngineBook {
     card: engineCard(manifest) as EngineCard,
     anchor,
     expressions,
+    references,
   };
 }

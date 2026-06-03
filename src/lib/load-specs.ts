@@ -20,7 +20,7 @@ export interface RawSpec {
 export function loadAllSpecs(): RawSpec[] {
   const entries = readdirSync(KHAI_ARCH_DIR)
     .filter((name) => name.endsWith(".md"))
-    .filter((name) => name !== "model.md");
+    .filter((name) => name !== "model.md" && name !== "reference.md");
 
   return entries.map((name) => {
     const id = name.replace(/\.md$/, "");
