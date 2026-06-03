@@ -61,19 +61,21 @@ const processors = [
     </header>
 
     <section class="p-section">
-      <div class="p-seclabel">
-        <span class="p-n">01</span><h2 class="p-h2">The short version</h2>
+      <div class="book-section">
+        <span class="book-secno">01</span><h2 class="book-h2">The short version</h2>
       </div>
       <p>
         This is a small site with a newsletter. We don't sell data, we don't run advertising
         trackers, and we collect the minimum needed to serve pages, keep them secure, and send you
         the newsletter if you ask for it. The few companies that help us run it are listed in
-        <a href="#vendors">section&nbsp;04</a>.
+        <a href="#vendors" class="book-link">section&nbsp;04</a>.
       </p>
     </section>
 
     <section class="p-section">
-      <div class="p-seclabel"><span class="p-n">02</span><h2 class="p-h2">What we collect</h2></div>
+      <div class="book-section">
+        <span class="book-secno">02</span><h2 class="book-h2">What we collect</h2>
+      </div>
       <h3 class="p-h3">Automatically, when you visit</h3>
       <p>
         Like every website, our hosting and security providers process basic technical data so pages
@@ -94,21 +96,25 @@ const processors = [
       <p>
         If you subscribe to the newsletter, you provide your <strong>email address</strong>
         (and optionally a name). That's the only personal information we deliberately collect, and it's
-        handled by Substack - see <a href="#newsletter">section&nbsp;03</a>.
+        handled by Substack - see <a href="#newsletter" class="book-link">section&nbsp;03</a>.
       </p>
     </section>
 
     <section id="newsletter" class="p-section">
-      <div class="p-seclabel"><span class="p-n">03</span><h2 class="p-h2">The newsletter</h2></div>
+      <div class="book-section">
+        <span class="book-secno">03</span><h2 class="book-h2">The newsletter</h2>
+      </div>
       <p>
         Our newsletter is published on <strong>Substack</strong> at
-        <a href="https://combinedcultures.substack.com">combinedcultures.substack.com</a>.
-        Subscriptions are handled entirely on Substack's own site. When you click through to
+        <a href="https://combinedcultures.substack.com" class="book-link"
+          >combinedcultures.substack.com</a
+        >. Subscriptions are handled entirely on Substack's own site. When you click through to
         subscribe, your email address is collected and stored by Substack as part of its own
-        service, under <a href="https://substack.com/privacy">Substack's privacy policy</a>. We can
-        see open and click engagement in the Substack dashboard. We use it only to send the
-        newsletter and gauge whether issues are landing - we don't build subscriber profiles, target
-        off-platform advertising, or cross-reference engagement with other sources. Your
+        service, under <a href="https://substack.com/privacy" class="book-link"
+          >Substack's privacy policy</a
+        >. We can see open and click engagement in the Substack dashboard. We use it only to send
+        the newsletter and gauge whether issues are landing - we don't build subscriber profiles,
+        target off-platform advertising, or cross-reference engagement with other sources. Your
         subscription consent is our legal basis (<strong>GDPR Art. 6(1)(a)</strong>).
       </p>
       <p>
@@ -118,8 +124,8 @@ const processors = [
     </section>
 
     <section id="vendors" class="p-section">
-      <div class="p-seclabel">
-        <span class="p-n">04</span><h2 class="p-h2">Who helps us run this</h2>
+      <div class="book-section">
+        <span class="book-secno">04</span><h2 class="book-h2">Who helps us run this</h2>
       </div>
       <p>
         These are our service providers (sub-processors). Each has its own privacy policy governing
@@ -131,7 +137,10 @@ const processors = [
             <div class="p-proc-row">
               <div class="p-proc-who">{p.who}</div>
               <div class="p-proc-what">
-                {p.what} <a href={p.policy}>Policy ↗</a>
+                {p.what}{" "}
+                <a href={p.policy} class="book-link">
+                  Policy ↗
+                </a>
               </div>
             </div>
           ))
@@ -149,7 +158,9 @@ const processors = [
     </section>
 
     <section class="p-section">
-      <div class="p-seclabel"><span class="p-n">05</span><h2 class="p-h2">Cookies</h2></div>
+      <div class="book-section">
+        <span class="book-secno">05</span><h2 class="book-h2">Cookies</h2>
+      </div>
       <p>We don't use advertising or analytics-tracking cookies.</p>
       <ul class="p-list">
         <li>
@@ -165,8 +176,8 @@ const processors = [
     </section>
 
     <section class="p-section">
-      <div class="p-seclabel">
-        <span class="p-n">06</span><h2 class="p-h2">How long we keep it</h2>
+      <div class="book-section">
+        <span class="book-secno">06</span><h2 class="book-h2">How long we keep it</h2>
       </div>
       <p>
         Technical logs are retained by our host and Cloudflare for short periods under their own
@@ -176,8 +187,8 @@ const processors = [
     </section>
 
     <section class="p-section">
-      <div class="p-seclabel">
-        <span class="p-n">07</span><h2 class="p-h2">Your choices & rights</h2>
+      <div class="book-section">
+        <span class="book-secno">07</span><h2 class="book-h2">Your choices & rights</h2>
       </div>
       <p>You can:</p>
       <ul class="p-list">
@@ -187,22 +198,24 @@ const processors = [
         </li>
         <li>
           <strong>Ask what we hold</strong> about you, and ask us to correct or delete it, by emailing
-          <a href="mailto:privacy@kaihacks.ai">privacy@kaihacks.ai</a>.
+          <a href="mailto:privacy@kaihacks.ai" class="book-link">privacy@kaihacks.ai</a>.
         </li>
       </ul>
       <p>
         KAI HACKS AI operates from the EU (Denmark), so the GDPR applies to how we process your
         data. Under the GDPR you may ask us to access, correct, delete, restrict, or port your data,
         and you may lodge a complaint with your local data-protection authority - in Denmark that's
-        <a href="https://www.datatilsynet.dk/">Datatilsynet</a>. Visitors from the UK or California
-        may have additional or analogous rights (UK GDPR, CCPA); contact us at the address above to
-        exercise any of them.
+        <a href="https://www.datatilsynet.dk/" class="book-link">Datatilsynet</a>. Visitors from the
+        UK or California may have additional or analogous rights (UK GDPR, CCPA); contact us at the
+        address above to exercise any of them.
       </p>
     </section>
 
     <section class="p-section p-section--last">
       <div class="p-last-center">
-        <div class="p-seclabel"><span class="p-n">08</span><h2 class="p-h2">Changes</h2></div>
+        <div class="book-section">
+          <span class="book-secno">08</span><h2 class="book-h2">Changes</h2>
+        </div>
         <p>
           If we change how we handle data, we'll update this page and move the effective date at the
           top. Material changes to the newsletter will be noted in the newsletter itself.
@@ -243,7 +256,11 @@ const processors = [
   <style>
     /* Legal-doc inner column. The .arch-page wrapper gives us the
      * 1080px chrome-aligned container; this narrower column keeps the
-     * reading text comfortable. */
+     * reading text comfortable. The numbered section head (.book-section /
+     * .book-secno / .book-h2) and the link (.book-link) are the shared
+     * khaibook typesetting (book.css) -- this page only adds its own
+     * doc-specific layout (masthead, meta grid, list markers, the
+     * sub-processor table, the snap chassis). */
     .privacy {
       max-width: 820px;
     }
@@ -356,25 +373,9 @@ const processors = [
     .p-section--last {
       border-bottom: none;
     }
-    .p-seclabel {
-      display: flex;
-      align-items: baseline;
-      gap: 16px;
+    /* the shared .book-section head, with this page's section spacing */
+    .privacy .book-section {
       margin-bottom: 18px;
-    }
-    .p-n {
-      font-family: var(--font-mono);
-      font-size: 12px;
-      color: var(--color-brick);
-      flex: 0 0 auto;
-    }
-    .p-h2 {
-      font-family: var(--font-display);
-      font-weight: 420;
-      font-size: 27px;
-      letter-spacing: -0.01em;
-      margin: 0;
-      color: var(--color-ink);
     }
     .p-h3 {
       font-family: var(--font-mono);
@@ -396,11 +397,6 @@ const processors = [
     }
     .privacy em {
       font-style: italic;
-    }
-    .privacy a {
-      color: var(--color-brick);
-      text-decoration: none;
-      border-bottom: 1px solid var(--color-rule);
     }
 
     .p-list {
