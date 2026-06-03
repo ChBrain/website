@@ -119,7 +119,7 @@ const groups: BookTocGroup[] = tocGroups ?? [
       <h1 class="pb-cover-title">{cover.title}<em>.</em></h1>
       {cover.subtitle && <p class="pb-cover-sub" set:html={cover.subtitle} />}
       <div class="pb-cover-actions">
-        <a href={cover.ctaHref} class="pb-cover-cta">{cover.ctaLabel}</a>
+        <a href={cover.ctaHref} class="book-cta">{cover.ctaLabel}</a>
         {cover.hint && <span class="pb-cover-hint">{cover.hint}</span>}
         {
           cover.backHref && (
@@ -137,57 +137,84 @@ const groups: BookTocGroup[] = tocGroups ?? [
   {/* The spreads. One snap-stop per spread; mobile scrolls naturally. */}
   <main class="pb-spreads">
     {
-      spreads.map((s) => (
-        <article
-          id={s.slug}
-          class={`pb-spread ${s.written === false ? "pb-spread--draft" : ""} ${s.engine ? "pb-spread--engine" : ""}`}
-        >
-          <header class="pb-spread-head">
-            <span class="pb-spread-no">
-              {s.n} · {s.groupLabel}
-            </span>
-            <span class={`pb-spread-state pb-spread-state--${s.status}`}>{s.status}</span>
-          </header>
+      spreads.map((s) => {
+        // A prose snap (reference / LORE) carries a body and no facet cards.
+        // It renders as an open-book "leaf": the chapter title on the left,
+        // the prose on the right, so the spread fills the canvas instead of
+        // stranding a short body top-left. Facet spreads keep the full-width
+        // hero title + 2x2 grid.
+        const isProse = s.written !== false && !!s.bodyHtml && s.facets.length === 0;
+        return (
+          <article
+            id={s.slug}
+            class={`pb-spread ${s.written === false ? "pb-spread--draft" : ""} ${s.engine ? "pb-spread--engine" : ""} ${isProse ? "pb-spread--prose" : ""}`}
+          >
+            <header class="pb-spread-head">
+              <span class="pb-spread-no">
+                {s.n} · {s.groupLabel}
+              </span>
+              <span class={`pb-spread-state pb-spread-state--${s.status}`}>{s.status}</span>
+            </header>
 
-          {/* prettier-ignore */}
-          <h2 class="pb-spread-title">{s.title}<em>.</em></h2>
-
-          {s.subtitle && <p class="pb-spread-sub">{s.subtitle}</p>}
-
-          {s.written !== false && s.bodyHtml && <div class="pb-prose" set:html={s.bodyHtml} />}
-
-          {s.written !== false && s.facets.length > 0 && (
-            <div class="pb-facets">
-              {s.facets.map((f) => (
-                <article class="pb-facet">
+            {isProse ? (
+              <div class="pb-leaf">
+                <div class="pb-leaf-head">
                   {/* prettier-ignore */}
-                  <h3 class="pb-facet-name"><span class="pb-facet-initial">{f.letter}</span>{f.name.slice(1)}</h3>
-                  <p class="pb-facet-body">{f.body}</p>
-                </article>
-              ))}
-            </div>
-          )}
+                  <h2 class="pb-leaf-title">{s.title}<em>.</em></h2>
+                  {s.subtitle && <p class="pb-spread-sub">{s.subtitle}</p>}
+                </div>
+                <div class="pb-leaf-body book-prose" set:html={s.bodyHtml} />
+              </div>
+            ) : (
+              <Fragment>
+                {/* Title row: the hero title left, the optional "open" CTA
+                    pinned right on the same baseline (the enriched-by card's
+                    click-through into its full Enginebook). */}
+                <div class="pb-titlerow">
+                  {/* prettier-ignore */}
+                  <h2 class="pb-spread-title">{s.title}<em>.</em></h2>
+                  {s.deepLink && (
+                    <a class="book-cta pb-titlerow-cta" href={s.deepLink.href}>
+                      {s.deepLink.label}
+                    </a>
+                  )}
+                </div>
 
-          {s.written !== false && s.coda && (
-            <>
-              <span class="pb-spread-rule" aria-hidden="true" />
-              <p class="pb-spread-coda">{s.coda}</p>
-            </>
-          )}
+                {s.subtitle && <p class="pb-spread-sub">{s.subtitle}</p>}
 
-          {s.written === false && (
-            <div class="pb-spread-stub">
-              <span class="pb-spread-stub-label">coming</span>
-            </div>
-          )}
+                {s.written !== false && s.facets.length > 0 && (
+                  <div class="pb-facets">
+                    {s.facets.map((f) => (
+                      <article class="pb-facet">
+                        {/* prettier-ignore */}
+                        <h3 class="pb-facet-name"><span class="pb-facet-initial">{f.letter}</span>{f.name.slice(1)}</h3>
+                        {f.bodyHtml ? (
+                          <p class="pb-facet-body" set:html={f.bodyHtml} />
+                        ) : (
+                          <p class="pb-facet-body">{f.body}</p>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+                )}
 
-          {s.deepLink && (
-            <a class="pb-spread-cta" href={s.deepLink.href}>
-              {s.deepLink.label}
-            </a>
-          )}
-        </article>
-      ))
+                {s.written !== false && s.coda && (
+                  <>
+                    <span class="pb-spread-rule" aria-hidden="true" />
+                    <p class="pb-spread-coda">{s.coda}</p>
+                  </>
+                )}
+
+                {s.written === false && (
+                  <div class="pb-spread-stub">
+                    <span class="pb-spread-stub-label">coming</span>
+                  </div>
+                )}
+              </Fragment>
+            )}
+          </article>
+        );
+      })
     }
   </main>
 
@@ -510,22 +537,7 @@ const groups: BookTocGroup[] = tocGroups ?? [
     flex-wrap: wrap;
     justify-content: center;
   }
-  .pb-cover-cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--color-ink);
-    text-decoration: none;
-    border-bottom: 1px solid var(--color-brick);
-    padding-bottom: 4px;
-  }
-  .pb-cover-cta:hover {
-    color: var(--color-brick);
-  }
+  /* The cover CTA uses the shared `.book-cta` (see book.css). */
   .pb-cover-hint {
     font-family: var(--font-mono);
     font-size: 9.5px;
@@ -608,6 +620,22 @@ const groups: BookTocGroup[] = tocGroups ?? [
     color: var(--color-brick);
   }
 
+  /* Title row: the hero title and, when present, the "open" CTA pinned to
+   * the right on the title's baseline (the enriched-by card -> Enginebook). */
+  .pb-titlerow {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 28px;
+    flex-wrap: wrap;
+    margin-top: 22px;
+  }
+  .pb-titlerow .pb-spread-title {
+    margin: 0;
+  }
+  .pb-titlerow-cta {
+    flex: 0 0 auto;
+  }
   .pb-spread-title {
     font-family: var(--font-display);
     font-weight: 380;
@@ -686,74 +714,56 @@ const groups: BookTocGroup[] = tocGroups ?? [
     text-wrap: pretty;
   }
 
-  /* ── prose body (reference / LORE snaps) ─────────────────────────────────
-   * Reference snaps carry markdown prose, a table, or a bullet list rather
-   * than facet cards. Set in the book's prose voice on a readable measure;
-   * a clean bordered table for Origin; brick links and accents. */
-  .pb-prose {
+  /* ── prose leaf (reference / LORE snaps) ─────────────────────────────────
+   * A reference snap reads as an open-book leaf: the chapter title on the
+   * left, the prose on the right, so the snap fills its full-screen canvas
+   * rather than stranding a short body top-left. The reading voice itself
+   * (paragraphs, table, lists, links) is the shared `.book-prose` (book.css);
+   * this only lays the two columns out. Stacks to one column on narrow. */
+  .pb-leaf {
     margin-top: 30px;
-    max-width: 720px;
-    font-family: var(--font-prose);
-    font-size: 16px;
-    line-height: 1.6;
-    color: var(--color-ink-soft);
-    text-wrap: pretty;
   }
-  .pb-prose :global(p) {
-    margin: 0 0 14px;
+  @media (min-width: 861px) {
+    .pb-leaf {
+      display: grid;
+      grid-template-columns: minmax(240px, 0.85fr) 1.5fr;
+      gap: 56px;
+      align-items: start;
+    }
   }
-  .pb-prose :global(p:last-child) {
-    margin-bottom: 0;
+  .pb-leaf-head {
+    /* a touch of optical lead so the chapter title sits with the prose */
+    padding-top: 4px;
   }
-  .pb-prose :global(strong) {
-    font-weight: 600;
+  .pb-leaf-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 380;
+    font-size: 44px;
+    line-height: 0.98;
+    letter-spacing: -0.02em;
     color: var(--color-ink);
+    text-wrap: balance;
   }
-  .pb-prose :global(em) {
-    font-style: italic;
+  @media (min-width: 641px) {
+    .pb-leaf-title {
+      font-size: 56px;
+    }
   }
-  .pb-prose :global(code) {
-    font-family: var(--font-mono);
-    font-size: 0.85em;
-    color: var(--color-ink);
-  }
-  .pb-prose :global(a) {
-    color: var(--color-ink);
-    text-decoration: none;
-    border-bottom: 1px solid var(--color-rule);
-    transition: color 0.12s;
-  }
-  .pb-prose :global(a:hover) {
+  .pb-leaf-title em {
     color: var(--color-brick);
-    border-bottom-color: var(--color-brick);
+    font-style: normal;
   }
-  .pb-prose :global(ul) {
-    margin: 0 0 14px;
-    padding-left: 1.25em;
+  .pb-leaf-head .pb-spread-sub {
+    margin-top: 16px;
   }
-  .pb-prose :global(li) {
-    margin: 0 0 6px;
+  .pb-leaf-body {
+    max-width: 640px;
   }
-  .pb-prose :global(table) {
-    width: 100%;
-    margin: 0 0 14px;
-    border-collapse: collapse;
-    font-size: 15px;
-  }
-  .pb-prose :global(th),
-  .pb-prose :global(td) {
-    padding: 8px 14px;
-    text-align: left;
-    border: 1px solid var(--color-rule-soft);
-    vertical-align: top;
-  }
-  .pb-prose :global(th) {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--color-ink-mute);
-    background: var(--color-paper-warm);
+  @media (max-width: 860px) {
+    .pb-leaf-body {
+      margin-top: 22px;
+    }
   }
 
   .pb-spread-rule {
@@ -772,25 +782,9 @@ const groups: BookTocGroup[] = tocGroups ?? [
     text-wrap: pretty;
   }
 
-  /* click-through CTA at the foot of a spread (enriched-by engine card ->
-   * its full Enginebook). Mirrors the cover CTA. */
-  .pb-spread-cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 12px;
-    margin-top: 26px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--color-ink);
-    text-decoration: none;
-    border-bottom: 1px solid var(--color-brick);
-    padding-bottom: 4px;
-  }
-  .pb-spread-cta:hover {
-    color: var(--color-brick);
-  }
+  /* The spread's click-through CTA (enriched-by engine card -> its
+   * Enginebook) now sits in the title row and uses the shared `.book-cta`
+   * (see book.css); no foot variant. */
 
   /* draft stub: spec exists in the spine but hasn't been authored yet */
   .pb-spread--draft .pb-spread-title {
