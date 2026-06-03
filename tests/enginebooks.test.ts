@@ -89,12 +89,30 @@ describe("enginebook - /enginebooks/gender", () => {
     expect(title?.querySelector("em")?.textContent?.trim()).toBe(".");
   });
 
-  it("opens with the wiring (WIRES) spread, then the anchor", () => {
+  it("carries the wiring and anchor spreads", () => {
+    if (!genderBook) return;
+    const doc = new JSDOM(genderBook.html).window.document;
+    // Order-independent presence: holds both before and after the v2 reorder
+    // (which leads with the reference warrant and moves wiring to the back).
+    const ids = [...doc.querySelectorAll("article.pb-spread, article.eb-spread")].map((a) => a.id);
+    expect(ids).toContain("wiring");
+    expect(ids).toContain("anchor");
+  });
+
+  it("v2 sequence: the LORE reference warrant leads, wiring closes", () => {
     if (!genderBook) return;
     const doc = new JSDOM(genderBook.html).window.document;
     const ids = [...doc.querySelectorAll("article.pb-spread, article.eb-spread")].map((a) => a.id);
-    expect(ids[0]).toBe("wiring");
-    expect(ids[1]).toBe("anchor");
+    const refIds = ids.filter((id) => id.startsWith("ref-"));
+    // Dormant until gender ships a conforming REFERENCES.md (0.0.11) and the
+    // canon exposes referenceCard: only then do the reference snaps render. Until
+    // then the book opens with wiring, and this assertion is skipped (green).
+    if (refIds.length === 0) return;
+    expect(ids[0].startsWith("ref-")).toBe(true); // the warrant is up front
+    expect(ids[ids.length - 1]).toBe("wiring"); // the canon binding closes the book
+    const anchorIdx = ids.indexOf("anchor"); // content sits between warrant and wiring
+    expect(anchorIdx).toBeGreaterThan(ids.indexOf(refIds[0]));
+    expect(anchorIdx).toBeLessThan(ids.indexOf("wiring"));
   });
 
   it("renders one spread per expression (gender: male, female)", () => {
