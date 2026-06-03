@@ -9,3 +9,5 @@ coverage/
 .vscode/
 .env
 .env.local
+*.tgz
+*.tar.gz
