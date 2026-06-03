@@ -1,7 +1,8 @@
 ---
 import BaseLayout from "../../../../layouts/BaseLayout.astro";
 import Book from "../../../../components/Book.astro";
-import type { BookSpread } from "../../../../lib/book";
+import type { BookSpread, BookFacet } from "../../../../lib/book";
+import { rewriteMemberLinks } from "../../../../lib/book";
 import { loadEngines } from "../../../../lib/load-engines";
 import { loadEngineBook, type EngineBook } from "../../../../lib/load-engine-content";
 import { parseEngineSpec } from "../../../../lib/parse-engine-spec";
@@ -20,21 +21,26 @@ const { book } = Astro.props as { book: EngineBook };
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const md = new MarkdownIt({ html: false, breaks: false, linkify: false });
 
-// The Encoding chapter links each source to the member FILE it constrains
-// (e.g. [gender](position_gender.md)). Those files are not pages -- they are
-// the content snaps further down this same book. Rewrite member-file link
-// targets to the in-page anchors so the warrant hands into the content (and so
-// the build's internal-link check resolves them): anchor -> #anchor, each
-// expression -> #<key>, matching the spread slugs below.
+// The reference warrant AND the facet cards link each source to the member
+// FILE it constrains (e.g. [gender](position_gender.md)). Those files are not
+// pages -- they are the content snaps further down this same book. Map each
+// member file to its in-page anchor (anchor -> #anchor, each expression ->
+// #<key>, matching the spread slugs below); rewriteMemberLinks (the shared
+// book capability) does the rewrite so the build's internal-link check passes
+// and the links actually work.
 const fileAnchor = new Map<string, string>([
   [book.anchor.file, "anchor"],
   ...book.expressions.map((e) => [e.file, e.key] as [string, string]),
 ]);
-const mdRef = (text: string) => {
-  let t = text;
-  for (const [file, slug] of fileAnchor) t = t.split(`](${file})`).join(`](#${slug})`);
-  return md.render(t);
-};
+// Block-level prose for the reference (LORE) snaps: rewrite links, then render.
+const mdRef = (text: string) => md.render(rewriteMemberLinks(text, fileAnchor));
+// Facet card body: same link rewrite, rendered INLINE (no wrapping <p>) so it
+// nests cleanly in the card and so literal markdown (e.g. the "Has" card's
+// [gender](position_gender.md)) becomes a working in-page link.
+const facetLinks = (f: BookFacet): BookFacet => ({
+  ...f,
+  bodyHtml: md.renderInline(rewriteMemberLinks(f.body, fileAnchor)),
+});
 
 // A reference snap's slug: lowercase, non-alphanumerics -> "-", collapsed and
 // trimmed, prefixed "ref-" so it stays anchor-safe and unique across chapters
@@ -113,7 +119,7 @@ spreads.push({
   status: `anchor · ${book.type ?? "?"}`,
   title: cap(book.id),
   subtitle: anchor.subtitle ?? "the anchor",
-  facets: anchor.facets,
+  facets: anchor.facets.map(facetLinks),
   coda: null,
 });
 
@@ -127,7 +133,7 @@ for (const expr of book.expressions) {
     status: "expression",
     title: cap(expr.key),
     subtitle: parsed.subtitle ?? "expression",
-    facets: parsed.facets,
+    facets: parsed.facets.map(facetLinks),
     coda: null,
   });
 }
