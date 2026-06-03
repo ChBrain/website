@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "@chbrain/khai-arch": "^0.1.0",
-    "@chbrain/khai-engine-gender": "^0.0.11",
+    "@chbrain/khai-engine-gender": "^0.1.0",
     "@fontsource-variable/newsreader": "^5.2.10",
     "@fontsource-variable/source-serif-4": "^5.2.9",
     "@fontsource/ibm-plex-mono": "^5.2.7"
