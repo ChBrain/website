@@ -8,8 +8,27 @@ export interface BookFacet {
   letter: string;
   /** the full facet name, e.g. "Place" or "Has" */
   name: string;
-  /** the body prose */
+  /** the body prose (plain text) */
   body: string;
+  /** optional pre-rendered markdown -> HTML body, drawn in place of `body`.
+   *  Lets a facet carry resolved member-file links (e.g. the engine cards'
+   *  [gender](position_gender.md) -> #anchor) instead of literal markdown. */
+  bodyHtml?: string | null;
+}
+
+/**
+ * Rewrite member-FILE link targets to in-page anchors — a shared book
+ * capability. The engine warrant and cards link a source to the member file
+ * it constrains (e.g. `[gender](position_gender.md)`), but those files are not
+ * pages: they are snaps further down the same book. Given a map of
+ * file -> slug, rewrite `](file)` to `](#slug)` so every book resolves its
+ * cross-references the same way (and the build's internal-link check passes).
+ * Operates on markdown text, before it is rendered to HTML.
+ */
+export function rewriteMemberLinks(markdown: string, fileToSlug: Map<string, string>): string {
+  let out = markdown;
+  for (const [file, slug] of fileToSlug) out = out.split(`](${file})`).join(`](#${slug})`);
+  return out;
 }
 
 /** One spread (snap-stop) in the book. */

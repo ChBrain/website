@@ -1,0 +1,141 @@
+/* book.css — the shared khaibook typesetting.
+ *
+ * ONE book design language, consumed by every surface (Playbook, Enginebook,
+ * CVI, Privacy) so the prose voice, the numbered section head, the link, and
+ * the "open" CTA are defined exactly ONCE. Before this file each page (and the
+ * Book chassis) re-inlined its own copy — four drifting implementations of the
+ * same concept. Now they all reach for the same `.book-*` classes.
+ *
+ * Imported globally via BaseLayout; every class is plain (unscoped) so any
+ * page or component can opt in. Pulls only from tokens.css — no raw values.
+ */
+
+/* ── the link ────────────────────────────────────────────────────────────
+ * One underlined, brick-on-hover link, everywhere a book renders prose or a
+ * member-file cross-reference (replaces `.cvi a`, `.privacy a`, and the old
+ * scoped `.pb-prose a`). */
+.book-link,
+.book-prose a,
+.pb-facet-body a {
+  color: var(--color-ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--color-rule);
+  transition:
+    color 0.12s,
+    border-color 0.12s;
+}
+.book-link:hover,
+.book-prose a:hover,
+.pb-facet-body a:hover {
+  color: var(--color-brick);
+  border-bottom-color: var(--color-brick);
+}
+
+/* ── the "open" CTA ────────────────────────────────────────────────────────
+ * Mono, uppercase, brick underline. The book's single call-to-action — the
+ * cover's "open the book", a spread's "open the enginebook" — one element. */
+.book-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--color-brick);
+  padding-bottom: 4px;
+  white-space: nowrap;
+  transition: color 0.12s;
+}
+.book-cta:hover {
+  color: var(--color-brick);
+}
+
+/* ── the numbered section head ─────────────────────────────────────────────
+ * A mono ordinal hung beside a serif heading, baseline-aligned. The document
+ * pages (CVI, Privacy) compose their sections from this; replaces `.cvi-n` /
+ * `.cvi-h2`, `.p-n` / `.p-h2`. */
+.book-section {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+.book-secno {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: var(--color-brick);
+}
+.book-h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 420;
+  font-size: 29px;
+  line-height: 1.15;
+  letter-spacing: -0.005em;
+  color: var(--color-ink);
+}
+
+/* ── the reading voice ─────────────────────────────────────────────────────
+ * The book's prose on a comfortable measure: paragraphs, emphasis, inline
+ * code, lists, and the bordered table (LORE's Origin). Used by reference snaps
+ * in the Book chassis and by the document pages alike. */
+.book-prose {
+  font-family: var(--font-prose);
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--color-ink-soft);
+  text-wrap: pretty;
+}
+.book-prose > :first-child {
+  margin-top: 0;
+}
+.book-prose > :last-child {
+  margin-bottom: 0;
+}
+.book-prose p {
+  margin: 0 0 1em;
+}
+.book-prose strong {
+  font-weight: 600;
+  color: var(--color-ink);
+}
+.book-prose em {
+  font-style: italic;
+}
+.book-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  color: var(--color-ink);
+}
+.book-prose ul {
+  margin: 0 0 1em;
+  padding-left: 1.25em;
+}
+.book-prose li {
+  margin: 0 0 0.5em;
+}
+.book-prose table {
+  width: 100%;
+  margin: 0 0 1em;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+.book-prose th,
+.book-prose td {
+  padding: 8px 14px;
+  text-align: left;
+  border: 1px solid var(--color-rule-soft);
+  vertical-align: top;
+}
+.book-prose th {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-mute);
+  background: var(--color-paper-warm);
+}
