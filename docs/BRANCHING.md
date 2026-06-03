@@ -39,14 +39,14 @@ layer; the gates (CI, hooks, this guard config) are governance.
 
 ## Lanes
 
-| Branch pattern                                  | Layer        | May touch                                                                       |
-| ----------------------------------------------- | ------------ | ------------------------------------------------------------------------------- |
+| Branch pattern                                  | Layer        | May touch                                                                            |
+| ----------------------------------------------- | ------------ | ------------------------------------------------------------------------------------ |
 | `chassis/<change>`                              | architecture | `src/components/**`, `src/lib/**`, `src/layouts/**`, `src/styles/**`, `src/marks/**` |
-| `governance/<change>`                           | governance   | `.github/**`, `.husky/**`, `khai-guard.config.json`                             |
-| `surface/<name>/<change>`                       | solution     | `src/pages/**/<name>/**` (the `<name>` segment binds to the surface dir)         |
-| `surface/architecture/<change>`                 | solution     | the loose canon pages (see "Loose canon pages" below)                            |
-| `repo/<change>`                                 | infra        | only **unowned** paths (root configs, `README.md`, `docs/`, ...); owns nothing  |
-| `chore/<change>` `fix/<change>` `docs/<change>` | general      | only **unowned** paths; owns nothing                                            |
+| `governance/<change>`                           | governance   | `.github/**`, `.husky/**`, `khai-guard.config.json`                                  |
+| `surface/<name>/<change>`                       | solution     | `src/pages/**/<name>/**` (the `<name>` segment binds to the surface dir)             |
+| `surface/architecture/<change>`                 | solution     | the loose canon pages (see "Loose canon pages" below)                                |
+| `repo/<change>`                                 | infra        | only **unowned** paths (root configs, `README.md`, `docs/`, ...); owns nothing       |
+| `chore/<change>` `fix/<change>` `docs/<change>` | general      | only **unowned** paths; owns nothing                                                 |
 
 `<change>` is a free kebab-case topic. The layer is derived from the prefix.
 
