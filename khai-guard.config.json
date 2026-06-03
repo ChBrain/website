@@ -19,7 +19,7 @@
       {
         "pattern": "governance/*",
         "layer": "governance",
-        "allow": [".github/**", ".husky/**", "khai-guard.config.json"]
+        "allow": [".github/**", ".husky/**", "khai-guard.config.json", "tests/**"]
       },
       {
         "pattern": "surface/architecture/*",
