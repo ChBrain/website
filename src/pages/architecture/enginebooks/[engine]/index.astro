@@ -20,6 +20,22 @@ const { book } = Astro.props as { book: EngineBook };
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const md = new MarkdownIt({ html: false, breaks: false, linkify: false });
 
+// The Encoding chapter links each source to the member FILE it constrains
+// (e.g. [gender](position_gender.md)). Those files are not pages -- they are
+// the content snaps further down this same book. Rewrite member-file link
+// targets to the in-page anchors so the warrant hands into the content (and so
+// the build's internal-link check resolves them): anchor -> #anchor, each
+// expression -> #<key>, matching the spread slugs below.
+const fileAnchor = new Map<string, string>([
+  [book.anchor.file, "anchor"],
+  ...book.expressions.map((e) => [e.file, e.key] as [string, string]),
+]);
+const mdRef = (text: string) => {
+  let t = text;
+  for (const [file, slug] of fileAnchor) t = t.split(`](${file})`).join(`](#${slug})`);
+  return md.render(t);
+};
+
 // A reference snap's slug: lowercase, non-alphanumerics -> "-", collapsed and
 // trimmed, prefixed "ref-" so it stays anchor-safe and unique across chapters
 // and subchapters (e.g. "ref-origin", "ref-restrictions-intersectionality").
@@ -59,7 +75,7 @@ if (book.references) {
         status: refs.mnemonic,
         title: chapter,
         facets: [],
-        bodyHtml: md.render(section.body),
+        bodyHtml: mdRef(section.body),
         coda: null,
       });
     } else {
@@ -74,7 +90,7 @@ if (book.references) {
           status: chapter,
           title: sub.name,
           facets: [],
-          bodyHtml: md.render(lead + sub.body),
+          bodyHtml: mdRef(lead + sub.body),
           coda: null,
         });
       });
@@ -84,7 +100,7 @@ if (book.references) {
   // snap, appended to its prose body.
   if (refs.coda && spreads.length > firstRefIdx) {
     const last = spreads[spreads.length - 1];
-    last.bodyHtml = (last.bodyHtml ?? "") + md.render(refs.coda);
+    last.bodyHtml = (last.bodyHtml ?? "") + mdRef(refs.coda);
   }
 }
 
