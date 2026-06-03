@@ -41,6 +41,10 @@ export interface BookSpread {
   groupLabel: string;
   /** the status badge on the right (e.g. "published", a mnemonic, "engine") */
   status: string;
+  /** optional pre-rendered HTML for the status corner, drawn in place of
+   *  `status` -- lets the corner carry a link (e.g. an engine spread's parent
+   *  Taxonomy, linked to the anchor snap) instead of plain text. */
+  statusHtml?: string | null;
   /** the spread title (brick-dot is appended by the chassis) */
   title: string;
   /** optional italic subtitle under the title */
