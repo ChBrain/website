@@ -4,6 +4,12 @@
 # KHAI-Guard at pre-push, where it sees the whole PR range rather than a
 # single commit. See khai-guard.config.json for this repo's buckets.
 
+# Guard: reject any staged tarballs (should never be committed)
+if git diff --cached --name-only | grep -E '\.(tgz|tar\.gz)$'; then
+  echo "❌ Error: Tarball files (.tgz/.tar.gz) should not be committed. Use a registry instead."
+  exit 1
+fi
+
 # Prettier enforcement: mirrors CI's format:check.
 # What passes here passes CI; nothing slips through.
 if ! npm run --silent format:check; then
