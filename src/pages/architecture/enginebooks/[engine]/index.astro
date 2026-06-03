@@ -5,6 +5,7 @@ import type { BookSpread } from "../../../../lib/book";
 import { loadEngines } from "../../../../lib/load-engines";
 import { loadEngineBook, type EngineBook } from "../../../../lib/load-engine-content";
 import { parseEngineSpec } from "../../../../lib/parse-engine-spec";
+import MarkdownIt from "markdown-it";
 
 // One static path per installed engine (today: just gender). The canon never
 // names engines; loadEngines() discovers them from node_modules.
@@ -17,30 +18,91 @@ export async function getStaticPaths() {
 
 const { book } = Astro.props as { book: EngineBook };
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const md = new MarkdownIt({ html: false, breaks: false, linkify: false });
+
+// The Encoding chapter links each source to the member FILE it constrains
+// (e.g. [gender](position_gender.md)). Those files are not pages -- they are
+// the content snaps further down this same book. Rewrite member-file link
+// targets to the in-page anchors so the warrant hands into the content (and so
+// the build's internal-link check resolves them): anchor -> #anchor, each
+// expression -> #<key>, matching the spread slugs below.
+const fileAnchor = new Map<string, string>([
+  [book.anchor.file, "anchor"],
+  ...book.expressions.map((e) => [e.file, e.key] as [string, string]),
+]);
+const mdRef = (text: string) => {
+  let t = text;
+  for (const [file, slug] of fileAnchor) t = t.split(`](${file})`).join(`](#${slug})`);
+  return md.render(t);
+};
+
+// A reference snap's slug: lowercase, non-alphanumerics -> "-", collapsed and
+// trimmed, prefixed "ref-" so it stays anchor-safe and unique across chapters
+// and subchapters (e.g. "ref-origin", "ref-restrictions-intersectionality").
+const refSlug = (s: string) =>
+  "ref-" +
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
 
 // An Enginebook is the same book as the Playbook -- same chassis (Book.astro),
-// only the spreads differ. We feed it: the WIRES card the canon projects, the
-// anchor the engine wires at, and one spread per expression hung beneath it.
+// only the spreads differ. The v2 sequence leads with the LORE reference
+// warrant (cover -> reference -> anchor -> expressions), then closes with the
+// wiring card: the canon binding sits LAST, after the content it warrants.
 // Engine files parse with parseEngineSpec (position/instance format), NOT the
 // canon parseSpec; their substantive H2 sections become the facet cards.
 const spreads: BookSpread[] = [];
 const n = () => String(spreads.length).padStart(2, "0");
 
-// 1. Wiring: the WIRES card the canon projects from the manifest.
-spreads.push({
-  slug: "wiring",
-  n: n(),
-  groupLabel: "wiring",
-  status: book.card.mnemonic,
-  title: "Wiring",
-  subtitle: "how the engine binds to the canon",
-  facets: book.card.chapters.map((name) => ({
-    letter: name.charAt(0),
-    name,
-    body: book.card.sections[name],
-  })),
-  coda: null,
-});
+// 1. Reference: the LORE warrant, one snap per chapter -- or per subchapter so
+//    a heavy chapter (Restrictions) paginates. Skipped when the engine ships
+//    no conforming REFERENCES.md.
+if (book.references) {
+  const refs = book.references;
+  // The reference snaps lead the book, so we push straight into `spreads` and
+  // each n() reads the correct, final ordinal at push time.
+  const firstRefIdx = spreads.length;
+  for (const chapter of refs.chapters) {
+    const section = refs.sections[chapter];
+    if (section.subchapters.length === 0) {
+      // Body-only chapter: one snap carrying its prose (or table / list).
+      spreads.push({
+        slug: refSlug(chapter),
+        n: n(),
+        groupLabel: "reference",
+        status: refs.mnemonic,
+        title: chapter,
+        facets: [],
+        bodyHtml: mdRef(section.body),
+        coda: null,
+      });
+    } else {
+      // Subchaptered chapter: one snap per subchapter. The chapter intro
+      // folds into the first subchapter's snap so no prose is dropped.
+      section.subchapters.forEach((sub, i) => {
+        const lead = i === 0 && section.body ? section.body + "\n\n" : "";
+        spreads.push({
+          slug: refSlug(chapter + "-" + sub.name),
+          n: n(),
+          groupLabel: "reference",
+          status: chapter,
+          title: sub.name,
+          facets: [],
+          bodyHtml: mdRef(lead + sub.body),
+          coda: null,
+        });
+      });
+    }
+  }
+  // The warrant's coda (e.g. "_Authored by ..._") tails the last reference
+  // snap, appended to its prose body.
+  if (refs.coda && spreads.length > firstRefIdx) {
+    const last = spreads[spreads.length - 1];
+    last.bodyHtml = (last.bodyHtml ?? "") + mdRef(refs.coda);
+  }
+}
 
 // 2. Anchor: the root the engine wires at.
 const anchor = parseEngineSpec(book.anchor.text);
@@ -70,6 +132,23 @@ for (const expr of book.expressions) {
   });
 }
 
+// 4. Wiring: the WIRES card the canon projects from the manifest. Last in the
+//    v2 sequence -- the binding closes the book, after the content.
+spreads.push({
+  slug: "wiring",
+  n: n(),
+  groupLabel: "wiring",
+  status: book.card.mnemonic,
+  title: "Wiring",
+  subtitle: "how the engine binds to the canon",
+  facets: book.card.chapters.map((name) => ({
+    letter: name.charAt(0),
+    name,
+    body: book.card.sections[name],
+  })),
+  coda: null,
+});
+
 const title = `${cap(book.id)} · Enginebook · kaihacks`;
 ---
 
@@ -86,7 +165,7 @@ const title = `${cap(book.id)} · Enginebook · kaihacks`;
       title: cap(book.id),
       subtitle: book.tagline,
       edition: `khai · ${book.id}`,
-      ctaHref: "#wiring",
+      ctaHref: `#${spreads[0].slug}`,
       ctaLabel: "Open the enginebook →",
       backHref: "../",
       backLabel: "← all enginebooks",

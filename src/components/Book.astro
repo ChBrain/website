@@ -154,6 +154,8 @@ const groups: BookTocGroup[] = tocGroups ?? [
 
           {s.subtitle && <p class="pb-spread-sub">{s.subtitle}</p>}
 
+          {s.written !== false && s.bodyHtml && <div class="pb-prose" set:html={s.bodyHtml} />}
+
           {s.written !== false && s.facets.length > 0 && (
             <div class="pb-facets">
               {s.facets.map((f) => (
@@ -682,6 +684,76 @@ const groups: BookTocGroup[] = tocGroups ?? [
     line-height: 1.5;
     color: var(--color-ink-soft);
     text-wrap: pretty;
+  }
+
+  /* ── prose body (reference / LORE snaps) ─────────────────────────────────
+   * Reference snaps carry markdown prose, a table, or a bullet list rather
+   * than facet cards. Set in the book's prose voice on a readable measure;
+   * a clean bordered table for Origin; brick links and accents. */
+  .pb-prose {
+    margin-top: 30px;
+    max-width: 720px;
+    font-family: var(--font-prose);
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+  .pb-prose :global(p) {
+    margin: 0 0 14px;
+  }
+  .pb-prose :global(p:last-child) {
+    margin-bottom: 0;
+  }
+  .pb-prose :global(strong) {
+    font-weight: 600;
+    color: var(--color-ink);
+  }
+  .pb-prose :global(em) {
+    font-style: italic;
+  }
+  .pb-prose :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    color: var(--color-ink);
+  }
+  .pb-prose :global(a) {
+    color: var(--color-ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-rule);
+    transition: color 0.12s;
+  }
+  .pb-prose :global(a:hover) {
+    color: var(--color-brick);
+    border-bottom-color: var(--color-brick);
+  }
+  .pb-prose :global(ul) {
+    margin: 0 0 14px;
+    padding-left: 1.25em;
+  }
+  .pb-prose :global(li) {
+    margin: 0 0 6px;
+  }
+  .pb-prose :global(table) {
+    width: 100%;
+    margin: 0 0 14px;
+    border-collapse: collapse;
+    font-size: 15px;
+  }
+  .pb-prose :global(th),
+  .pb-prose :global(td) {
+    padding: 8px 14px;
+    text-align: left;
+    border: 1px solid var(--color-rule-soft);
+    vertical-align: top;
+  }
+  .pb-prose :global(th) {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-ink-mute);
+    background: var(--color-paper-warm);
   }
 
   .pb-spread-rule {

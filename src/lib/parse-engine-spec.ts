@@ -18,7 +18,7 @@ import matter from "gray-matter";
  *
  *   # Position: Gender
  *
- *   ## Title
+ *   ## Taxonomy
  *   Gender
  *
  *   ## Owner
@@ -39,13 +39,13 @@ import matter from "gray-matter";
  *
  * There is no `chapters` array. The H1 is the file's heading and is skipped.
  * The substantive H2 sections become the facet cards, EXCLUDING the metadata
- * sections "Title" and "Owner". For the example above the facets are
+ * sections "Taxonomy" and "Owner". For the example above the facets are
  * Has / Orders / Loses / Drives -- their initials spell the mnemonic HOLD.
  * There is no `---` coda in this format, so the coda is always null.
  */
 
 /** Section names that carry file metadata, not substantive facet content. */
-const META_SECTIONS = new Set(["Title", "Owner"]);
+const META_SECTIONS = new Set(["Taxonomy", "Owner"]);
 
 /** One facet card parsed out of an engine file's H2 section. */
 export interface EngineFacet {

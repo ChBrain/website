@@ -28,6 +28,9 @@ export interface BookSpread {
   subtitle?: string | null;
   /** the facet cards (2x2 grid; 4 or 5 lay out correctly) */
   facets: BookFacet[];
+  /** optional pre-rendered markdown -> HTML prose body, drawn where facets
+   *  would go. Reference (LORE) snaps carry prose/tables, not facet cards. */
+  bodyHtml?: string | null;
   /** optional closing paragraph, drawn after a rule */
   coda?: string | null;
   /** authored? false renders the draft stub instead of facets */
