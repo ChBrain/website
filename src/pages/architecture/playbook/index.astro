@@ -87,6 +87,9 @@ for (const group of playbook) {
         coda: null,
         written: true,
         engine: true,
+        // The WIRES card is the teaser; click through to the full Enginebook
+        // (../enginebooks/<id>/ from /architecture/playbook/).
+        deepLink: { href: `../enginebooks/${card.id}/`, label: `Open the ${name} enginebook →` },
       });
       items.push({ slug: card.id, idx: n, n: nStr, name, written: true });
     }

@@ -178,6 +178,12 @@ const groups: BookTocGroup[] = tocGroups ?? [
               <span class="pb-spread-stub-label">coming</span>
             </div>
           )}
+
+          {s.deepLink && (
+            <a class="pb-spread-cta" href={s.deepLink.href}>
+              {s.deepLink.label}
+            </a>
+          )}
         </article>
       ))
     }
@@ -692,6 +698,26 @@ const groups: BookTocGroup[] = tocGroups ?? [
     line-height: 1.55;
     color: var(--color-ink-soft);
     text-wrap: pretty;
+  }
+
+  /* click-through CTA at the foot of a spread (enriched-by engine card ->
+   * its full Enginebook). Mirrors the cover CTA. */
+  .pb-spread-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 26px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-brick);
+    padding-bottom: 4px;
+  }
+  .pb-spread-cta:hover {
+    color: var(--color-brick);
   }
 
   /* draft stub: spec exists in the spine but hasn't been authored yet */
