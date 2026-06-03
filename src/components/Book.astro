@@ -138,16 +138,15 @@ const groups: BookTocGroup[] = tocGroups ?? [
   <main class="pb-spreads">
     {
       spreads.map((s) => {
-        // A prose snap (reference / LORE) carries a body and no facet cards.
-        // It renders as an open-book "leaf": the chapter title on the left,
-        // the prose on the right, so the spread fills the canvas instead of
-        // stranding a short body top-left. Facet spreads keep the full-width
-        // hero title + 2x2 grid.
-        const isProse = s.written !== false && !!s.bodyHtml && s.facets.length === 0;
+        // Every spread is stacked: the numbered running head, then the hero
+        // title on its own line (with the optional "Open" CTA pinned right),
+        // then the body beneath -- a reference/LORE snap renders its prose
+        // full-width, a content snap its 2x2 facet grid. No side-by-side.
+        const proseSnap = s.written !== false && !!s.bodyHtml && s.facets.length === 0;
         return (
           <article
             id={s.slug}
-            class={`pb-spread ${s.written === false ? "pb-spread--draft" : ""} ${s.engine ? "pb-spread--engine" : ""} ${isProse ? "pb-spread--prose" : ""}`}
+            class={`pb-spread ${s.written === false ? "pb-spread--draft" : ""} ${s.engine ? "pb-spread--engine" : ""} ${proseSnap ? "pb-spread--prose" : ""}`}
           >
             <header class="pb-spread-head">
               <span class="pb-spread-no">
@@ -156,61 +155,57 @@ const groups: BookTocGroup[] = tocGroups ?? [
               <span class={`pb-spread-state pb-spread-state--${s.status}`}>{s.status}</span>
             </header>
 
-            {isProse ? (
-              <div class="pb-leaf">
-                <div class="pb-leaf-head">
-                  {/* prettier-ignore */}
-                  <h2 class="pb-leaf-title">{s.title}<em>.</em></h2>
-                  {s.subtitle && <p class="pb-spread-sub">{s.subtitle}</p>}
-                </div>
-                <div class="pb-leaf-body book-prose" set:html={s.bodyHtml} />
+            {/* Title row: the hero title stands on its own line; the optional
+                "Open" CTA sits right, on the title's baseline (the enriched-by
+                card's click-through into its full Enginebook). */}
+            <div class="pb-titlerow">
+              {/* prettier-ignore */}
+              <h2 class="pb-spread-title">{s.title}<em>.</em></h2>
+              {s.deepLink && (
+                <a class="pb-open" href={s.deepLink.href} aria-label={s.deepLink.label}>
+                  Open{" "}
+                  <span class="pb-open-arr" aria-hidden="true">
+                    →
+                  </span>
+                </a>
+              )}
+            </div>
+
+            {s.subtitle && <p class="pb-spread-sub">{s.subtitle}</p>}
+
+            {/* Body: a reference/LORE snap's prose, full-width beneath the
+                title; otherwise the facet grid. */}
+            {s.written !== false && s.bodyHtml && (
+              <div class="pb-prose-body book-prose" set:html={s.bodyHtml} />
+            )}
+
+            {s.written !== false && s.facets.length > 0 && (
+              <div class="pb-facets">
+                {s.facets.map((f) => (
+                  <article class="pb-facet">
+                    {/* prettier-ignore */}
+                    <h3 class="pb-facet-name"><span class="pb-facet-initial">{f.letter}</span>{f.name.slice(1)}</h3>
+                    {f.bodyHtml ? (
+                      <p class="pb-facet-body" set:html={f.bodyHtml} />
+                    ) : (
+                      <p class="pb-facet-body">{f.body}</p>
+                    )}
+                  </article>
+                ))}
               </div>
-            ) : (
-              <Fragment>
-                {/* Title row: the hero title left, the optional "open" CTA
-                    pinned right on the same baseline (the enriched-by card's
-                    click-through into its full Enginebook). */}
-                <div class="pb-titlerow">
-                  {/* prettier-ignore */}
-                  <h2 class="pb-spread-title">{s.title}<em>.</em></h2>
-                  {s.deepLink && (
-                    <a class="book-cta pb-titlerow-cta" href={s.deepLink.href}>
-                      {s.deepLink.label}
-                    </a>
-                  )}
-                </div>
+            )}
 
-                {s.subtitle && <p class="pb-spread-sub">{s.subtitle}</p>}
+            {s.written !== false && s.coda && (
+              <>
+                <span class="pb-spread-rule" aria-hidden="true" />
+                <p class="pb-spread-coda">{s.coda}</p>
+              </>
+            )}
 
-                {s.written !== false && s.facets.length > 0 && (
-                  <div class="pb-facets">
-                    {s.facets.map((f) => (
-                      <article class="pb-facet">
-                        {/* prettier-ignore */}
-                        <h3 class="pb-facet-name"><span class="pb-facet-initial">{f.letter}</span>{f.name.slice(1)}</h3>
-                        {f.bodyHtml ? (
-                          <p class="pb-facet-body" set:html={f.bodyHtml} />
-                        ) : (
-                          <p class="pb-facet-body">{f.body}</p>
-                        )}
-                      </article>
-                    ))}
-                  </div>
-                )}
-
-                {s.written !== false && s.coda && (
-                  <>
-                    <span class="pb-spread-rule" aria-hidden="true" />
-                    <p class="pb-spread-coda">{s.coda}</p>
-                  </>
-                )}
-
-                {s.written === false && (
-                  <div class="pb-spread-stub">
-                    <span class="pb-spread-stub-label">coming</span>
-                  </div>
-                )}
-              </Fragment>
+            {s.written === false && (
+              <div class="pb-spread-stub">
+                <span class="pb-spread-stub-label">coming</span>
+              </div>
             )}
           </article>
         );
@@ -633,8 +628,39 @@ const groups: BookTocGroup[] = tocGroups ?? [
   .pb-titlerow .pb-spread-title {
     margin: 0;
   }
-  .pb-titlerow-cta {
+  /* The "Open" CTA: a smaller display sibling of the hero title -- ink, no
+   * brick dot, brick on hover, the arrow nudging right. Larger than the
+   * running head, well below the title (CVI: one resting accent per surface,
+   * already spent on the title dot; the CTA earns brick on interaction). */
+  .pb-open {
     flex: 0 0 auto;
+    font-family: var(--font-display);
+    font-weight: 380;
+    font-size: 30px;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: var(--color-ink);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.14s;
+  }
+  @media (min-width: 641px) {
+    .pb-open {
+      font-size: 40px;
+    }
+  }
+  .pb-open:hover {
+    color: var(--color-brick);
+  }
+  .pb-open-arr {
+    display: inline-block;
+    transition:
+      transform 0.14s,
+      color 0.14s;
+  }
+  .pb-open:hover .pb-open-arr {
+    transform: translateX(5px);
+    color: var(--color-brick);
   }
   .pb-spread-title {
     font-family: var(--font-display);
@@ -714,56 +740,15 @@ const groups: BookTocGroup[] = tocGroups ?? [
     text-wrap: pretty;
   }
 
-  /* ── prose leaf (reference / LORE snaps) ─────────────────────────────────
-   * A reference snap reads as an open-book leaf: the chapter title on the
-   * left, the prose on the right, so the snap fills its full-screen canvas
-   * rather than stranding a short body top-left. The reading voice itself
-   * (paragraphs, table, lists, links) is the shared `.book-prose` (book.css);
-   * this only lays the two columns out. Stacks to one column on narrow. */
-  .pb-leaf {
+  /* ── prose body (reference / LORE snaps) ─────────────────────────────────
+   * A reference snap is stacked like every other: the hero title stands on
+   * its own line above (the running head + .pb-titlerow), and the prose runs
+   * full-width beneath it on a generous measure -- not a side column. The
+   * reading voice itself (paragraphs, table, lists, links) is the shared
+   * `.book-prose` (book.css); this only sets the body's lead and measure. */
+  .pb-prose-body {
     margin-top: 30px;
-  }
-  @media (min-width: 861px) {
-    .pb-leaf {
-      display: grid;
-      grid-template-columns: minmax(240px, 0.85fr) 1.5fr;
-      gap: 56px;
-      align-items: start;
-    }
-  }
-  .pb-leaf-head {
-    /* a touch of optical lead so the chapter title sits with the prose */
-    padding-top: 4px;
-  }
-  .pb-leaf-title {
-    margin: 0;
-    font-family: var(--font-display);
-    font-weight: 380;
-    font-size: 44px;
-    line-height: 0.98;
-    letter-spacing: -0.02em;
-    color: var(--color-ink);
-    text-wrap: balance;
-  }
-  @media (min-width: 641px) {
-    .pb-leaf-title {
-      font-size: 56px;
-    }
-  }
-  .pb-leaf-title em {
-    color: var(--color-brick);
-    font-style: normal;
-  }
-  .pb-leaf-head .pb-spread-sub {
-    margin-top: 16px;
-  }
-  .pb-leaf-body {
-    max-width: 640px;
-  }
-  @media (max-width: 860px) {
-    .pb-leaf-body {
-      margin-top: 22px;
-    }
+    max-width: 880px;
   }
 
   .pb-spread-rule {
