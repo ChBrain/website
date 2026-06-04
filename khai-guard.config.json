@@ -62,6 +62,11 @@
         "allow": ["src/pages/main/contact/**"]
       },
       {
+        "pattern": "deps/*",
+        "layer": "deps",
+        "allow": ["**/package.json", "**/package-lock.json"]
+      },
+      {
         "pattern": "dependabot/*",
         "layer": "deps",
         "allow": ["**/package.json", "**/package-lock.json", ".github/workflows/**"]
