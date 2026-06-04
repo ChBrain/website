@@ -146,7 +146,7 @@ const groups: BookTocGroup[] = tocGroups ?? [
         return (
           <article
             id={s.slug}
-            class={`pb-spread ${s.written === false ? "pb-spread--draft" : ""} ${s.engine ? "pb-spread--engine" : ""} ${proseSnap ? "pb-spread--prose" : ""}`}
+            class={`pb-spread ${s.written === false ? "pb-spread--draft" : ""} ${s.engine ? "pb-spread--engine" : ""} ${proseSnap ? "pb-spread--prose" : ""} ${s.download ? "pb-spread--download" : ""}`}
           >
             <header class="pb-spread-head">
               <span class="pb-spread-no">
@@ -196,6 +196,32 @@ const groups: BookTocGroup[] = tocGroups ?? [
                     )}
                   </article>
                 ))}
+              </div>
+            )}
+
+            {/* Download back-cover: the built zip, with the provenance a reader
+                needs to trust it (byte size + the content-hash the packer
+                stamped). The artifact is site-served, not an npm tarball. */}
+            {s.written !== false && s.download && (
+              <div class="pb-download">
+                <a
+                  class="book-cta pb-download-cta"
+                  href={s.download.href}
+                  download={s.download.filename}
+                >
+                  Download {s.download.filename}
+                </a>
+                <dl class="pb-download-meta">
+                  <div class="pb-download-row">
+                    <dt>size</dt>
+                    <dd>{s.download.size}</dd>
+                  </div>
+                  <div class="pb-download-row">
+                    <dt>sha256</dt>
+                    <dd class="pb-download-hash">{s.download.sha256}</dd>
+                  </div>
+                </dl>
+                {s.download.note && <p class="pb-download-note">{s.download.note}</p>}
               </div>
             )}
 
@@ -764,6 +790,57 @@ const groups: BookTocGroup[] = tocGroups ?? [
   .pb-prose-body {
     margin-top: 30px;
     max-width: 880px;
+  }
+
+  /* ── download back-cover ─────────────────────────────────────────────────
+   * The last snap of a book that ships an artifact (the engine zip, the skill
+   * zip). The brick CTA leads; the provenance (size + content-hash) sits under
+   * it in mono, quiet — there to be trusted, not read aloud. */
+  .pb-download {
+    margin-top: 34px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 22px;
+  }
+  .pb-download-meta {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .pb-download-row {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+  .pb-download-row dt {
+    flex: 0 0 64px;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-ink-mute);
+  }
+  .pb-download-row dd {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-ink-soft);
+  }
+  /* The hash is long; let it wrap on its own rather than push the row wide. */
+  .pb-download-hash {
+    word-break: break-all;
+    max-width: 52ch;
+  }
+  .pb-download-note {
+    margin: 0;
+    max-width: 720px;
+    font-family: var(--font-prose);
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
   }
 
   .pb-spread-rule {
