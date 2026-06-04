@@ -24,7 +24,9 @@ const SHARED = [
 // Shared directories copied recursively (e.g. RFC 9116 security.txt). On the
 // apex these resolve via the .htaccess rewrite (kaihacks.ai/.well-known/... ->
 // /main/.well-known/...); on the subdomains they're served from their own root.
-const SHARED_DIRS = [".well-known"];
+// downloads/ holds engine and skill zips built by the prebuild script; the
+// exists() guard below makes this a no-op when khai-pack is not installed.
+const SHARED_DIRS = [".well-known", "downloads"];
 
 async function exists(path) {
   try {

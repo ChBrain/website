@@ -1,15 +1,14 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
-import Book from "../../../components/Book.astro";
-import type { BookSpread, BookCover } from "../../../lib/book";
+import SiteHeader from "../../../components/SiteHeader.astro";
+import SiteFooter from "../../../components/SiteFooter.astro";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
 // Skill sidecars are generated at prebuild time by scripts/build-downloads.mjs.
-// Each JSON carries: name, slug, title, bodyHtml (the rendered SKILL.md prose),
-// filename, size, sha256 (the download metadata). When the sidecars are absent
-// (CI build, no @chbrain registry) the book renders with no spreads; the build
-// stays green, and the cover shows a graceful empty state.
+// Each JSON carries: name, slug, title, bodyHtml, filename, size, sha256,
+// problem, solution, outcome. When the sidecars are absent (CI build, no
+// @chbrain registry) the catalogue renders an empty state; the build stays green.
 const skillsDir = join(process.cwd(), "public", "downloads", "skills");
 const skills = existsSync(skillsDir)
   ? readdirSync(skillsDir)
@@ -17,71 +16,225 @@ const skills = existsSync(skillsDir)
       .sort()
       .map((f) => JSON.parse(readFileSync(join(skillsDir, f), "utf8")))
   : [];
-
-const spreads: BookSpread[] = [];
-const n = () => String(spreads.length).padStart(2, "0");
-
-for (const skill of skills) {
-  // Content spread: the SKILL.md prose rendered as a prose snap. The
-  // groupLabel "spell" echoes the spellbook metaphor in the running head;
-  // the status corner says "skill" for legibility.
-  spreads.push({
-    slug: skill.slug,
-    n: n(),
-    groupLabel: "spell",
-    status: "skill",
-    title: skill.title,
-    facets: [],
-    bodyHtml: skill.bodyHtml,
-  });
-  // Download spread: the skill's zip, immediately after its content.
-  spreads.push({
-    slug: `download-${skill.slug}`,
-    n: n(),
-    groupLabel: "download",
-    status: "skill",
-    title: "Download",
-    subtitle: `take ${skill.title} into any project`,
-    facets: [],
-    download: {
-      href: `/downloads/skills/${skill.slug}.zip`,
-      filename: skill.filename,
-      size: skill.size,
-      sha256: skill.sha256,
-      note: "A self-contained skill bundle: the skill guide and injected canon templates, ready to drop into any khai project.",
-    },
-  });
-}
-
-const cover: BookCover = {
-  overline: "the practice · a skillbook",
-  title: "Skills",
-  subtitle:
-    skills.length > 0
-      ? `${skills.length} skill${skills.length === 1 ? "" : "s"} in the book`
-      : null,
-  edition: "khai · skills",
-  ctaHref: spreads.length > 0 ? `#${spreads[0].slug}` : "#",
-  ctaLabel: "Open the spellbook →",
-  hint: "or press →",
-  backHref: "../",
-  backLabel: "← architecture",
-};
 ---
 
 <BaseLayout
   title="Skillbook · architecture · kaihacks"
   description="khai skills: self-contained agent skill bundles built from the khai-arch canon, ready to drop into any project."
 >
-  <Book
-    header={{
-      domain: "architecture",
-      tld: ".kaihacks.ai",
-      basePath: "../",
-      location: "skillbook",
-    }}
-    cover={cover}
-    spreads={spreads}
-    tocEyebrow="skillbook"
-  />
+  <div class="arch-page skillbook-catalogue">
+    <SiteHeader domain="architecture" tld=".kaihacks.ai" basePath="../" location="skillbook" />
+
+    <div class="catalogue-header">
+      <h1 class="catalogue-title">Skills</h1>
+      {
+        skills.length > 0 && (
+          <p class="catalogue-count">
+            {skills.length} skill{skills.length === 1 ? "" : "s"}
+          </p>
+        )
+      }
+    </div>
+
+    {
+      skills.length === 0 ? (
+        <p class="catalogue-empty">
+          No skills loaded. Run <code>npm run prebuild</code> on a machine with the GitHub Packages
+          token to generate skill artifacts.
+        </p>
+      ) : (
+        <div class="catalogue-list">
+          {skills.map((skill) => (
+            <section class="skill-row" id={skill.slug}>
+              <h2 class="skill-name">{skill.title}</h2>
+              <div class="card-grid">
+                <div class="card">
+                  <span class="card-label">Problem</span>
+                  <div class="card-body">
+                    {skill.problem ?? <span class="card-placeholder">·</span>}
+                  </div>
+                </div>
+                <div class="card">
+                  <span class="card-label">Solution</span>
+                  <div class="card-body">
+                    {skill.solution ?? <span class="card-placeholder">·</span>}
+                  </div>
+                </div>
+                <div class="card">
+                  <span class="card-label">What you get</span>
+                  <div class="card-body">
+                    {skill.outcome ?? <span class="card-placeholder">·</span>}
+                  </div>
+                </div>
+                <div class="card card--download">
+                  <span class="card-label">Download</span>
+                  <div class="card-body">
+                    <p class="download-filename">{skill.filename}</p>
+                    <p class="download-size">{skill.size}</p>
+                    <a class="download-link" href={`/downloads/skills/${skill.slug}.zip`} download>
+                      Download .zip →
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </section>
+          ))}
+        </div>
+      )
+    }
+
+    <SiteFooter />
+  </div>
 </BaseLayout>
+
+<style>
+  .skillbook-catalogue {
+    padding-bottom: var(--space-9);
+  }
+
+  /* ── catalogue header ───────────────────────────────────────────── */
+  .catalogue-header {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+    margin: var(--space-7) 0 var(--space-6);
+  }
+
+  .catalogue-title {
+    font-family: var(--font-display);
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-regular);
+    color: var(--color-ink);
+    margin: 0;
+    line-height: var(--line-height-tight);
+  }
+
+  .catalogue-count {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    letter-spacing: var(--letter-spacing-loose);
+    text-transform: uppercase;
+    color: var(--color-ink-mute);
+    margin: 0;
+  }
+
+  /* ── empty state ────────────────────────────────────────────────── */
+  .catalogue-empty {
+    font-family: var(--font-prose);
+    font-size: var(--font-size-base);
+    color: var(--color-ink-soft);
+    margin: var(--space-7) 0;
+  }
+
+  .catalogue-empty code {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    color: var(--color-ink);
+  }
+
+  /* ── skill list ─────────────────────────────────────────────────── */
+  .catalogue-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+  }
+
+  /* ── skill row ──────────────────────────────────────────────────── */
+  .skill-row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .skill-name {
+    font-family: var(--font-display);
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-regular);
+    color: var(--color-ink);
+    margin: 0;
+    line-height: var(--line-height-tight);
+  }
+
+  /* ── 4-card grid ────────────────────────────────────────────────── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-3);
+  }
+
+  @media (max-width: 860px) {
+    .card-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 540px) {
+    .card-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ── card ───────────────────────────────────────────────────────── */
+  .card {
+    border: 1px solid var(--color-rule);
+    background: var(--color-paper-warm);
+    padding: var(--space-3) var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .card-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: var(--letter-spacing-mono);
+    text-transform: uppercase;
+    color: var(--color-ink-mute);
+    flex-shrink: 0;
+  }
+
+  .card-body {
+    font-family: var(--font-prose);
+    font-size: var(--font-size-sm);
+    color: var(--color-ink-soft);
+    line-height: var(--line-height-loose);
+  }
+
+  .card-placeholder {
+    color: var(--color-rule);
+    font-family: var(--font-mono);
+    font-size: var(--font-size-base);
+  }
+
+  /* ── download card specifics ────────────────────────────────────── */
+  .download-filename {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--color-ink);
+    margin: 0 0 var(--space-1);
+    word-break: break-all;
+  }
+
+  .download-size {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--color-ink-mute);
+    margin: 0 0 var(--space-3);
+  }
+
+  .download-link {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    letter-spacing: var(--letter-spacing-loose);
+    text-transform: uppercase;
+    color: var(--color-brick);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-rule);
+    display: inline-block;
+  }
+
+  .download-link:hover {
+    color: var(--color-ink);
+    border-bottom-color: var(--color-ink);
+  }
+</style>
