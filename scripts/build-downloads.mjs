@@ -115,7 +115,10 @@ function buildSkillDownloads() {
     // Strip the H1: the spread chassis already renders the title; a second
     // heading in bodyHtml would duplicate it.
     const bodyWithoutH1 = content.replace(/^# .+\n+/, "");
-    const bodyHtml = md.render(bodyWithoutH1);
+    // Strip relative .md links — they reference bundle files that aren't pages.
+    // Replace with the link text so prose reads naturally without broken hrefs.
+    const bodyMd = bodyWithoutH1.replace(/\[([^\]]+)\]\((?!https?:\/\/|#)[^)]*\.md\)/g, "$1");
+    const bodyHtml = md.render(bodyMd);
 
     writeFileSync(
       join(outDir, `${r.name}.json`),
