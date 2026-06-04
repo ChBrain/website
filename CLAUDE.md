@@ -40,3 +40,6 @@ deploys. Hand these off **clean**, not as a prose recipe — a second agent
 - **One-off → commands only.** One fenced block, one command per line, **no
   inline comments, no conditionals**. Put "verify" and "on failure" notes as
   plain text _outside_ the block.
+- **Deliver via PR comment.** Post the command block on the PR that needs the
+  work — not as chat output. The PR is the context; the comment is the
+  traceability.
