@@ -193,7 +193,12 @@ if (existsSync(dlSidecar)) {
     subtitle: "the engine, packaged for deployment",
     facets: [],
     download: {
-      href: `/downloads/engines/${book.id}.zip`,
+      // Surface-relative (matches the header basePath): this page is two levels
+      // under the architecture surface root (architecture/enginebooks/<engine>/),
+      // so the engine zip resolves at `../../downloads/...`. An absolute
+      // `/downloads/...` breaks on staging, where the surface is nested under
+      // /architecture/ rather than served from the domain root.
+      href: `../../downloads/engines/${book.id}.zip`,
       filename: dl.filename,
       size: dl.size,
       sha256: dl.sha256,
