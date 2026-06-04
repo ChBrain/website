@@ -42,9 +42,9 @@ layer; the gates (CI, hooks, this guard config) are governance.
 | Branch pattern                                  | Layer        | May touch                                                                            |
 | ----------------------------------------------- | ------------ | ------------------------------------------------------------------------------------ |
 | `chassis/<change>`                              | architecture | `src/components/**`, `src/lib/**`, `src/layouts/**`, `src/styles/**`, `src/marks/**` |
-| `governance/<change>`                           | governance   | `.github/**`, `.husky/**`, `khai-guard.config.json`                                  |
-| `surface/<name>/<change>`                       | solution     | `src/pages/**/<name>/**` (the `<name>` segment binds to the surface dir)             |
-| `surface/architecture/<change>`                 | solution     | the loose canon pages (see "Loose canon pages" below)                                |
+| `governance/<change>`                           | governance   | `.github/**`, `.husky/**`, `khai-guard.config.json`, `tests/**`                      |
+| `surface/<surface>/<change>`                    | solution     | that surface's page dir — one explicit lane per surface (see below)                  |
+| `surface/pages/<change>`                        | solution     | the loose top-level / index / `[slug]` pages                                         |
 | `repo/<change>`                                 | infra        | only **unowned** paths (root configs, `README.md`, `docs/`, ...); owns nothing       |
 | `chore/<change>` `fix/<change>` `docs/<change>` | general      | only **unowned** paths; owns nothing                                                 |
 
@@ -63,34 +63,64 @@ Conversely, a protected lane may **not** stray onto an unowned path: a
 `chassis/` branch that edits `README.md` is rejected and told to use a `repo/`
 or `chore/` branch.
 
-### The solution layer fans out per surface
+### The solution layer is explicit, per surface
 
-There is no single "solution" lane. The solution layer is the set of surfaces
-under `src/pages/`, and each surface is its own lane: `surface/<name>/<change>`.
-The `<name>` branch segment **binds** to the surface directory via the `{name}`
-placeholder in the glob `src/pages/**/{name}/**`. The `**` before `{name}`
-lets the binding resolve a surface wherever it sits in the page tree, so the
-same lane shape covers surfaces nested at different depths:
+There is no single "solution" lane and **no fan-out**. Each surface under
+`src/pages/` is its **own explicit lane** with a literal `allow`:
 
-- `surface/playbook/<change>` binds `src/pages/architecture/playbook/**`
-- `surface/enginebooks/<change>` binds `src/pages/architecture/enginebooks/**`
-- `surface/cultures/<change>` binds `src/pages/cultures/**`
-- `surface/main/<change>` binds `src/pages/main/**`
+| Branch                         | Owns                                                                                        |
+| ------------------------------ | ------------------------------------------------------------------------------------------- |
+| `surface/enginebooks/<change>` | `src/pages/architecture/enginebooks/**`                                                     |
+| `surface/playbook/<change>`    | `src/pages/architecture/playbook/**`                                                        |
+| `surface/cvi/<change>`         | `src/pages/main/cvi/**`                                                                     |
+| `surface/privacy/<change>`     | `src/pages/main/privacy/**`                                                                 |
+| `surface/contact/<change>`     | `src/pages/main/contact/**`                                                                 |
+| `surface/pages/<change>`       | the loose pages: `src/pages/*.astro`, `src/pages/*/*.astro` (apex, group indexes, `[slug]`) |
 
-A mismatch (a `surface/cultures/...` branch editing `src/pages/main/**`) is
-rejected. This keeps surfaces independent and lets them land in parallel without
-one surface's branch silently reaching into another.
+A **new surface must be added here first.** Until its lane exists, the branch
+name `surface/<new>/...` matches no lane and its pages are unowned, so the
+change is rejected. Creating a surface is therefore a governance act
+(architecture → governance → solution), not a side effect of a feature branch.
 
-### Loose canon pages
+> **Why explicit, not a `surface/*/*` fan-out?** A fan-out lane with a glob like
+> `src/pages/**/{name}/**` cannot be made to work here. The guard recovers the
+> bound `{name}` from a path by slicing at the **literal length** of the glob's
+> prefix; a `**` in that prefix makes the slice land on the wrong segment, so
+> every surface page resolves as **unowned**. It was latent under advisory mode
+> and only surfaced once the gate was enforced. Explicit literal lanes are
+> unambiguous, so the guard owns each page correctly. Bracketed dynamic routes
+> (`[engine]`, `[slug]`) are fine: they sit inside a `**` or are matched by `*`,
+> never written as a literal `[...]` glob (which picomatch would read as a
+> character class).
 
-A few canon pages live directly in the page tree rather than inside a surface
-`<name>/` directory: the apex `src/pages/index.astro`, the canon index
-`src/pages/architecture/index.astro`, and the canon type page
-`src/pages/architecture/[slug].astro`. Rather than leave these unowned (where any
-general lane could touch them), they are a real surface: the explicit
-`surface/architecture/<change>` lane owns exactly those three files. Because that
-lane is more specific than the generic `surface/*/*` lane, it is listed first in
-`khai-guard.config.json` so the classifier matches it before the fan-out lane.
+### What this isolates — and what it does not
+
+These lanes deliver two of the three properties you might want:
+
+1. **Layer isolation (enforced).** A `surface/*` branch cannot touch
+   `src/components/**` etc. (chassis) or `.github/**` / `khai-guard.config.json`
+   / `tests/**` (governance). The load-bearing rule — a solution can't edit the
+   chassis or the gates — holds.
+2. **New-surface gating (enforced).** A surface with no lane is unowned, so it
+   cannot be created without a governance PR.
+3. **Mutual per-surface isolation — _not_ enforced.** A `surface/enginebooks`
+   branch _can_ edit a `surface/privacy` file and the guard will not object.
+
+The third is a property of the **guard**, not this config: `khai-guard` keys a
+lane's identity off the **first segment of its pattern** (`laneForPath` returns
+`pattern.split("/")[0]`), so every `surface/<x>/*` lane shares the one identity
+`surface`. Distinct identities — and therefore mutual isolation — require the
+`{name}`-binding `unit` mechanism, which (per the note above) the website's
+nested page tree cannot feed correctly today.
+
+**To get true per-surface isolation you would change the guard, not this repo:**
+teach `laneForPath`'s `{name}` extraction to _match the glob_ (or iterate the
+allow globs by literal prefix) rather than slice one prefix, then give a single
+`surface/*/*` lane two literal-prefix globs — `src/pages/main/{name}/**` and
+`src/pages/architecture/{name}/**`. Lane identity then becomes `surface/<name>`,
+and a privacy branch can no longer reach a cvi file. It is a small, contained
+change to `@chbrain/khai-guard`; until then, **layer isolation + new-surface
+gating** is the honest guarantee, and that is the load-bearing half.
 
 ### Shared metadata
 

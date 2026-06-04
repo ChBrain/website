@@ -14,6 +14,7 @@
   },
   "scripts": {
     "dev": "astro dev",
+    "prebuild": "node scripts/build-downloads.mjs",
     "build": "astro build",
     "postbuild": "node scripts/copy-public-to-surfaces.mjs",
     "preview": "astro preview",
@@ -26,14 +27,16 @@
     "prepare": "husky && chmod +x .husky/pre-commit .husky/pre-push"
   },
   "dependencies": {
-    "@chbrain/khai-arch": "^0.1.0",
-    "@chbrain/khai-engine-gender": "^0.1.2",
+    "@chbrain/khai-arch": "^0.1.1",
+    "@chbrain/khai-engine-gender": "^0.1.3",
     "@fontsource-variable/newsreader": "^5.2.10",
     "@fontsource-variable/source-serif-4": "^5.2.9",
     "@fontsource/ibm-plex-mono": "^5.2.7"
   },
   "devDependencies": {
-    "@chbrain/khai-guard": "^0.1.1",
+    "@chbrain/khai-guard": "^0.1.3",
+    "@chbrain/khai-pack": "^0.0.2",
+    "@chbrain/khai-skills": "^0.0.3",
     "@types/jsdom": "^28.0.3",
     "@types/markdown-it": "^14.1.2",
     "astro": "^6.4.2",
