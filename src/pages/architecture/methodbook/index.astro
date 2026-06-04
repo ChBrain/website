@@ -1,0 +1,80 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Book from "../../../components/Book.astro";
+import type { BookSpread, BookCover } from "../../../lib/book";
+import MarkdownIt from "markdown-it";
+
+const md = new MarkdownIt({ html: false, breaks: false, linkify: false });
+
+// Replace raw em-dash (U+2014) from package content: use the HTML entity in
+// rendered HTML strings, and a spaced hyphen in plain-text props (which Astro
+// HTML-escapes, so &mdash; would double-escape).
+const cleanText = (s: string) => s.replace(/—/g, " - ");
+const cleanHtml = (s: string) => s.replace(/—/g, "&mdash;");
+
+let methods: any[] = [];
+try {
+  const { listMethods } = await import("@chbrain/khai-methods");
+  methods = listMethods();
+} catch {
+  // not installed — graceful empty state
+}
+
+const attribution = (m: any): string => {
+  const names: string[] =
+    m.invented_by?.map((a: { name: string }) => a.name.split(" ").at(-1)) ?? [];
+  const who = names.length > 0 ? names.join(" & ") : "traditional practice";
+  return m.year ? `${who} · ${m.year}` : who;
+};
+
+const spreads: BookSpread[] = [];
+const n = () => String(spreads.length).padStart(2, "0");
+
+for (const method of methods) {
+  spreads.push({
+    slug: method.id,
+    n: n(),
+    groupLabel: cleanText(method.type ?? ""),
+    status: attribution(method),
+    title: cleanText(method.name),
+    facets: (method.prompts ?? []).map((p: any) => ({
+      letter: p.label.charAt(0),
+      name: cleanText(p.label),
+      body: cleanText(p.question),
+    })),
+    bodyHtml: method.body ? cleanHtml(md.render(method.body)) : null,
+  });
+}
+
+const cover: BookCover = {
+  overline: "the practice · a methodbook",
+  title: "Methods",
+  subtitle:
+    methods.length > 0
+      ? `${methods.length} method${methods.length === 1 ? "" : "s"} in the book`
+      : null,
+  edition: "khai · methods",
+  ctaHref: spreads.length > 0 ? `#${spreads[0].slug}` : "#",
+  ctaLabel: "Open the methodbook →",
+  hint: "or press →",
+  backHref: "../",
+  backLabel: "← architecture",
+};
+---
+
+<BaseLayout
+  title="Methodbook · architecture · kaihacks"
+  description="khai methods: structured process definitions with attribution, including retrospectives, planning frameworks, and reviews."
+>
+  <Book
+    header={{
+      domain: "architecture",
+      tld: ".kaihacks.ai",
+      basePath: "../",
+      location: "methodbook",
+    }}
+    cover={cover}
+    spreads={spreads}
+    tocEyebrow="methodbook"
+  />
+</BaseLayout>
