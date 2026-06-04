@@ -42,6 +42,11 @@
         "allow": ["src/pages/architecture/skillbook/**"]
       },
       {
+        "pattern": "surface/methodbook/*",
+        "layer": "solution",
+        "allow": ["src/pages/architecture/methodbook/**"]
+      },
+      {
         "pattern": "surface/cvi/*",
         "layer": "solution",
         "allow": ["src/pages/main/cvi/**"]
