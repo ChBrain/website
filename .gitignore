@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .astro/
+public/downloads/
 .DS_Store
 *.log
 .vitest-cache/
