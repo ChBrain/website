@@ -39,7 +39,7 @@ const skills = existsSync(skillsDir)
     {
       skills.length === 0 ? (
         <p class="catalogue-empty">
-          No skills loaded — run <code>npm run prebuild</code> on a machine with the GitHub Packages
+          No skills loaded. Run <code>npm run prebuild</code> on a machine with the GitHub Packages
           token to generate skill artifacts.
         </p>
       ) : (
@@ -51,19 +51,19 @@ const skills = existsSync(skillsDir)
                 <div class="card">
                   <span class="card-label">Problem</span>
                   <div class="card-body">
-                    {skill.problem ?? <span class="card-placeholder">—</span>}
+                    {skill.problem ?? <span class="card-placeholder">·</span>}
                   </div>
                 </div>
                 <div class="card">
                   <span class="card-label">Solution</span>
                   <div class="card-body">
-                    {skill.solution ?? <span class="card-placeholder">—</span>}
+                    {skill.solution ?? <span class="card-placeholder">·</span>}
                   </div>
                 </div>
                 <div class="card">
                   <span class="card-label">What you get</span>
                   <div class="card-body">
-                    {skill.outcome ?? <span class="card-placeholder">—</span>}
+                    {skill.outcome ?? <span class="card-placeholder">·</span>}
                   </div>
                 </div>
                 <div class="card card--download">
