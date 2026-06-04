@@ -1,0 +1,87 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Book from "../../../components/Book.astro";
+import type { BookSpread, BookCover } from "../../../lib/book";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { join } from "node:path";
+
+// Skill sidecars are generated at prebuild time by scripts/build-downloads.mjs.
+// Each JSON carries: name, slug, title, bodyHtml (the rendered SKILL.md prose),
+// filename, size, sha256 (the download metadata). When the sidecars are absent
+// (CI build, no @chbrain registry) the book renders with no spreads; the build
+// stays green, and the cover shows a graceful empty state.
+const skillsDir = join(process.cwd(), "public", "downloads", "skills");
+const skills = existsSync(skillsDir)
+  ? readdirSync(skillsDir)
+      .filter((f) => f.endsWith(".json"))
+      .sort()
+      .map((f) => JSON.parse(readFileSync(join(skillsDir, f), "utf8")))
+  : [];
+
+const spreads: BookSpread[] = [];
+const n = () => String(spreads.length).padStart(2, "0");
+
+for (const skill of skills) {
+  // Content spread: the SKILL.md prose rendered as a prose snap. The
+  // groupLabel "spell" echoes the spellbook metaphor in the running head;
+  // the status corner says "skill" for legibility.
+  spreads.push({
+    slug: skill.slug,
+    n: n(),
+    groupLabel: "spell",
+    status: "skill",
+    title: skill.title,
+    facets: [],
+    bodyHtml: skill.bodyHtml,
+  });
+  // Download spread: the skill's zip, immediately after its content.
+  spreads.push({
+    slug: `download-${skill.slug}`,
+    n: n(),
+    groupLabel: "download",
+    status: "skill",
+    title: "Download",
+    subtitle: `take ${skill.title} into any project`,
+    facets: [],
+    download: {
+      href: `/downloads/skills/${skill.slug}.zip`,
+      filename: skill.filename,
+      size: skill.size,
+      sha256: skill.sha256,
+      note: "A self-contained skill bundle: the skill guide and injected canon templates, ready to drop into any khai project.",
+    },
+  });
+}
+
+const cover: BookCover = {
+  overline: "the practice · a skillbook",
+  title: "Skills",
+  subtitle:
+    skills.length > 0
+      ? `${skills.length} skill${skills.length === 1 ? "" : "s"} in the book`
+      : null,
+  edition: "khai · skills",
+  ctaHref: spreads.length > 0 ? `#${spreads[0].slug}` : "#",
+  ctaLabel: "Open the spellbook →",
+  hint: "or press →",
+  backHref: "../",
+  backLabel: "← architecture",
+};
+---
+
+<BaseLayout
+  title="Skillbook · architecture · kaihacks"
+  description="khai skills: self-contained agent skill bundles built from the khai-arch canon, ready to drop into any project."
+>
+  <Book
+    header={{
+      domain: "architecture",
+      tld: ".kaihacks.ai",
+      basePath: "../",
+      location: "skillbook",
+    }}
+    cover={cover}
+    spreads={spreads}
+    tocEyebrow="skillbook"
+  />
+</BaseLayout>
