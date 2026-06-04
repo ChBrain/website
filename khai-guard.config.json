@@ -37,6 +37,11 @@
         "allow": ["src/pages/architecture/playbook/**"]
       },
       {
+        "pattern": "surface/skillbook/*",
+        "layer": "solution",
+        "allow": ["src/pages/architecture/skillbook/**"]
+      },
+      {
         "pattern": "surface/cvi/*",
         "layer": "solution",
         "allow": ["src/pages/main/cvi/**"]
