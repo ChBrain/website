@@ -54,6 +54,11 @@ export interface BookSpread {
   /** optional pre-rendered markdown -> HTML prose body, drawn where facets
    *  would go. Reference (LORE) snaps carry prose/tables, not facet cards. */
   bodyHtml?: string | null;
+  /** optional download artifact — turns the spread into the back-cover: a
+   *  download card (filename, size, content-hash, brick CTA) where the facet
+   *  grid would go. Both the Enginebook (engine zip) and Skillbook (skill zip)
+   *  end on one. */
+  download?: BookDownload | null;
   /** optional closing paragraph, drawn after a rule */
   coda?: string | null;
   /** authored? false renders the draft stub instead of facets */
@@ -63,6 +68,27 @@ export interface BookSpread {
   /** optional click-through at the foot of the spread (the Playbook's
    *  enriched-by engine card links into its full Enginebook) */
   deepLink?: { href: string; label: string } | null;
+}
+
+/**
+ * The download back-cover. The last snap of a book that ships an artifact:
+ * the engine zip on an Enginebook, the skill zip on a Skillbook page. The
+ * zip is built at build time (via @chbrain/khai-pack) and served from the
+ * site; this carries the link plus the provenance a reader needs to trust it
+ * (the byte size and the content-hash the packer stamped). Rendered in place
+ * of the facet grid on a spread that sets `download`.
+ */
+export interface BookDownload {
+  /** href to the built zip artifact (site-served, not an npm tarball) */
+  href: string;
+  /** the file name shown + used as the download attribute, e.g. "gender.zip" */
+  filename: string;
+  /** human-readable byte size, e.g. "12.4 kB" */
+  size: string;
+  /** the sha256 the packer stamped on the zip — provenance, shown in mono */
+  sha256: string;
+  /** optional one-line note on what the bundle carries */
+  note?: string | null;
 }
 
 /** A TOC group: a labelled run of spreads, used to build the overlay. */
