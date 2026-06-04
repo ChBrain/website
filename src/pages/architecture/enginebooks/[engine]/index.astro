@@ -7,6 +7,8 @@ import { loadEngines } from "../../../../lib/load-engines";
 import { loadEngineBook, type EngineBook } from "../../../../lib/load-engine-content";
 import { parseEngineSpec } from "../../../../lib/parse-engine-spec";
 import MarkdownIt from "markdown-it";
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
 
 // One static path per installed engine (today: just gender). The canon never
 // names engines; loadEngines() discovers them from node_modules.
@@ -175,6 +177,30 @@ spreads.push({
   })),
   coda: null,
 });
+
+// 5. Download back-cover: the engine zip built at prebuild time by
+//    scripts/build-downloads.mjs. Only added when the sidecar is present;
+//    CI builds (no @chbrain registry) skip it cleanly.
+const dlSidecar = join(process.cwd(), "public", "downloads", "engines", `${book.id}.json`);
+if (existsSync(dlSidecar)) {
+  const dl = JSON.parse(readFileSync(dlSidecar, "utf8"));
+  spreads.push({
+    slug: "download",
+    n: n(),
+    groupLabel: "download",
+    status: "download",
+    title: "Download",
+    subtitle: "the engine, packaged for deployment",
+    facets: [],
+    download: {
+      href: `/downloads/engines/${book.id}.zip`,
+      filename: dl.filename,
+      size: dl.size,
+      sha256: dl.sha256,
+      note: `${cap(book.id)} engine: all markdown files and the khai manifest, ready to install in any project.`,
+    },
+  });
+}
 
 const title = `${cap(book.id)} · Enginebook · kaihacks`;
 ---
