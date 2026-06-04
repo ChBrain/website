@@ -4,6 +4,7 @@ import SiteHeader from "../../../components/SiteHeader.astro";
 import SiteFooter from "../../../components/SiteFooter.astro";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { URLS } from "../../../lib/urls";
 
 // Skill sidecars are generated at prebuild time by scripts/build-downloads.mjs.
 // Each JSON carries: name, slug, title, bodyHtml, filename, size, sha256,
@@ -17,11 +18,12 @@ const skills = existsSync(skillsDir)
       .map((f) => JSON.parse(readFileSync(join(skillsDir, f), "utf8")))
   : [];
 
-// Surface-relative base. This page is one level under the architecture surface
-// root (architecture/skillbook/), so downloads resolve at `../downloads/...`.
-// An absolute `/downloads/...` would break on staging, where the surface is
-// nested under /architecture/ rather than served from the domain root.
-const basePath = "../";
+// URLS.architecture is the single source of truth for the architecture surface
+// root (production: https://architecture.kaihacks.ai/, staging:
+// https://staging.kaihacks.ai/architecture/), switched by DEPLOY_ENV at build
+// time. All architecture-surface-relative paths are derived from it so staging
+// and production builds never need different page logic.
+const downloadsBase = `${URLS.architecture}downloads/`;
 ---
 
 <BaseLayout
@@ -29,7 +31,7 @@ const basePath = "../";
   description="khai skills: self-contained agent skill bundles built from the khai-arch canon, ready to drop into any project."
 >
   <div class="arch-page skillbook-catalogue">
-    <SiteHeader domain="architecture" tld=".kaihacks.ai" basePath={basePath} location="skillbook" />
+    <SiteHeader domain="architecture" tld=".kaihacks.ai" basePath="../" location="skillbook" />
 
     <div class="catalogue-header">
       <h1 class="catalogue-title">Skills</h1>
@@ -79,7 +81,7 @@ const basePath = "../";
                     <p class="download-size">{skill.size}</p>
                     <a
                       class="download-link"
-                      href={`${basePath}downloads/skills/${skill.slug}.zip`}
+                      href={`${downloadsBase}skills/${skill.slug}.zip`}
                       download
                     >
                       Download .zip →
