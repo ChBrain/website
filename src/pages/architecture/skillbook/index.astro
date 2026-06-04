@@ -1,10 +1,12 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Book from "../../../components/Book.astro";
 import SiteHeader from "../../../components/SiteHeader.astro";
 import SiteFooter from "../../../components/SiteFooter.astro";
+import type { BookSpread } from "../../../lib/book";
+import { URLS } from "../../../lib/urls";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { URLS } from "../../../lib/urls";
 
 // Skill sidecars are generated at prebuild time by scripts/build-downloads.mjs.
 // Each JSON carries: name, slug, title, bodyHtml, filename, size, sha256,
@@ -18,235 +20,83 @@ const skills = existsSync(skillsDir)
       .map((f) => JSON.parse(readFileSync(join(skillsDir, f), "utf8")))
   : [];
 
-// URLS.architecture is the single source of truth for the architecture surface
-// root (production: https://architecture.kaihacks.ai/, staging:
-// https://staging.kaihacks.ai/architecture/), switched by DEPLOY_ENV at build
-// time. All architecture-surface-relative paths are derived from it so staging
-// and production builds never need different page logic.
-const downloadsBase = `${URLS.architecture}downloads/`;
+const spreads: BookSpread[] = skills.map((skill, i) => ({
+  slug: skill.slug,
+  n: String(i + 1).padStart(2, "0"),
+  groupLabel: "skill",
+  status: "skill",
+  title: skill.title,
+  subtitle: null,
+  facets: [
+    { letter: "P", name: "Problem", body: skill.problem ?? "" },
+    { letter: "S", name: "Solution", body: skill.solution ?? "" },
+    { letter: "O", name: "Outcome", body: skill.outcome ?? "" },
+  ],
+  download: {
+    href: `${URLS.architecture}downloads/skills/${skill.slug}.zip`,
+    filename: skill.filename,
+    size: skill.size,
+    sha256: skill.sha256,
+    note: null,
+  },
+  coda: null,
+}));
 ---
 
 <BaseLayout
   title="Skillbook · architecture · kaihacks"
   description="khai skills: self-contained agent skill bundles built from the khai-arch canon, ready to drop into any project."
 >
-  <div class="arch-page skillbook-catalogue">
-    <SiteHeader domain="architecture" tld=".kaihacks.ai" basePath="../" location="skillbook" />
-
-    <div class="catalogue-header">
-      <h1 class="catalogue-title">Skills</h1>
-      {
-        skills.length > 0 && (
-          <p class="catalogue-count">
-            {skills.length} skill{skills.length === 1 ? "" : "s"}
-          </p>
-        )
-      }
-    </div>
-
-    {
-      skills.length === 0 ? (
-        <p class="catalogue-empty">
+  {
+    skills.length === 0 ? (
+      <div class="arch-page skillbook-empty">
+        <SiteHeader domain="architecture" tld=".kaihacks.ai" basePath="../" location="skillbook" />
+        <p class="empty-msg">
           No skills loaded. Run <code>npm run prebuild</code> on a machine with the GitHub Packages
           token to generate skill artifacts.
         </p>
-      ) : (
-        <div class="catalogue-list">
-          {skills.map((skill) => (
-            <section class="skill-row" id={skill.slug}>
-              <h2 class="skill-name">{skill.title}</h2>
-              <div class="card-grid">
-                <div class="card">
-                  <span class="card-label">Problem</span>
-                  <div class="card-body">
-                    {skill.problem ?? <span class="card-placeholder">·</span>}
-                  </div>
-                </div>
-                <div class="card">
-                  <span class="card-label">Solution</span>
-                  <div class="card-body">
-                    {skill.solution ?? <span class="card-placeholder">·</span>}
-                  </div>
-                </div>
-                <div class="card">
-                  <span class="card-label">What you get</span>
-                  <div class="card-body">
-                    {skill.outcome ?? <span class="card-placeholder">·</span>}
-                  </div>
-                </div>
-                <div class="card card--download">
-                  <span class="card-label">Download</span>
-                  <div class="card-body">
-                    <p class="download-filename">{skill.filename}</p>
-                    <p class="download-size">{skill.size}</p>
-                    <a
-                      class="download-link"
-                      href={`${downloadsBase}skills/${skill.slug}.zip`}
-                      download
-                    >
-                      Download .zip →
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </section>
-          ))}
-        </div>
-      )
-    }
-
-    <SiteFooter />
-  </div>
+        <SiteFooter />
+      </div>
+    ) : (
+      <Book
+        header={{
+          domain: "architecture",
+          tld: ".kaihacks.ai",
+          basePath: "../",
+          location: "skillbook",
+        }}
+        cover={{
+          overline: "the extension · a skillbook",
+          title: "Skills",
+          subtitle: "self-contained agent bundles built from the khai-arch canon",
+          edition: `khai · skills · ${skills.length} skill${skills.length === 1 ? "" : "s"}`,
+          ctaHref: `#${spreads[0].slug}`,
+          ctaLabel: "Open the skillbook →",
+          backHref: "../",
+          backLabel: "← architecture",
+        }}
+        spreads={spreads}
+        tocEyebrow="skillbook"
+      />
+    )
+  }
 </BaseLayout>
 
 <style>
-  .skillbook-catalogue {
+  .skillbook-empty {
     padding-bottom: var(--space-9);
   }
 
-  /* ── catalogue header ───────────────────────────────────────────── */
-  .catalogue-header {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-4);
-    margin: var(--space-7) 0 var(--space-6);
-  }
-
-  .catalogue-title {
-    font-family: var(--font-display);
-    font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-regular);
-    color: var(--color-ink);
-    margin: 0;
-    line-height: var(--line-height-tight);
-  }
-
-  .catalogue-count {
-    font-family: var(--font-mono);
-    font-size: var(--font-size-xs);
-    letter-spacing: var(--letter-spacing-loose);
-    text-transform: uppercase;
-    color: var(--color-ink-mute);
-    margin: 0;
-  }
-
-  /* ── empty state ────────────────────────────────────────────────── */
-  .catalogue-empty {
+  .empty-msg {
     font-family: var(--font-prose);
     font-size: var(--font-size-base);
     color: var(--color-ink-soft);
     margin: var(--space-7) 0;
   }
 
-  .catalogue-empty code {
+  .empty-msg code {
     font-family: var(--font-mono);
     font-size: 0.875em;
     color: var(--color-ink);
-  }
-
-  /* ── skill list ─────────────────────────────────────────────────── */
-  .catalogue-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-8);
-  }
-
-  /* ── skill row ──────────────────────────────────────────────────── */
-  .skill-row {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-  }
-
-  .skill-name {
-    font-family: var(--font-display);
-    font-size: var(--font-size-xl);
-    font-weight: var(--font-weight-regular);
-    color: var(--color-ink);
-    margin: 0;
-    line-height: var(--line-height-tight);
-  }
-
-  /* ── 4-card grid ────────────────────────────────────────────────── */
-  .card-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-3);
-  }
-
-  @media (max-width: 860px) {
-    .card-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  @media (max-width: 540px) {
-    .card-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  /* ── card ───────────────────────────────────────────────────────── */
-  .card {
-    border: 1px solid var(--color-rule);
-    background: var(--color-paper-warm);
-    padding: var(--space-3) var(--space-4);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-  }
-
-  .card-label {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    letter-spacing: var(--letter-spacing-mono);
-    text-transform: uppercase;
-    color: var(--color-ink-mute);
-    flex-shrink: 0;
-  }
-
-  .card-body {
-    font-family: var(--font-prose);
-    font-size: var(--font-size-sm);
-    color: var(--color-ink-soft);
-    line-height: var(--line-height-loose);
-  }
-
-  .card-placeholder {
-    color: var(--color-rule);
-    font-family: var(--font-mono);
-    font-size: var(--font-size-base);
-  }
-
-  /* ── download card specifics ────────────────────────────────────── */
-  .download-filename {
-    font-family: var(--font-mono);
-    font-size: var(--font-size-xs);
-    color: var(--color-ink);
-    margin: 0 0 var(--space-1);
-    word-break: break-all;
-  }
-
-  .download-size {
-    font-family: var(--font-mono);
-    font-size: var(--font-size-xs);
-    color: var(--color-ink-mute);
-    margin: 0 0 var(--space-3);
-  }
-
-  .download-link {
-    font-family: var(--font-mono);
-    font-size: var(--font-size-xs);
-    letter-spacing: var(--letter-spacing-loose);
-    text-transform: uppercase;
-    color: var(--color-brick);
-    text-decoration: none;
-    border-bottom: 1px solid var(--color-rule);
-    display: inline-block;
-  }
-
-  .download-link:hover {
-    color: var(--color-ink);
-    border-bottom-color: var(--color-ink);
   }
 </style>
