@@ -120,6 +120,24 @@ function buildSkillDownloads() {
     const bodyMd = bodyWithoutH1.replace(/\[([^\]]+)\]\((?!https?:\/\/|#)[^)]*\.md\)/g, "$1");
     const bodyHtml = md.render(bodyMd);
 
+    // Extract Problem / Solution / What you get sections from README.md
+    // (each is the content between its ## heading and the next ## or EOF).
+    let problem = null,
+      solution = null,
+      outcome = null;
+    const readmePath = join(skillsPkg, "src", r.name, "README.md");
+    if (existsSync(readmePath)) {
+      const readmeSrc = readFileSync(readmePath, "utf8");
+      const extractSection = (src, heading) => {
+        const re = new RegExp(`^## ${heading}\\s*\\n([\\s\\S]*?)(?=^## |$)`, "m");
+        const m = src.match(re);
+        return m ? m[1].trim() : null;
+      };
+      problem = extractSection(readmeSrc, "Problem");
+      solution = extractSection(readmeSrc, "Solution");
+      outcome = extractSection(readmeSrc, "What you get");
+    }
+
     writeFileSync(
       join(outDir, `${r.name}.json`),
       JSON.stringify({
@@ -130,6 +148,9 @@ function buildSkillDownloads() {
         filename: `${r.name}.zip`,
         size: fmtBytes(zip.length),
         sha256: r.zipSha,
+        problem,
+        solution,
+        outcome,
       }) + "\n",
     );
     console.log(
