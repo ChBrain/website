@@ -1,4 +1,10 @@
 #!/usr/bin/env sh
+# Auto-format staged files so prettier never fails CI on a forgotten --write.
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
+if [ -n "$STAGED" ]; then
+  echo "$STAGED" | xargs npx prettier --write --ignore-unknown 2>/dev/null || true
+  echo "$STAGED" | xargs git add
+fi
 
 # Source/test separation (formerly an inline META-2 block here) now lives in
 # KHAI-Guard at pre-push, where it sees the whole PR range rather than a
@@ -7,14 +13,6 @@
 # Guard: reject any staged tarballs (should never be committed)
 if git diff --cached --name-only | grep -E '\.(tgz|tar\.gz)$'; then
   echo "❌ Error: Tarball files (.tgz/.tar.gz) should not be committed. Use a registry instead."
-  exit 1
-fi
-
-# Prettier enforcement: mirrors CI's format:check.
-# What passes here passes CI; nothing slips through.
-if ! npm run --silent format:check; then
-  echo
-  echo "Prettier formatting failed. Run: npm run format"
   exit 1
 fi
 
