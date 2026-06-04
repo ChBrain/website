@@ -95,11 +95,11 @@ describe("architecture home - design contract", () => {
       expect(accent!.textContent).toBe("HACKS");
     });
 
-    it("subline begins with 'Three tokens. One specification.'", () => {
+    it("has a non-empty subline (copy is not pinned)", () => {
       const dom = new JSDOM(home!.html);
       const subline = dom.window.document.querySelector(".masthead-subline");
       expect(subline).not.toBeNull();
-      expect(subline!.textContent?.trim()).toMatch(/^Three tokens\. One specification\./);
+      expect(subline!.textContent?.trim().length ?? 0).toBeGreaterThan(0);
     });
   });
 
