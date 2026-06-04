@@ -13,13 +13,13 @@ const edition = `v${pkg.version}`;
 // The three book cards print their owning package's own tagline verbatim. The
 // frontend stays dumb on package content: it never composes or derives a
 // description, it renders the one the canon hands over -- so the card can never
-// drift from the spec. Playbook's tagline lives in khai-arch's model.md (beside
-// the groups it describes); methodbook's and skillbook's live in their
-// package.json `khai.tagline`. Each falls back to empty (not to hand-written
-// copy) until the tagline-bearing package version is installed via deps:sync.
+// drift from the spec. Playbook's tagline is the khai-arch `playbookTagline`
+// export; methodbook's and skillbook's are the top-level `tagline` field of
+// their package.json. Each falls back to empty (not to hand-written copy) until
+// the tagline-bearing package version is installed via deps:sync.
 const playbookNote = (khaiArch as { playbookTagline?: string }).playbookTagline ?? "";
-const methodbookNote = (methodsPkg as { khai?: { tagline?: string } }).khai?.tagline ?? "";
-const skillbookNote = (skillsPkg as { khai?: { tagline?: string } }).khai?.tagline ?? "";
+const methodbookNote = (methodsPkg as { tagline?: string }).tagline ?? "";
+const skillbookNote = (skillsPkg as { tagline?: string }).tagline ?? "";
 
 const movements = [
   {
