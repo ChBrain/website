@@ -191,13 +191,33 @@ const groups: BookTocGroup[] = tocGroups ?? [
                     )}
                   </article>
                 ))}
+                {/* When a spread carries both facets and a download, the
+                    download becomes the final card in the grid (e.g. the
+                    skillbook: Problem · Solution · Outcome · Download). */}
+                {s.download && (
+                  <article class="pb-facet pb-facet--download">
+                    {/* prettier-ignore */}
+                    <h3 class="pb-facet-name"><span class="pb-facet-initial">D</span>ownload</h3>
+                    <div class="pb-facet-dl">
+                      <a
+                        class="pb-facet-dl-link"
+                        href={s.download.href}
+                        download={s.download.filename}
+                      >
+                        {s.download.filename}
+                      </a>
+                      <span class="pb-facet-dl-size">{s.download.size}</span>
+                    </div>
+                  </article>
+                )}
               </div>
             )}
 
-            {/* Download back-cover: the built zip, with the provenance a reader
-                needs to trust it (byte size + the content-hash the packer
-                stamped). The artifact is site-served, not an npm tarball. */}
-            {s.written !== false && s.download && (
+            {/* Standalone download section: only when there are no facets
+                (the enginebook back-cover, where the download IS the spread
+                content). When facets are present the download renders as the
+                final card in the grid above. */}
+            {s.written !== false && s.download && s.facets.length === 0 && (
               <div class="pb-download">
                 <a
                   class="book-cta pb-download-cta"
@@ -749,6 +769,33 @@ const groups: BookTocGroup[] = tocGroups ?? [
     .pb-facet:last-child:nth-child(odd) {
       grid-column: 1 / -1;
     }
+  }
+
+  /* Download card (when inside the facets grid) */
+  .pb-facet-dl {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .pb-facet-dl-link {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--color-brick);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-rule);
+    display: inline-block;
+    word-break: break-all;
+  }
+  .pb-facet-dl-link:hover {
+    color: var(--color-ink);
+    border-bottom-color: var(--color-ink);
+  }
+  .pb-facet-dl-size {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--color-ink-mute);
   }
   .pb-facet {
     background: var(--color-paper-warm);
