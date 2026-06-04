@@ -41,6 +41,19 @@ const facetLinks = (f: BookFacet): BookFacet => ({
   ...f,
   bodyHtml: md.renderInline(rewriteMemberLinks(f.body, fileAnchor)),
 });
+// The corner shows the spread's PARENT -- its `## Taxonomy`, the group it
+// reports into -- linked where that parent has its own file. An expression's
+// parent is the anchor ([Gender](position_gender.md) -> a link to #anchor); the
+// anchor's parent is a concept with no file (Social structure). A bare
+// markdown-link taxonomy renders as-is; a prose taxonomy is trimmed to its lead
+// name (dropping a trailing "(... no file ...)" qualifier) for the small slot.
+const parentHtml = (taxonomy: string | null): string | null => {
+  if (!taxonomy) return null;
+  const t = taxonomy.trim();
+  const isLink = /^\[[^\]]+\]\([^)]+\)$/.test(t);
+  const name = isLink ? t : t.replace(/\s*\([^)]*\)\s*\.?$/, "").trim();
+  return md.renderInline(rewriteMemberLinks(name, fileAnchor));
+};
 
 // A reference snap's slug: lowercase, non-alphanumerics -> "-", collapsed and
 // trimmed, prefixed "ref-" so it stays anchor-safe and unique across chapters
@@ -117,8 +130,12 @@ spreads.push({
   n: n(),
   groupLabel: "anchor",
   status: `anchor · ${book.type ?? "?"}`,
+  // Corner: the anchor's parent (Taxonomy). The left already says "anchor", so
+  // the right carries the parent, not a repeat. Subtitle drops the "the anchor"
+  // default -- the role marker already covers it.
+  statusHtml: parentHtml(anchor.taxonomy),
   title: cap(book.id),
-  subtitle: anchor.subtitle ?? "the anchor",
+  subtitle: anchor.subtitle,
   facets: anchor.facets.map(facetLinks),
   coda: null,
 });
@@ -131,8 +148,12 @@ for (const expr of book.expressions) {
     n: n(),
     groupLabel: "expression",
     status: "expression",
+    // Corner: the expression's parent (Taxonomy) -- the anchor, linked. Kills
+    // the "expression x3": left = "expression", right = the parent link, and
+    // the subtitle drops its "expression" default.
+    statusHtml: parentHtml(parsed.taxonomy),
     title: cap(expr.key),
-    subtitle: parsed.subtitle ?? "expression",
+    subtitle: parsed.subtitle,
     facets: parsed.facets.map(facetLinks),
     coda: null,
   });
