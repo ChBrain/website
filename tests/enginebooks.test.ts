@@ -108,11 +108,14 @@ describe("enginebook - /enginebooks/gender", () => {
     // canon exposes referenceCard: only then do the reference snaps render. Until
     // then the book opens with wiring, and this assertion is skipped (green).
     if (refIds.length === 0) return;
-    expect(ids[0].startsWith("ref-")).toBe(true); // the warrant is up front
-    expect(ids[ids.length - 1]).toBe("wiring"); // the canon binding closes the book
-    const anchorIdx = ids.indexOf("anchor"); // content sits between warrant and wiring
-    expect(anchorIdx).toBeGreaterThan(ids.indexOf(refIds[0]));
-    expect(anchorIdx).toBeLessThan(ids.indexOf("wiring"));
+    // "download" is an optional back-cover that trails the content book; exclude
+    // it so the sequence check stays valid whether or not the sidecar is present.
+    const contentIds = ids.filter((id) => id !== "download");
+    expect(contentIds[0].startsWith("ref-")).toBe(true); // the warrant is up front
+    expect(contentIds[contentIds.length - 1]).toBe("wiring"); // the canon binding closes the book
+    const anchorIdx = contentIds.indexOf("anchor"); // content sits between warrant and wiring
+    expect(anchorIdx).toBeGreaterThan(contentIds.indexOf(refIds[0]));
+    expect(anchorIdx).toBeLessThan(contentIds.indexOf("wiring"));
   });
 
   it("renders one spread per expression (gender: male, female)", () => {
