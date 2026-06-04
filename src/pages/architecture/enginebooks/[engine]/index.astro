@@ -9,6 +9,7 @@ import { parseEngineSpec } from "../../../../lib/parse-engine-spec";
 import MarkdownIt from "markdown-it";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import { URLS } from "../../../../lib/urls";
 
 // One static path per installed engine (today: just gender). The canon never
 // names engines; loadEngines() discovers them from node_modules.
@@ -193,12 +194,7 @@ if (existsSync(dlSidecar)) {
     subtitle: "the engine, packaged for deployment",
     facets: [],
     download: {
-      // Surface-relative (matches the header basePath): this page is two levels
-      // under the architecture surface root (architecture/enginebooks/<engine>/),
-      // so the engine zip resolves at `../../downloads/...`. An absolute
-      // `/downloads/...` breaks on staging, where the surface is nested under
-      // /architecture/ rather than served from the domain root.
-      href: `../../downloads/engines/${book.id}.zip`,
+      href: `${URLS.architecture}downloads/engines/${book.id}.zip`,
       filename: dl.filename,
       size: dl.size,
       sha256: dl.sha256,
