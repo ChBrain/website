@@ -34,9 +34,10 @@ deploys. Hand these off **clean**, not as a prose recipe — a second agent
 (Copilot) executes literally and chokes on mixed prose + commands.
 
 - **Prefer a script.** A recurring local task is a repo script, so the handoff
-  is one command. Dependency sync: **`npm run deps:sync`** — updates every
+  is one command. Dependency sync: **`npm run deps:sync`** updates every
   `@chbrain/*` dep + the lockfile; then review the diff, commit, push on a
-  `chore/*` branch.
+  `deps/*` branch (the lane that owns `package.json` + the lockfile; a manual
+  sync is not a `dependabot/*` bot PR, and `chore/*` owns no package paths).
 - **One-off → commands only.** One fenced block, one command per line, **no
   inline comments, no conditionals**. Put "verify" and "on failure" notes as
   plain text _outside_ the block.
