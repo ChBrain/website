@@ -22,19 +22,34 @@
         "allow": [".github/**", ".husky/**", "khai-guard.config.json", "tests/**"]
       },
       {
-        "pattern": "surface/architecture/*",
+        "pattern": "surface/pages/*",
         "layer": "solution",
-        "allow": [
-          "src/pages/index.astro",
-          "src/pages/architecture/index.astro",
-          "src/pages/architecture/[slug].astro"
-        ]
+        "allow": ["src/pages/*.astro", "src/pages/*/*.astro"]
       },
       {
-        "pattern": "surface/*/*",
+        "pattern": "surface/enginebooks/*",
         "layer": "solution",
-        "unit": 1,
-        "allow": ["src/pages/**/{name}/**"]
+        "allow": ["src/pages/architecture/enginebooks/**"]
+      },
+      {
+        "pattern": "surface/playbook/*",
+        "layer": "solution",
+        "allow": ["src/pages/architecture/playbook/**"]
+      },
+      {
+        "pattern": "surface/cvi/*",
+        "layer": "solution",
+        "allow": ["src/pages/main/cvi/**"]
+      },
+      {
+        "pattern": "surface/privacy/*",
+        "layer": "solution",
+        "allow": ["src/pages/main/privacy/**"]
+      },
+      {
+        "pattern": "surface/contact/*",
+        "layer": "solution",
+        "allow": ["src/pages/main/contact/**"]
       },
       {
         "pattern": "repo/*",
