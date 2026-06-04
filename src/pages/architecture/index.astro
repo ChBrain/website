@@ -3,9 +3,23 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
 import pkg from "@chbrain/khai-arch/package.json";
+import * as khaiArch from "@chbrain/khai-arch";
+import methodsPkg from "@chbrain/khai-methods/package.json";
+import skillsPkg from "@chbrain/khai-skills/package.json";
 
 // The canon edition, derived from the installed canon -- one source, no drift.
 const edition = `v${pkg.version}`;
+
+// The three book cards print their owning package's own tagline verbatim. The
+// frontend stays dumb on package content: it never composes or derives a
+// description, it renders the one the canon hands over -- so the card can never
+// drift from the spec. Playbook's tagline lives in khai-arch's model.md (beside
+// the groups it describes); methodbook's and skillbook's live in their
+// package.json `khai.tagline`. Each falls back to empty (not to hand-written
+// copy) until the tagline-bearing package version is installed via deps:sync.
+const playbookNote = (khaiArch as { playbookTagline?: string }).playbookTagline ?? "";
+const methodbookNote = (methodsPkg as { khai?: { tagline?: string } }).khai?.tagline ?? "";
+const skillbookNote = (skillsPkg as { khai?: { tagline?: string } }).khai?.tagline ?? "";
 
 const movements = [
   {
@@ -114,11 +128,50 @@ const movements = [
             <span class="playbook-card-state">{edition} · live · the field manual</span>
           </div>
           <div class="playbook-card-title">Playbook</div>
-          <p class="playbook-card-note">
-            The bound specification: Plot, the five elements that Plot casts, and the two substrate
-            files everything rests on.
-          </p>
+          <p class="playbook-card-note">{playbookNote}</p>
           <span class="playbook-card-cta">Open the playbook →</span>
+        </div>
+      </a>
+    </section>
+
+    <section class="section methodbook-cta">
+      <h2 class="section-heading">
+        <span class="section-no">§3</span>
+        <span class="section-title">Open the methodbook</span>
+        <span class="section-note">structured process definitions with attribution</span>
+      </h2>
+
+      <a href="./methodbook/" class="playbook-card playbook-card--methodbook">
+        <div class="playbook-card-hue" aria-hidden="true"></div>
+        <div class="playbook-card-body">
+          <div class="playbook-card-row">
+            <span class="playbook-card-url">architecture.kaihacks.ai/methodbook</span>
+            <span class="playbook-card-state">live · the practice</span>
+          </div>
+          <div class="playbook-card-title">Methodbook</div>
+          <p class="playbook-card-note">{methodbookNote}</p>
+          <span class="playbook-card-cta">Open the methodbook →</span>
+        </div>
+      </a>
+    </section>
+
+    <section class="section skillbook-cta">
+      <h2 class="section-heading">
+        <span class="section-no">§4</span>
+        <span class="section-title">Open the skillbook</span>
+        <span class="section-note">agent skill bundles ready to deploy</span>
+      </h2>
+
+      <a href="./skillbook/" class="playbook-card playbook-card--skillbook">
+        <div class="playbook-card-hue" aria-hidden="true"></div>
+        <div class="playbook-card-body">
+          <div class="playbook-card-row">
+            <span class="playbook-card-url">architecture.kaihacks.ai/skillbook</span>
+            <span class="playbook-card-state">live · the practice</span>
+          </div>
+          <div class="playbook-card-title">Skillbook</div>
+          <p class="playbook-card-note">{skillbookNote}</p>
+          <span class="playbook-card-cta">Open the skillbook →</span>
         </div>
       </a>
     </section>
@@ -141,8 +194,7 @@ const movements = [
      * room for the sticky topbar (top) and sticky footer (bottom) so
      * snap-aligned content doesn't end up underneath the chrome.
      *
-     * Three top-level sections: masthead (§0), reading (§1) and the
-     * playbook CTA (§2). The book itself lives at /playbook/. */
+     * §0 masthead, §1 reading, §2 playbook, §3 methodbook, §4 skillbook. */
     html:has(.arch-home) {
       scroll-snap-type: y mandatory;
       scroll-padding-top: 4rem;
@@ -458,6 +510,12 @@ const movements = [
     .playbook-card-hue {
       height: 6px;
       background: var(--color-sea);
+    }
+    .playbook-card--methodbook .playbook-card-hue {
+      background: var(--color-marsh);
+    }
+    .playbook-card--skillbook .playbook-card-hue {
+      background: var(--color-amber);
     }
     .playbook-card-body {
       padding: 18px 20px 20px;
