@@ -5,9 +5,18 @@
 Branch by subject, not by worker. The defining unit is the **surface** (a page
 area under `src/pages/`).
 
-- Surface work -> `surface/<name>/<change>` (binds `src/pages/**/<name>/**`).
+- Surface work -> `surface/<surface>/<change>`, where `<surface>` is a
+  **defined** lane (`enginebooks`, `playbook`, `cvi`, `privacy`, `contact`, or
+  `pages` for the loose index/`[slug]` pages). A NEW surface must be added to
+  `khai-guard.config.json` first (a `governance/` PR) — until then its pages are
+  unowned and the branch is rejected. Each surface is its own explicit lane.
 - Shared chassis (components, libs, layouts, styles, marks) -> `chassis/<change>`.
-- Gates (CI, hooks, this guard config) -> `governance/<change>`.
+- Gates (CI, hooks, this guard config, `tests/**`) -> `governance/<change>`.
+
+The guard gives **layer isolation** (a surface can't touch the chassis or the
+gates) and **new-surface gating** (a surface needs a lane first), but _not_
+mutual isolation between surfaces — see [docs/BRANCHING.md](docs/BRANCHING.md)
+"What this isolates — and what it does not".
 
 Ask `npx khai-guard advise --files <paths>` before `git checkout -b`. Never
 `claude/*`. Multi-lane work splits into per-lane branches and merges in layer
