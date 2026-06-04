@@ -2,6 +2,7 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import SiteHeader from "../../components/SiteHeader.astro";
 import SiteFooter from "../../components/SiteFooter.astro";
+import { URLS } from "../../lib/urls";
 
 // §01 Services: two engagement modes.
 // Lifted verbatim from the legacy cultures landing
@@ -176,7 +177,7 @@ const example = [
         </div>
       </div>
 
-      <a href="https://cultures.kaihacks.ai/map/" class="cu-map-card">
+      <a href={`${URLS.cultures}map/`} class="cu-map-card">
         <div class="cu-map-card-hue" aria-hidden="true"></div>
         <div class="cu-map-card-body">
           <div class="cu-map-card-row">
