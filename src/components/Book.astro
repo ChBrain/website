@@ -53,12 +53,7 @@ const groups: BookTocGroup[] = tocGroups ?? [
 ---
 
 <div class="playbook">
-  <SiteHeader
-    domain={header.domain}
-    tld={header.tld}
-    basePath={header.basePath}
-    location={header.location}
-  />
+  <SiteHeader domain={header.domain} tld={header.tld} location={header.location} />
 
   {
     /* Collapsed-strip indicator on the left edge. Click to expand the
