@@ -7,15 +7,11 @@
 // 1. LOCATION LAYOUT (new, magazine grammar): pass `location`.
 //      [where you are]                                    [kaihacks.ai]
 //    Wayfinding label sits top-left; wordmark anchors top-right and
-//    links back to URLS.main (or to `basePath` if overridden (useful
-//    on subdomain surfaces where the wordmark should self-anchor).
+//    links back to the surface root derived from `domain` via URLS.
 //
 // 2. LEGACY NAV LAYOUT (kept for backwards compat): pass `nav`.
 //      [wordmark]                          [nav · items · here]
-//    Wordmark left, nav links right. Used by privacy, architecture
-//    home; architecture/playbook, and others are surfaces whose CVI-tier
-//    tests strictly assert the nav. The chrome lift on those
-//    surfaces is a follow-up PR.
+//    Wordmark left, nav links right.
 //
 // If both `location` and `nav` are passed, location wins (the new
 // layout takes precedence). If neither is passed, the header is
@@ -35,9 +31,8 @@ interface NavItem {
 interface Props {
   domain: string;
   tld: string;
-  /** Override the wordmark link destination. Defaults to URLS.main so the
-   *  wordmark is the way home from any surface. Subdomain surfaces
-   *  (architecture.kaihacks.ai) pass basePath="../" to self-anchor. */
+  /** @deprecated Wordmark link is now derived from `domain` via the URLS
+   *  singleton. This prop is ignored; remove from call sites per surface PR. */
   basePath?: string;
   version?: string;
   /** New layout: wayfinding label rendered top-left. */
@@ -46,8 +41,11 @@ interface Props {
   nav?: NavItem[];
 }
 
-const { domain, tld, basePath, version, location, nav } = Astro.props;
-const wordmarkHref = basePath ?? URLS.main;
+const { domain, tld, version, location, nav } = Astro.props;
+// Derive the wordmark self-anchor from the URLS singleton so every surface
+// links to its own root regardless of the page's depth in the directory tree.
+const wordmarkHref =
+  domain === "architecture" ? URLS.architecture : domain === "cultures" ? URLS.cultures : URLS.main;
 const useLocationLayout = Boolean(location);
 ---
 

@@ -118,6 +118,7 @@ export interface BookCover {
 export interface BookHeader {
   domain: string;
   tld: string;
-  basePath: string;
+  /** @deprecated Ignored; the wordmark href is derived from `domain`. */
+  basePath?: string;
   location: string;
 }
