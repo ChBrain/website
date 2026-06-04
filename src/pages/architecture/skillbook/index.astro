@@ -16,6 +16,12 @@ const skills = existsSync(skillsDir)
       .sort()
       .map((f) => JSON.parse(readFileSync(join(skillsDir, f), "utf8")))
   : [];
+
+// Surface-relative base. This page is one level under the architecture surface
+// root (architecture/skillbook/), so downloads resolve at `../downloads/...`.
+// An absolute `/downloads/...` would break on staging, where the surface is
+// nested under /architecture/ rather than served from the domain root.
+const basePath = "../";
 ---
 
 <BaseLayout
@@ -23,7 +29,7 @@ const skills = existsSync(skillsDir)
   description="khai skills: self-contained agent skill bundles built from the khai-arch canon, ready to drop into any project."
 >
   <div class="arch-page skillbook-catalogue">
-    <SiteHeader domain="architecture" tld=".kaihacks.ai" basePath="../" location="skillbook" />
+    <SiteHeader domain="architecture" tld=".kaihacks.ai" basePath={basePath} location="skillbook" />
 
     <div class="catalogue-header">
       <h1 class="catalogue-title">Skills</h1>
@@ -71,7 +77,11 @@ const skills = existsSync(skillsDir)
                   <div class="card-body">
                     <p class="download-filename">{skill.filename}</p>
                     <p class="download-size">{skill.size}</p>
-                    <a class="download-link" href={`/downloads/skills/${skill.slug}.zip`} download>
+                    <a
+                      class="download-link"
+                      href={`${basePath}downloads/skills/${skill.slug}.zip`}
+                      download
+                    >
                       Download .zip →
                     </a>
                   </div>
