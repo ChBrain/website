@@ -53,20 +53,26 @@ describe("enginebooks shelf - /enginebooks", () => {
     // needs at least one engine installed; genderBook is the proxy for that.
     if (!shelf || !genderBook) return;
     const doc = new JSDOM(shelf.html).window.document;
-    const cards = [...doc.querySelectorAll("a.eb-card")];
+    // Tolerate the legacy eb-card markup and the shared Shelf's shelf-card, so
+    // the contract holds across the chassis migration onto <Shelf> (#245).
+    const cards = [...doc.querySelectorAll("a.eb-card, a.shelf-card")];
     expect(cards.length).toBeGreaterThan(0);
     for (const card of cards) {
       const href = card.getAttribute("href") ?? "";
       // ./<id>/ -- a relative descent into the per-engine book
       expect(href).toMatch(/^\.\/[a-z0-9-]+\/$/);
-      expect(card.querySelector(".eb-card-title")?.textContent?.trim()).toBeTruthy();
+      expect(
+        card.querySelector(".eb-card-title, .shelf-card-title")?.textContent?.trim(),
+      ).toBeTruthy();
     }
   });
 
   it("includes the gender engine on the shelf", () => {
     if (!shelf || !genderBook) return; // only when the gender engine is installed
     const doc = new JSDOM(shelf.html).window.document;
-    const hrefs = [...doc.querySelectorAll("a.eb-card")].map((a) => a.getAttribute("href"));
+    const hrefs = [...doc.querySelectorAll("a.eb-card, a.shelf-card")].map((a) =>
+      a.getAttribute("href"),
+    );
     expect(hrefs).toContain("./gender/");
   });
 });
