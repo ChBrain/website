@@ -60,6 +60,10 @@ export interface EngineFacet {
 export interface ParsedEngineSpec {
   /** the substantive H2 sections as facet cards (metadata sections dropped) */
   facets: EngineFacet[];
+  /** the declared `title` from frontmatter (echoes the file's H1 name, e.g.
+   *  "Speaking, Borrowed"); null when the file carries none. The spread renders
+   *  this in place of a filename-derived title. */
+  title: string | null;
   /** the spread subtitle if the frontmatter declares one; otherwise null */
   subtitle: string | null;
   /** the `## Taxonomy` meta value -- the group the position reports into, a
@@ -82,6 +86,7 @@ export function parseEngineSpec(text: string): ParsedEngineSpec {
   const frontmatter = parsed.data as Record<string, unknown>;
   const body = parsed.content.trim();
 
+  const title = typeof frontmatter.title === "string" ? frontmatter.title : null;
   const subtitle = typeof frontmatter.subtitle === "string" ? frontmatter.subtitle : null;
 
   // Split on H2 headings. The leading chunk (file H1 + any preamble) is
@@ -116,5 +121,5 @@ export function parseEngineSpec(text: string): ParsedEngineSpec {
     }
   }
 
-  return { facets, subtitle, taxonomy };
+  return { facets, title, subtitle, taxonomy };
 }
