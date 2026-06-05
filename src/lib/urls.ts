@@ -23,6 +23,7 @@ export interface SurfaceUrls {
   cvi: string;
   privacy: string;
   cultures: string;
+  plays: string;
   contact: string;
 }
 
@@ -32,6 +33,7 @@ const PRODUCTION: SurfaceUrls = {
   cvi: "https://kaihacks.ai/cvi/",
   privacy: "https://kaihacks.ai/privacy/",
   cultures: "https://cultures.kaihacks.ai/",
+  plays: "https://plays.kaihacks.ai/",
   contact: "https://kaihacks.ai/contact/",
 };
 
@@ -43,6 +45,7 @@ const STAGING: SurfaceUrls = {
   cvi: `${STAGING_BASE}/main/cvi/`,
   privacy: `${STAGING_BASE}/main/privacy/`,
   cultures: `${STAGING_BASE}/cultures/`,
+  plays: `${STAGING_BASE}/plays/`,
   contact: `${STAGING_BASE}/main/contact/`,
 };
 

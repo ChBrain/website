@@ -45,7 +45,13 @@ const { domain, tld, version, location, nav } = Astro.props;
 // Derive the wordmark self-anchor from the URLS singleton so every surface
 // links to its own root regardless of the page's depth in the directory tree.
 const wordmarkHref =
-  domain === "architecture" ? URLS.architecture : domain === "cultures" ? URLS.cultures : URLS.main;
+  domain === "architecture"
+    ? URLS.architecture
+    : domain === "cultures"
+      ? URLS.cultures
+      : domain === "plays"
+        ? URLS.plays
+        : URLS.main;
 const useLocationLayout = Boolean(location);
 ---
 
