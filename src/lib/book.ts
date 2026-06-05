@@ -68,9 +68,11 @@ export interface BookSpread {
   written?: boolean;
   /** installed-extension card -- adds the engine modifier class */
   engine?: boolean;
-  /** optional click-through at the foot of the spread (the Playbook's
-   *  enriched-by engine card links into its full Enginebook) */
-  deepLink?: { href: string; label: string } | null;
+  /** optional click-through pinned to the spread's title row. The Playbook's
+   *  enriched-by engine card links into its full Enginebook ("Open"); the
+   *  engines type spread links out to the download shelf ("Download"). `verb`
+   *  is the visible word (default "Open"); `label` is the full aria sentence. */
+  deepLink?: { href: string; label: string; verb?: string } | null;
 }
 
 /**

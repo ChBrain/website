@@ -169,7 +169,7 @@ const groups: BookTocGroup[] = tocGroups ?? [
               <h2 class="pb-spread-title">{s.title}<em>.</em></h2>
               {s.deepLink && (
                 <a class="pb-open" href={s.deepLink.href} aria-label={s.deepLink.label}>
-                  Open{" "}
+                  {s.deepLink.verb ?? "Open"}{" "}
                   <span class="pb-open-arr" aria-hidden="true">
                     →
                   </span>
