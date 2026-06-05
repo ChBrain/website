@@ -87,12 +87,13 @@ jobs:
               architecture) target="$base/architecture.kaihacks.ai/" ;;
               main)         target="$base/main/" ;;
               cultures)     target="$base/cultures.kaihacks.ai/" ;;
+              plays)        target="$base/plays.kaihacks.ai/" ;;
               *) echo "::error::unknown surface '$surface'"; exit 1 ;;
             esac
           elif [ "$env" = "staging" ]; then
             # Every surface stages under the single staging vhost.
             case "$surface" in
-              architecture|main|cultures)
+              architecture|main|cultures|plays)
                 target="$base/staging.kaihacks.ai/$surface/" ;;
               *) echo "::error::unknown surface '$surface'"; exit 1 ;;
             esac

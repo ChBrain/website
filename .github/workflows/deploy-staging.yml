@@ -28,6 +28,7 @@ jobs:
           - architecture
           - main
           - cultures
+          - plays
     uses: ./.github/workflows/deploy-surface.yml
     with:
       surface: ${{ matrix.surface }}
