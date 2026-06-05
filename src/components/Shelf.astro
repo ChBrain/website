@@ -112,6 +112,27 @@ const {
   <SiteFooter />
 </div>
 
+<script>
+  // Keep the masthead on one line. At the CSS size (128px, matching the
+  // KAI HACKS AI masthead) a short title fits; a long one -- a house, "KHAI
+  // plays Büchner" -- would overflow, so step the font-size down until it fits.
+  function fitMasthead() {
+    document.querySelectorAll(".masthead-title").forEach((el) => {
+      if (!(el instanceof HTMLElement)) return;
+      el.style.whiteSpace = "nowrap"; // one line; no-JS falls back to wrapping
+      el.style.fontSize = "";
+      let size = parseFloat(getComputedStyle(el).fontSize);
+      while (el.scrollWidth > el.clientWidth && size > 28) {
+        size -= 1;
+        el.style.fontSize = `${size}px`;
+      }
+    });
+  }
+  fitMasthead();
+  addEventListener("resize", fitMasthead);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitMasthead);
+</script>
+
 <style is:global>
   body:has(.shelf) {
     padding: 0;
@@ -159,14 +180,16 @@ const {
     margin: 1.125rem 0 0;
     font-family: var(--font-display);
     font-weight: 350;
-    font-size: 54px;
+    /* matches the front-page KAI HACKS AI masthead (52/128). A long title (a
+     * house: "KHAI plays Büchner") is shrunk to one line by the fit script. */
+    font-size: 52px;
     line-height: 0.94;
     letter-spacing: -0.03em;
     color: var(--color-ink);
   }
   @media (min-width: 641px) {
     .masthead-title {
-      font-size: 120px;
+      font-size: 128px;
     }
   }
   .masthead-title em {
