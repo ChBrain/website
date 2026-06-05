@@ -1,0 +1,52 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Shelf, { type ShelfCard } from "../../../components/Shelf.astro";
+import { houses } from "@chbrain/khai-plays";
+// MOCK -- REMOVE WHEN THE FIRST HOUSE REGISTERS (see ../_mock).
+import { MOCK_HOUSES, type MockHouse, type MockPlay } from "../_mock";
+
+// One page per house. Real houses (from the registry) drive the routes once
+// registered; their plays will come from each house's programme package (a
+// later capability). While the registry is empty, the mock houses provide the
+// routes and their plays so the flow renders. A house with no plays yet shows
+// the empty-state.
+export function getStaticPaths() {
+  const list = houses.length ? houses : MOCK_HOUSES;
+  return list.map((house: (typeof list)[number]) => ({
+    params: { house: house.id },
+    props: { house },
+  }));
+}
+
+const { house } = Astro.props as { house: MockHouse };
+const plays: MockPlay[] = house.plays ?? [];
+const repoLabel = house.repo.replace(/^https?:\/\//, "");
+
+const cards: ShelfCard[] = plays.map((p) => ({
+  href: house.repo,
+  external: true,
+  eyebrow: house.package,
+  state: "play",
+  title: p.title,
+  note: p.blurb,
+  cta: "Open in the house →",
+}));
+---
+
+<BaseLayout title={`${house.title} · Plays · kaihacks`} description={house.blurb}>
+  <Shelf
+    domain="plays"
+    location={house.id}
+    sectionLabel="§ · a house"
+    title={house.title}
+    sectionNo="§1"
+    sectionTitle="The plays"
+    sectionNote={house.package}
+    cards={cards}
+    empty="No plays in this house yet."
+  >
+    <Fragment slot="subline">
+      {house.blurb} The house lives at <a href={house.repo} rel="external">{repoLabel}</a>.
+    </Fragment>
+  </Shelf>
+</BaseLayout>
