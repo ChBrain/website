@@ -36,7 +36,7 @@
     "@fontsource/ibm-plex-mono": "^5.2.7"
   },
   "devDependencies": {
-    "@chbrain/khai-guard": "^0.1.4",
+    "@chbrain/khai-guard": "^0.1.5",
     "@chbrain/khai-pack": "^0.0.3",
     "@chbrain/khai-skills": "^0.0.8",
     "@types/jsdom": "^28.0.3",
