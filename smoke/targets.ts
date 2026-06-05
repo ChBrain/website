@@ -15,6 +15,7 @@ const SURFACE_OF: Record<keyof SurfaceUrls, string> = {
   privacy: "main",
   contact: "main",
   cultures: "cultures",
+  plays: "plays",
 };
 
 /** Build the live-check targets for an environment from the canonical URLS. */
