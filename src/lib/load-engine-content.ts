@@ -86,21 +86,37 @@ export function loadEngineBook(id: string): EngineBook {
   }
   const read = (file: string) => readFileSync(join(dir, file), "utf8");
 
-  const anchor: EngineBookFile = {
-    key: "anchor",
-    role: "anchor",
-    file: manifest.anchor,
-    text: read(manifest.anchor),
-  };
+  // Language-style engines declare a `members` array (a process tree with
+  // parent links); gender-style engines declare a flat `anchor` string +
+  // `expressions` record. Handle both shapes.
+  let anchor: EngineBookFile;
+  let expressions: EngineBookFile[];
 
-  const expressions: EngineBookFile[] = Object.entries(
-    (manifest.expressions ?? {}) as Record<string, string>,
-  ).map(([name, file]) => ({
-    key: name,
-    role: "expression" as const,
-    file,
-    text: read(file),
-  }));
+  if (Array.isArray(manifest.members)) {
+    const root = (manifest.members as Array<{ file: string; parent: unknown }>).find(
+      (m) => m.parent === null,
+    );
+    if (!root) throw new Error(`@chbrain/khai-engine-${id}: no root member (parent: null)`);
+    const typePrefix = manifest.type ? `${manifest.type}_` : "";
+    const memberKey = (file: string) => {
+      const base = file.endsWith(".md") ? file.slice(0, -3) : file;
+      return typePrefix && base.startsWith(typePrefix) ? base.slice(typePrefix.length) : base;
+    };
+    anchor = { key: "anchor", role: "anchor", file: root.file, text: read(root.file) };
+    expressions = (manifest.members as Array<{ file: string; parent: unknown }>)
+      .filter((m) => m.parent !== null)
+      .map((m) => ({ key: memberKey(m.file), role: "expression" as const, file: m.file, text: read(m.file) }));
+  } else {
+    anchor = { key: "anchor", role: "anchor", file: manifest.anchor, text: read(manifest.anchor) };
+    expressions = Object.entries(
+      (manifest.expressions ?? {}) as Record<string, string>,
+    ).map(([name, file]) => ({
+      key: name,
+      role: "expression" as const,
+      file,
+      text: read(file),
+    }));
+  }
 
   // The LORE reference warrant. We render whatever the canon projects and
   // degrade to null on any failure -- a missing REFERENCES.md or a
