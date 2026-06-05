@@ -105,17 +105,22 @@ export function loadEngineBook(id: string): EngineBook {
     anchor = { key: "anchor", role: "anchor", file: root.file, text: read(root.file) };
     expressions = (manifest.members as Array<{ file: string; parent: unknown }>)
       .filter((m) => m.parent !== null)
-      .map((m) => ({ key: memberKey(m.file), role: "expression" as const, file: m.file, text: read(m.file) }));
+      .map((m) => ({
+        key: memberKey(m.file),
+        role: "expression" as const,
+        file: m.file,
+        text: read(m.file),
+      }));
   } else {
     anchor = { key: "anchor", role: "anchor", file: manifest.anchor, text: read(manifest.anchor) };
-    expressions = Object.entries(
-      (manifest.expressions ?? {}) as Record<string, string>,
-    ).map(([name, file]) => ({
-      key: name,
-      role: "expression" as const,
-      file,
-      text: read(file),
-    }));
+    expressions = Object.entries((manifest.expressions ?? {}) as Record<string, string>).map(
+      ([name, file]) => ({
+        key: name,
+        role: "expression" as const,
+        file,
+        text: read(file),
+      }),
+    );
   }
 
   // The LORE reference warrant. We render whatever the canon projects and
