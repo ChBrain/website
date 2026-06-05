@@ -13,13 +13,14 @@
           "src/lib/**",
           "src/layouts/**",
           "src/styles/**",
-          "src/marks/**"
+          "src/marks/**",
+          "smoke/**"
         ]
       },
       {
         "pattern": "governance/*",
         "layer": "governance",
-        "allow": [".github/**", ".husky/**", "khai-guard.config.json", "tests/**"]
+        "allow": [".github/**", ".husky/**", "khai-guard.config.json", "tests/**", "scripts/**"]
       },
       {
         "pattern": "surface/pages/*",
@@ -34,7 +35,7 @@
       {
         "pattern": "surface/plays/*",
         "layer": "solution",
-        "allow": ["src/pages/architecture/plays/**"]
+        "allow": ["src/pages/plays/**"]
       },
       {
         "pattern": "surface/playbook/*",
