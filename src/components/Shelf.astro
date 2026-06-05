@@ -1,0 +1,330 @@
+---
+// Shelf: the shared card-grid surface. One place for the masthead + section +
+// card grid + empty-state that the enginebooks/plays/(future) download surfaces
+// all share, so the layout lives once and cannot drift between them. The page
+// supplies the text and the cards; the chrome (SiteHeader domain) and the
+// masthead subline (a `subline` slot) stay page-specific.
+import SiteHeader from "./SiteHeader.astro";
+import SiteFooter from "./SiteFooter.astro";
+
+/** One card on the shelf. The CTA's focus differs by surface (open / download /
+ *  visit); the layout does not. */
+export interface ShelfCard {
+  /** where the card links (an in-site path or, for a house, an external repo). */
+  href: string;
+  /** the mono eyebrow, top-left (e.g. a URL or a package name). */
+  eyebrow: string;
+  /** the brick state marker, top-right (e.g. "engine · wires at position"). */
+  state: string;
+  /** the card title (display face). */
+  title: string;
+  /** the card note / blurb (italic). */
+  note: string;
+  /** the call to action label (e.g. "Open the enginebook →"). */
+  cta: string;
+  /** when true, the link leaves the site (rel=external) — e.g. a house repo. */
+  external?: boolean;
+}
+
+interface Props {
+  domain: string;
+  tld?: string;
+  location: string;
+  /** the small eyebrow above the masthead title (e.g. "§ · the extensions"). */
+  sectionLabel: string;
+  /** the masthead title; the trailing period is added by the component. */
+  title: string;
+  sectionNo: string;
+  sectionTitle: string;
+  sectionNote: string;
+  cards: ShelfCard[];
+  /** the empty-state line when there are no cards. */
+  empty: string;
+}
+
+const {
+  domain,
+  tld = ".kaihacks.ai",
+  location,
+  sectionLabel,
+  title,
+  sectionNo,
+  sectionTitle,
+  sectionNote,
+  cards,
+  empty,
+} = Astro.props;
+---
+
+<div class="shelf">
+  <SiteHeader domain={domain} tld={tld} location={location} />
+
+  <section class="masthead">
+    <div class="section-label">{sectionLabel}</div>
+    {/* prettier-ignore */}
+    <h1 class="masthead-title">{title}<em>.</em></h1>
+    <p class="masthead-subline"><slot name="subline" /></p>
+  </section>
+
+  <section class="section">
+    <h2 class="section-heading">
+      <span class="section-no">{sectionNo}</span>
+      <span class="section-title">{sectionTitle}</span>
+      <span class="section-note">{sectionNote}</span>
+    </h2>
+
+    {
+      cards.length === 0 ? (
+        <p class="shelf-empty">{empty}</p>
+      ) : (
+        <div class="shelf-cards">
+          {cards.map((card) => (
+            <a href={card.href} class="shelf-card" {...(card.external ? { rel: "external" } : {})}>
+              <div class="shelf-card-hue" aria-hidden="true" />
+              <div class="shelf-card-body">
+                <div class="shelf-card-row">
+                  <span class="shelf-card-eyebrow">{card.eyebrow}</span>
+                  <span class="shelf-card-state">{card.state}</span>
+                </div>
+                <div class="shelf-card-title">{card.title}</div>
+                <p class="shelf-card-note">{card.note}</p>
+                <span class="shelf-card-cta">{card.cta}</span>
+              </div>
+            </a>
+          ))}
+        </div>
+      )
+    }
+  </section>
+
+  <SiteFooter />
+</div>
+
+<style is:global>
+  body:has(.shelf) {
+    padding: 0;
+  }
+  body:has(.shelf) main {
+    max-width: none;
+    margin: 0;
+  }
+</style>
+
+<style>
+  .shelf {
+    max-width: var(--width-page);
+    margin: 0 auto;
+    padding: 0 1.25rem;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-prose);
+  }
+  @media (min-width: 641px) {
+    .shelf {
+      padding: 0 3.5rem;
+    }
+  }
+  .masthead {
+    padding: 1.875rem 0 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  @media (min-width: 641px) {
+    .masthead {
+      padding: 4rem 0 2.5rem;
+    }
+  }
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.26em;
+    color: var(--color-ink-soft);
+    text-transform: uppercase;
+  }
+  .masthead-title {
+    margin: 1.125rem 0 0;
+    font-family: var(--font-display);
+    font-weight: 350;
+    font-size: 54px;
+    line-height: 0.94;
+    letter-spacing: -0.03em;
+    color: var(--color-ink);
+  }
+  @media (min-width: 641px) {
+    .masthead-title {
+      font-size: 120px;
+    }
+  }
+  .masthead-title em {
+    color: var(--color-brick);
+    font-style: normal;
+  }
+  .masthead-subline {
+    margin: 1.375rem 0 0;
+    max-width: 680px;
+    font-family: var(--font-prose);
+    font-style: italic;
+    font-size: 17px;
+    line-height: 1.4;
+    color: var(--color-ink-soft);
+    text-wrap: pretty;
+  }
+  @media (min-width: 641px) {
+    .masthead-subline {
+      margin-top: 1.75rem;
+      font-size: 22px;
+    }
+  }
+  .masthead-subline :global(code) {
+    font-family: var(--font-mono);
+    font-style: normal;
+    font-size: 0.85em;
+  }
+  .section {
+    padding: 0.5rem 0 2rem;
+  }
+  .section-heading {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-bottom: 1px solid var(--color-rule);
+    padding-bottom: 10px;
+    margin: 0;
+    font-weight: normal;
+  }
+  @media (min-width: 641px) {
+    .section-heading {
+      flex-direction: row;
+      align-items: baseline;
+      gap: 0;
+    }
+  }
+  .section-no {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--color-brick);
+    text-transform: uppercase;
+    margin-right: 14px;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--color-ink);
+  }
+  @media (min-width: 641px) {
+    .section-title {
+      font-size: 26px;
+    }
+  }
+  .section-note {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--color-ink-soft);
+    text-transform: uppercase;
+    margin-left: auto;
+  }
+  .shelf-empty {
+    margin-top: 24px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--color-ink-mute);
+    text-transform: uppercase;
+  }
+  .shelf-cards {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  @media (min-width: 721px) {
+    .shelf-cards {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .shelf-card {
+    display: block;
+    text-decoration: none;
+    color: var(--color-ink);
+    border: 1px solid var(--color-ink);
+    background: var(--color-paper-warm);
+    overflow: hidden;
+    transition:
+      transform 0.16s,
+      box-shadow 0.16s;
+  }
+  .shelf-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -16px var(--color-ink);
+  }
+  .shelf-card-hue {
+    height: 6px;
+    background: var(--color-brick);
+  }
+  .shelf-card-body {
+    padding: 18px 20px 20px;
+  }
+  @media (min-width: 641px) {
+    .shelf-card-body {
+      padding: 24px 26px;
+    }
+  }
+  .shelf-card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .shelf-card-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: -0.01em;
+    color: var(--color-ink);
+  }
+  .shelf-card-state {
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    letter-spacing: 0.18em;
+    color: var(--color-brick);
+    text-transform: uppercase;
+  }
+  .shelf-card-title {
+    font-family: var(--font-display);
+    font-size: 32px;
+    line-height: 1.06;
+    margin-top: 8px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  @media (min-width: 641px) {
+    .shelf-card-title {
+      font-size: 40px;
+    }
+  }
+  .shelf-card-note {
+    margin: 8px 0 0;
+    max-width: 640px;
+    font-family: var(--font-prose);
+    font-style: italic;
+    font-size: 15px;
+    color: var(--color-ink-soft);
+    line-height: 1.45;
+  }
+  .shelf-card-cta {
+    display: inline-block;
+    margin-top: 14px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--color-ink);
+    padding-bottom: 3px;
+    border-bottom: 1px solid var(--color-rule);
+  }
+</style>
