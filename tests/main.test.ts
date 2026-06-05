@@ -32,6 +32,8 @@ const SECTIONS: {
   id: string | string[];
   h2: string | string[];
   note: string | string[];
+  /** asserted only when present in the DOM (a surface still rolling out). */
+  optional?: boolean;
 }[] = [
   {
     n: "§01",
@@ -63,6 +65,13 @@ const SECTIONS: {
     note: ["the name reads itself · and what it runs on", "have the method built for you"],
   },
   { n: "§04", id: "apps", h2: "Applications", note: "what runs on the architecture" },
+  {
+    n: "§05",
+    id: "plays",
+    h2: "Plays",
+    note: "productions the architecture generates",
+    optional: true,
+  },
 ];
 
 // AIDE acrostic — first letter of each domain is bricked. Two accepted forms:
@@ -200,6 +209,7 @@ describe("main (company front door) — design contract", () => {
         const section = ids
           .map((id) => dom.window.document.querySelector(`section#${id}.section`))
           .find((s) => s !== null);
+        if (sec.optional && !section) return; // optional surface not rendered yet
         expect(section, `missing section for any of [${ids.join(", ")}]`).toBeDefined();
         expect(section!.querySelector(".section-no")?.textContent?.trim()).toBe(sec.n);
         const h2 = section!.querySelector(".section-title")?.textContent?.trim();
@@ -222,9 +232,14 @@ describe("main (company front door) — design contract", () => {
       const ids = [...dom.window.document.querySelectorAll("main.snap-scroll section.section")].map(
         (s) => s.id,
       );
-      // Build the expected id list by picking, for each canonical
-      // section, the tolerated id that actually appears in the DOM.
-      const expected = SECTIONS.map((sec) => {
+      // Build the expected id list by picking, for each canonical section, the
+      // tolerated id that actually appears in the DOM. Optional sections that
+      // are not rendered yet drop out, so the order holds before and after they
+      // land.
+      const expected = SECTIONS.filter((sec) => {
+        const tolerated = Array.isArray(sec.id) ? sec.id : [sec.id];
+        return !sec.optional || tolerated.some((id) => ids.includes(id));
+      }).map((sec) => {
         const tolerated = Array.isArray(sec.id) ? sec.id : [sec.id];
         return tolerated.find((id) => ids.includes(id)) ?? tolerated[0];
       });
@@ -239,10 +254,13 @@ describe("main (company front door) — design contract", () => {
       expect(scroll, "missing main.snap-scroll container").not.toBeNull();
     });
 
-    it("renders 5 snap panels: masthead + 4 §s", () => {
+    it("renders one snap panel per section plus the masthead", () => {
       const dom = new JSDOM(main!.html);
       const panels = dom.window.document.querySelectorAll("main.snap-scroll .snap-panel");
-      expect(panels.length).toBe(5);
+      const sections = dom.window.document.querySelectorAll("main.snap-scroll section.section");
+      // masthead + every section is its own panel (4 today, 5 once plays lands).
+      expect(panels.length).toBe(1 + sections.length);
+      expect(sections.length).toBeGreaterThanOrEqual(4);
     });
 
     it("masthead is the first snap panel", () => {
