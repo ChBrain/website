@@ -32,6 +32,11 @@
         "allow": ["src/pages/architecture/enginebooks/**"]
       },
       {
+        "pattern": "surface/plays/*",
+        "layer": "solution",
+        "allow": ["src/pages/architecture/plays/**"]
+      },
+      {
         "pattern": "surface/playbook/*",
         "layer": "solution",
         "allow": ["src/pages/architecture/playbook/**"]
