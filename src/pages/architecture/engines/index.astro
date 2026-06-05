@@ -1,0 +1,68 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Shelf, { type ShelfCard } from "../../../components/Shelf.astro";
+import pkg from "@chbrain/khai-arch/package.json";
+import { loadEngines } from "../../../lib/load-engines";
+import { loadEngineBook } from "../../../lib/load-engine-content";
+import { URLS } from "../../../lib/urls";
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
+
+// The engines download surface: a different audience from the enginebooks. An
+// enginebook is the reading book (open the spreads, see the engine wired through
+// the seam); this shelf is the take-it index -- one card per installed engine,
+// the bundle to download. The canon metadata (title + tagline + the seam it
+// wires) comes from the installed engine, the same source the enginebooks read;
+// the artifact (filename/size/sha256) comes from the download sidecar generated
+// at prebuild (scripts/build-downloads.mjs). An engine without a built bundle is
+// simply not on the shelf -- there is nothing to take.
+const edition = `v${pkg.version}`;
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+interface EngineDownload {
+  filename: string;
+  size: string;
+  sha256: string;
+}
+const downloadsDir = join(process.cwd(), "public", "downloads", "engines");
+function downloadFor(id: string): EngineDownload | null {
+  const path = join(downloadsDir, `${id}.json`);
+  return existsSync(path) ? (JSON.parse(readFileSync(path, "utf8")) as EngineDownload) : null;
+}
+
+const cards: ShelfCard[] = loadEngines()
+  .map((card) => ({ card, book: loadEngineBook(card.id), dl: downloadFor(card.id) }))
+  .filter((row): row is typeof row & { dl: EngineDownload } => row.dl !== null)
+  .map(({ card, book, dl }) => ({
+    href: `${URLS.architecture}downloads/engines/${card.id}.zip`,
+    eyebrow: dl.filename,
+    state: `engine · ${dl.size}`,
+    title: cap(card.id),
+    note: book.tagline ?? card.sections[card.chapters[0]],
+    cta: "Download the engine →",
+    external: true,
+  }));
+---
+
+<BaseLayout
+  title="Engines · architecture · kaihacks"
+  description="Download khai engines: the extensions that wire through the canon's seam, each a self-contained bundle ready to install."
+>
+  <Shelf
+    domain="architecture"
+    location="engines"
+    sectionLabel="§ · the extensions"
+    title="Engines"
+    sectionNo="§1"
+    sectionTitle="The bundles"
+    sectionNote={`canon ${edition} · downloads`}
+    cards={cards}
+    empty="No engines built yet. Run the prebuild on a machine with the registry token."
+  >
+    <Fragment slot="subline">
+      khai engines, ready to take with you. Each wires the canon at one seam, then travels as a
+      self-contained <code>.zip</code> you install where you need it. To read an engine before you take
+      it, open its <a href={`${URLS.architecture}enginebooks/`}>enginebook</a>.
+    </Fragment>
+  </Shelf>
+</BaseLayout>
