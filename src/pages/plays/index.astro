@@ -1,0 +1,45 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Shelf, { type ShelfCard } from "../../components/Shelf.astro";
+import { houses } from "@chbrain/khai-plays";
+// MOCK -- REMOVE WHEN THE FIRST HOUSE REGISTERS (see ./_mock).
+import { MOCK_HOUSES } from "./_mock";
+
+// The bill of houses. Real registrations come from the khai-plays registry
+// (`houses`); while it is empty we fall back to the mock houses so the surface
+// reads end to end. When the first house registers, the mock drops out on its
+// own -- then delete ./_mock and this import.
+const bill = houses.length ? houses : MOCK_HOUSES;
+
+const cards: ShelfCard[] = bill.map((h: (typeof bill)[number]) => ({
+  href: `/plays/${h.id}/`,
+  eyebrow: h.package,
+  state: "house · a khai-plays collection",
+  title: h.title,
+  note: h.blurb,
+  cta: "Enter the house →",
+}));
+---
+
+<BaseLayout
+  title="Plays · kaihacks"
+  description="The bill of houses: each a khai-plays collection the website reads, its plays inside."
+>
+  <Shelf
+    domain="plays"
+    location="the bill"
+    sectionLabel="§ · the productions"
+    title="Plays"
+    sectionNo="§1"
+    sectionTitle="The houses"
+    sectionNote="the bill"
+    cards={cards}
+    empty="No houses registered yet."
+  >
+    <Fragment slot="subline">
+      The bill of houses. khai holds the index, not the productions: each house is a
+      <code>khai-plays-&lt;source&gt;</code> collection, and the website reads its programme. The bill
+      is the list; the plays live in the houses.
+    </Fragment>
+  </Shelf>
+</BaseLayout>
