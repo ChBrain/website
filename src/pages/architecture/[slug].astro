@@ -8,11 +8,20 @@ interface Props {
 }
 
 export async function getStaticPaths() {
+  // The "engines" type does not get a standalone spec page here:
+  // /architecture/engines/ is the engines download shelf, and the engines spec
+  // is carried in the architecture playbook (the "enriched by" group). Excluding
+  // it frees that path for the shelf; every other type still renders its spec
+  // page. (Declared in-function: Astro runs getStaticPaths in isolation, so it
+  // cannot close over frontmatter-scope consts.)
+  const NO_SPEC_PAGE = new Set(["engines"]);
   const rawSpecs = loadAllSpecs();
-  return rawSpecs.map((raw) => ({
-    params: { slug: raw.id },
-    props: { spec: parseSpec(raw.text) },
-  }));
+  return rawSpecs
+    .filter((raw) => !NO_SPEC_PAGE.has(raw.id))
+    .map((raw) => ({
+      params: { slug: raw.id },
+      props: { spec: parseSpec(raw.text) },
+    }));
 }
 
 const { spec } = Astro.props as Props;
