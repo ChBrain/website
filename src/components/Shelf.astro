@@ -112,7 +112,11 @@ for (let i = 0; i < cards.length; i += per) cardPanels.push(cards.slice(i, i + p
           )}
           <div class="shelf-cards">
             {panel.map((card) => (
-              <a href={card.href} class="shelf-card" {...(card.external ? { rel: "external" } : {})}>
+              <a
+                href={card.href}
+                class="shelf-card"
+                {...(card.external ? { rel: "external" } : {})}
+              >
                 <div class="shelf-card-hue" aria-hidden="true" />
                 <div class="shelf-card-body">
                   <div class="shelf-card-row">
