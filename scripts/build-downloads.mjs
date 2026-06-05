@@ -173,9 +173,17 @@ function buildSkillDownloads() {
     if (existsSync(readmePath)) {
       const readmeSrc = readFileSync(readmePath, "utf8");
       const extractSection = (src, heading) => {
-        const re = new RegExp(`^## ${heading}\\s*\\n([\\s\\S]*?)(?=^## |$)`, "m");
-        const m = src.match(re);
-        return m ? m[1].trim() : null;
+        // Capture from "## <heading>" to the NEXT "## " heading or end of file,
+        // then flatten the section's hard wraps to single spaces. The terminator
+        // must be the next heading or true EOF -- NOT end-of-line. The earlier
+        // /(?=^## |$)/m stopped at the first line break, because in multiline
+        // mode `$` matches every line end: a hard-wrapped paragraph lost
+        // everything after its first line, while a single-line one survived
+        // whole. That is exactly why khai-playwright (one long line) read in full
+        // and khai-impresario (wrapped) cut off mid-sentence.
+        const re = new RegExp(`\\n## ${heading}[ \\t]*\\n([\\s\\S]*?)(?=\\n## |$)`);
+        const m = `\n${src}`.match(re);
+        return m ? m[1].trim().replace(/\s*\n\s*/g, " ") : null;
       };
       problem = extractSection(readmeSrc, "Problem");
       solution = extractSection(readmeSrc, "Solution");
