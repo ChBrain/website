@@ -63,6 +63,13 @@ for (const group of playbook) {
       })),
       coda: parsed?.coda ?? null,
       written,
+      // The engines type spread reads the spec; from here you can go take the
+      // engines themselves -- the download shelf (../engines/ from the playbook).
+      // The express lane out of the book: "Download" the verb, not "Open".
+      deepLink:
+        slug === "engines"
+          ? { href: "../engines/", label: "Download the engines", verb: "Download" }
+          : undefined,
     });
     items.push({ slug, idx: n, n: nStr, name, written });
   }
