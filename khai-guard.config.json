@@ -33,6 +33,16 @@
         "allow": ["src/pages/architecture/enginebooks/**"]
       },
       {
+        "pattern": "surface/engines/*",
+        "layer": "solution",
+        "allow": ["src/pages/architecture/engines/**"]
+      },
+      {
+        "pattern": "surface/skills/*",
+        "layer": "solution",
+        "allow": ["src/pages/architecture/skills/**"]
+      },
+      {
         "pattern": "surface/plays/*",
         "layer": "solution",
         "allow": ["src/pages/plays/**"]
