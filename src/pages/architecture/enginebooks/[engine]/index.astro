@@ -143,7 +143,9 @@ spreads.push({
   // the right carries the parent, not a repeat. Subtitle drops the "the anchor"
   // default -- the role marker already covers it.
   statusHtml: parentHtml(anchor.taxonomy),
-  title: cap(book.id),
+  // The anchor's declared title (its H1 name, e.g. "Using Language"); falls back
+  // to the capitalised engine id for an engine that ships no `title`.
+  title: anchor.title ?? cap(book.id),
   subtitle: anchor.subtitle,
   facets: anchor.facets.map(facetLinks),
   coda: null,
@@ -162,7 +164,9 @@ for (const expr of book.expressions) {
     // the "expression x3": left = "expression", right = the parent link, and
     // the subtitle drops its "expression" default.
     statusHtml: parentHtml(parsed.taxonomy),
-    title: cap(expr.key),
+    // The expression's declared title (its H1 name, e.g. "Speaking, Borrowed");
+    // falls back to the key when the file ships no `title`.
+    title: parsed.title ?? cap(expr.key),
     subtitle: parsed.subtitle,
     facets: parsed.facets.map(facetLinks),
     coda: null,
