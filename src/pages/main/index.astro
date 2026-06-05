@@ -268,7 +268,8 @@ const apps = [
               <span class="architecture-card-url">plays.kaihacks.ai</span>
               <span class="architecture-card-state">the bill of houses</span>
             </div>
-            <div class="architecture-card-title">KAI HACKS AI Plays</div>
+            {/* prettier-ignore */}
+            <div class="architecture-card-title">KHAI <em>Plays</em></div>
             <p class="architecture-card-note">
               Productions the architecture generates, not a part of it.<br />
               Each house its own khai-plays collection.<br />
@@ -919,6 +920,10 @@ const apps = [
       margin-top: 8px;
       font-weight: 400;
       letter-spacing: -0.01em;
+    }
+    .architecture-card-title em {
+      color: var(--color-brick);
+      font-style: normal;
     }
     @media (min-width: 641px) {
       .architecture-card-title {
