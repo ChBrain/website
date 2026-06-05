@@ -23,13 +23,12 @@ const plays: MockPlay[] = house.plays ?? [];
 const repoLabel = house.repo.replace(/^https?:\/\//, "");
 
 const cards: ShelfCard[] = plays.map((p) => ({
-  href: house.repo,
-  external: true,
+  href: `/plays/${house.id}/${p.id}/`,
   eyebrow: house.package,
   state: "play",
   title: p.title,
   note: p.blurb,
-  cta: "Open in the house →",
+  cta: "Open the playbook →",
 }));
 ---
 
