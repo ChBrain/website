@@ -38,7 +38,7 @@
   "devDependencies": {
     "@chbrain/khai-guard": "^0.1.4",
     "@chbrain/khai-pack": "^0.0.3",
-    "@chbrain/khai-skills": "^0.0.6",
+    "@chbrain/khai-skills": "^0.0.7",
     "@types/jsdom": "^28.0.3",
     "@types/markdown-it": "^14.1.2",
     "astro": "^6.4.4",
