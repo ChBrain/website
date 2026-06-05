@@ -1,0 +1,55 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Shelf, { type ShelfCard } from "../../../components/Shelf.astro";
+import { URLS } from "../../../lib/urls";
+import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { join } from "node:path";
+
+// The skills download surface: a different audience from the skillbook. The
+// skillbook is the reading book (open a spread, read the P/S/O facets); this
+// shelf is the quick-grab index -- one card per skill, the bundle to download.
+// Both read the same sidecars (generated at prebuild by scripts/build-downloads.mjs:
+// name, slug, title, bodyHtml, filename, size, sha256, problem, solution, outcome).
+// When the sidecars are absent (CI build, no @chbrain registry) the shelf shows
+// its empty-state and the build stays green.
+const skillsDir = join(process.cwd(), "public", "downloads", "skills");
+const skills = existsSync(skillsDir)
+  ? readdirSync(skillsDir)
+      .filter((f) => f.endsWith(".json"))
+      .sort()
+      .map((f) => JSON.parse(readFileSync(join(skillsDir, f), "utf8")))
+  : [];
+
+const cards: ShelfCard[] = skills.map((skill) => ({
+  href: `${URLS.architecture}downloads/skills/${skill.slug}.zip`,
+  eyebrow: skill.filename,
+  state: `skill · ${skill.size}`,
+  title: skill.title,
+  note: skill.problem,
+  cta: "Download the bundle →",
+  external: true,
+}));
+---
+
+<BaseLayout
+  title="Skills · architecture · kaihacks"
+  description="Download khai skills: self-contained agent bundles built from the khai-arch canon, ready to drop into any project."
+>
+  <Shelf
+    domain="architecture"
+    location="skills"
+    sectionLabel="§ · the extensions"
+    title="Skills"
+    sectionNo="§1"
+    sectionTitle="The bundles"
+    sectionNote="downloads"
+    cards={cards}
+    empty="No skills built yet. Run the prebuild on a machine with the registry token."
+  >
+    <Fragment slot="subline">
+      khai skills, ready to take with you. Each is a self-contained agent bundle built from the
+      khai-arch canon: grab the <code>.zip</code>, drop it into any project. To read a skill before
+      you take it, open the <a href={`${URLS.architecture}skillbook/`}>skillbook</a>.
+    </Fragment>
+  </Shelf>
+</BaseLayout>
