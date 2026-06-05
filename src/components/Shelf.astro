@@ -115,22 +115,11 @@ const {
 <script>
   // Keep the masthead on one line. At the CSS size (128px, matching the
   // KAI HACKS AI masthead) a short title fits; a long one -- a house, "KHAI
-  // plays Büchner" -- would overflow, so step the font-size down until it fits.
-  function fitMasthead() {
-    document.querySelectorAll(".masthead-title").forEach((el) => {
-      if (!(el instanceof HTMLElement)) return;
-      el.style.whiteSpace = "nowrap"; // one line; no-JS falls back to wrapping
-      el.style.fontSize = "";
-      let size = parseFloat(getComputedStyle(el).fontSize);
-      while (el.scrollWidth > el.clientWidth && size > 28) {
-        size -= 1;
-        el.style.fontSize = `${size}px`;
-      }
-    });
-  }
-  fitMasthead();
-  addEventListener("resize", fitMasthead);
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitMasthead);
+  // plays Büchner" -- would overflow, so the shared helper steps the
+  // font-size down until it fits. Same helper drives the Book cover, so the
+  // two cannot drift.
+  import { fitOneLine } from "../lib/fit-one-line";
+  fitOneLine(".masthead-title");
 </script>
 
 <style is:global>

@@ -946,6 +946,15 @@ const groups: BookTocGroup[] = tocGroups ?? [
 </style>
 
 <script>
+  // Keep the cover title on one line. At the CSS size (168px) a short title
+  // fits; a long one -- a play, "Leonce und Lena" -- would wrap to two lines,
+  // so the shared helper steps the font-size down until it fits. Same helper
+  // drives the Shelf masthead, so the two cannot drift.
+  import { fitOneLine } from "../lib/fit-one-line";
+  fitOneLine(".pb-cover-title");
+</script>
+
+<script>
   (function () {
     const strip = document.querySelector(".pb-strip") as HTMLButtonElement | null;
     const overlay = document.querySelector(".pb-overlay") as HTMLElement | null;
