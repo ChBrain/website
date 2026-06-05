@@ -22,6 +22,11 @@ export async function getStaticPaths() {
 
 const { book } = Astro.props as { book: EngineBook };
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+// The engine's khai type, linked to its canon type page (e.g. process ->
+// /architecture/process/). The engine content spreads (anchor + expressions)
+// carry it as their group label, linked, in place of the bare role word.
+const typeHref = book.type ? `${URLS.architecture}${book.type}/` : null;
 const md = new MarkdownIt({ html: false, breaks: false, linkify: false });
 
 // The reference warrant AND the facet cards link each source to the member
@@ -131,7 +136,8 @@ const anchor = parseEngineSpec(book.anchor.text);
 spreads.push({
   slug: "anchor",
   n: n(),
-  groupLabel: "anchor",
+  groupLabel: book.type ?? "anchor",
+  groupHref: typeHref,
   status: `anchor · ${book.type ?? "?"}`,
   // Corner: the anchor's parent (Taxonomy). The left already says "anchor", so
   // the right carries the parent, not a repeat. Subtitle drops the "the anchor"
@@ -149,7 +155,8 @@ for (const expr of book.expressions) {
   spreads.push({
     slug: expr.key,
     n: n(),
-    groupLabel: "expression",
+    groupLabel: book.type ?? "expression",
+    groupHref: typeHref,
     status: "expression",
     // Corner: the expression's parent (Taxonomy) -- the anchor, linked. Kills
     // the "expression x3": left = "expression", right = the parent link, and
