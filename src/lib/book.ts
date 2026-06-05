@@ -39,6 +39,9 @@ export interface BookSpread {
   n: string;
   /** the group label shown beside the ordinal (role / section) */
   groupLabel: string;
+  /** optional href that turns the group label into a link (e.g. an engine
+   *  spread's khai type, linked to its canon type page). */
+  groupHref?: string | null;
   /** the status badge on the right (e.g. "published", a mnemonic, "engine") */
   status: string;
   /** optional pre-rendered HTML for the status corner, drawn in place of

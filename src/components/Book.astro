@@ -145,7 +145,14 @@ const groups: BookTocGroup[] = tocGroups ?? [
           >
             <header class="pb-spread-head">
               <span class="pb-spread-no">
-                {s.n} · {s.groupLabel}
+                {s.n} ·{" "}
+                {s.groupHref ? (
+                  <a class="pb-spread-group-link" href={s.groupHref}>
+                    {s.groupLabel}
+                  </a>
+                ) : (
+                  s.groupLabel
+                )}
               </span>
               {s.statusHtml ? (
                 <span class="pb-spread-state" set:html={s.statusHtml} />
@@ -643,6 +650,17 @@ const groups: BookTocGroup[] = tocGroups ?? [
     letter-spacing: 0.2em;
     color: var(--color-brick);
     text-transform: uppercase;
+  }
+  /* A linked group label (an engine spread's khai type, linked to its canon
+   * type page). Inherits the brick badge colour; underlines on hover. */
+  .pb-spread-group-link {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.12s;
+  }
+  .pb-spread-group-link:hover {
+    border-bottom-color: var(--color-brick);
   }
   .pb-spread-state {
     font-family: var(--font-mono);
