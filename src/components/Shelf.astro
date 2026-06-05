@@ -44,6 +44,10 @@ interface Props {
   cards: ShelfCard[];
   /** the empty-state line when there are no cards. */
   empty: string;
+  /** how many cards fill one snap panel before the next snaps in. The masthead
+   *  is its own panel (counted out); the cards page into panels of this many.
+   *  6 reads nicely on a download shelf; a surface can tune it. */
+  cardsPerPanel?: number;
 }
 
 const {
@@ -58,13 +62,21 @@ const {
   sectionNote,
   cards,
   empty,
+  cardsPerPanel = 6,
 } = Astro.props;
+
+// Same game as the books: masthead, then snap, then content. The masthead is
+// the first snap panel; the cards page into panels of `cardsPerPanel`, each its
+// own snap stop. (Snap is desktop-only; on phones the shelf is one free scroll.)
+const per = Math.max(1, cardsPerPanel);
+const cardPanels: ShelfCard[][] = [];
+for (let i = 0; i < cards.length; i += per) cardPanels.push(cards.slice(i, i + per));
 ---
 
 <div class="shelf">
   <SiteHeader domain={domain} tld={tld} location={location} />
 
-  <section class="masthead">
+  <section class="snap-panel masthead">
     <div class="section-label">{sectionLabel}</div>
     {
       accent && title.includes(accent) ? (
@@ -78,36 +90,50 @@ const {
     <p class="masthead-subline"><slot name="subline" /></p>
   </section>
 
-  <section class="section">
-    <h2 class="section-heading">
-      <span class="section-no">{sectionNo}</span>
-      <span class="section-title">{sectionTitle}</span>
-      <span class="section-note">{sectionNote}</span>
-    </h2>
-
-    {
-      cards.length === 0 ? (
+  {
+    cards.length === 0 ? (
+      <section class="snap-panel section">
+        <h2 class="section-heading">
+          <span class="section-no">{sectionNo}</span>
+          <span class="section-title">{sectionTitle}</span>
+          <span class="section-note">{sectionNote}</span>
+        </h2>
         <p class="shelf-empty">{empty}</p>
-      ) : (
-        <div class="shelf-cards">
-          {cards.map((card) => (
-            <a href={card.href} class="shelf-card" {...(card.external ? { rel: "external" } : {})}>
-              <div class="shelf-card-hue" aria-hidden="true" />
-              <div class="shelf-card-body">
-                <div class="shelf-card-row">
-                  <span class="shelf-card-eyebrow">{card.eyebrow}</span>
-                  <span class="shelf-card-state">{card.state}</span>
+      </section>
+    ) : (
+      cardPanels.map((panel, p) => (
+        <section class="snap-panel section section--cards">
+          {p === 0 && (
+            <h2 class="section-heading">
+              <span class="section-no">{sectionNo}</span>
+              <span class="section-title">{sectionTitle}</span>
+              <span class="section-note">{sectionNote}</span>
+            </h2>
+          )}
+          <div class="shelf-cards">
+            {panel.map((card) => (
+              <a
+                href={card.href}
+                class="shelf-card"
+                {...(card.external ? { rel: "external" } : {})}
+              >
+                <div class="shelf-card-hue" aria-hidden="true" />
+                <div class="shelf-card-body">
+                  <div class="shelf-card-row">
+                    <span class="shelf-card-eyebrow">{card.eyebrow}</span>
+                    <span class="shelf-card-state">{card.state}</span>
+                  </div>
+                  <div class="shelf-card-title">{card.title}</div>
+                  <p class="shelf-card-note">{card.note}</p>
+                  <span class="shelf-card-cta">{card.cta}</span>
                 </div>
-                <div class="shelf-card-title">{card.title}</div>
-                <p class="shelf-card-note">{card.note}</p>
-                <span class="shelf-card-cta">{card.cta}</span>
-              </div>
-            </a>
-          ))}
-        </div>
-      )
-    }
-  </section>
+              </a>
+            ))}
+          </div>
+        </section>
+      ))
+    )
+  }
 
   <SiteFooter />
 </div>
@@ -130,6 +156,21 @@ const {
     max-width: none;
     margin: 0;
   }
+  /* Same game as the books: the viewport (html) is the scroll container, so the
+   * snap-type lives here, scoped to a shelf page. Masthead, then each card page,
+   * is a snap stop. scroll-padding clears the sticky header/footer. Snap is
+   * desktop-only -- on a phone a shelf reads better as one free scroll. */
+  html:has(.shelf) {
+    scroll-snap-type: y mandatory;
+    scroll-padding-top: 4rem;
+    scroll-padding-bottom: 4rem;
+    scroll-behavior: smooth;
+  }
+  @media (max-width: 640px) {
+    html:has(.shelf) {
+      scroll-snap-type: none;
+    }
+  }
 </style>
 
 <style>
@@ -144,6 +185,37 @@ const {
   @media (min-width: 641px) {
     .shelf {
       padding: 0 3.5rem;
+    }
+  }
+  /* ── snap chassis (book parity) ──────────────────────────────────────────
+   * snap-type lives on `html:has(.shelf)` in the is:global block above; here
+   * each panel sets its snap-align and a viewport-height min so it stands on
+   * its own. The masthead centres; a card page tops-aligns so a full page of
+   * cards never overflows past the snap point. SiteFooter sits outside the
+   * panels, so it scrolls past the last snap. Desktop-only, like the books. */
+  .snap-panel {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+  @media (min-width: 641px) {
+    .snap-panel {
+      min-height: calc(100vh - 8rem);
+      display: flex;
+      flex-direction: column;
+      padding-top: 2.25rem;
+      padding-bottom: 2.25rem;
+    }
+    .snap-panel.masthead {
+      justify-content: center;
+    }
+    .snap-panel.section--cards {
+      justify-content: flex-start;
+    }
+  }
+  @media (max-width: 640px) {
+    .snap-panel {
+      scroll-snap-align: none;
+      scroll-snap-stop: normal;
     }
   }
   .masthead {
