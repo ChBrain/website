@@ -18,12 +18,20 @@ const SURFACE_OF: Record<keyof SurfaceUrls, string> = {
   plays: "plays",
 };
 
+/** Surfaces not yet live in production: monitored on staging, skipped in the
+ *  production check until their first production deploy ships. Remove a surface
+ *  here when it goes live in prod (e.g. when the `plays-v*` tag cuts plays). */
+const NOT_YET_IN_PRODUCTION = new Set<keyof SurfaceUrls>(["plays"]);
+
 /** Build the live-check targets for an environment from the canonical URLS. */
 export function targetsFor(env?: string): Target[] {
   const urls = urlsFor(env);
-  return (Object.keys(urls) as (keyof SurfaceUrls)[]).map((name) => ({
-    name,
-    url: urls[name],
-    surface: SURFACE_OF[name],
-  }));
+  const isProduction = env !== "staging";
+  return (Object.keys(urls) as (keyof SurfaceUrls)[])
+    .filter((name) => !(isProduction && NOT_YET_IN_PRODUCTION.has(name)))
+    .map((name) => ({
+      name,
+      url: urls[name],
+      surface: SURFACE_OF[name],
+    }));
 }
