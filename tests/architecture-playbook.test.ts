@@ -64,15 +64,15 @@ const GROUP_COUNTS = CANON ? [2, 5, 2, 1] : [1, 5, 2];
 
 // Engine cards (Phase 3, a third axis). Each installed engine renders as a
 // WIRES-card spread appended to the "enriched by" group, alphabetical, after
-// the engines type spread; marked with .pb-spread--engine. The website's
-// installed engine is gender, so that is the expected set when rendered. The
-// detection keeps the gate green on the pre-render build and locks the
-// placement + WIRES chapters once the render lands.
-const enginesRendered = playbookPage
-  ? new JSDOM(playbookPage.html).window.document.querySelectorAll("article.pb-spread--engine")
-      .length > 0
-  : false;
-const ENGINE_SLUGS = enginesRendered ? ["gender"] : [];
+// the engines type spread; marked with .pb-spread--engine. Derived from the
+// rendered page so the gate stays green regardless of which engines CI can
+// install from the private registry.
+const ENGINE_SLUGS = playbookPage
+  ? [...new JSDOM(playbookPage.html).window.document.querySelectorAll("article.pb-spread--engine")]
+      .map((a) => a.id)
+      .sort()
+  : [];
+const enginesRendered = ENGINE_SLUGS.length > 0;
 
 type Spread = { n: string; slug: string; role: string; engine?: boolean };
 // FULL = the canon spine plus engine cards, numbered continuing from the canon.
