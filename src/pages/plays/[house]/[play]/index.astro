@@ -1,0 +1,63 @@
+---
+import BaseLayout from "../../../../layouts/BaseLayout.astro";
+import Book from "../../../../components/Book.astro";
+import type { BookSpread } from "../../../../lib/book";
+// MOCK -- REMOVE WHEN THE FIRST HOUSE REGISTERS (see ../../_mock). A real
+// playbook's spreads come from the house's programme package; these placeholders
+// render the shared Book chassis while the khai-plays registry is empty.
+import { MOCK_HOUSES, type MockHouse, type MockPlay } from "../../_mock";
+
+export function getStaticPaths() {
+  return MOCK_HOUSES.flatMap((house) =>
+    house.plays.map((play) => ({
+      params: { house: house.id, play: play.id },
+      props: { house, play },
+    })),
+  );
+}
+
+const { house, play } = Astro.props as { house: MockHouse; play: MockPlay };
+
+// The playbook reuses Book.astro (the same chassis as the architecture playbook
+// and the enginebooks) -- one book, no drift. Mock spreads for now.
+const spreads: BookSpread[] = [
+  {
+    slug: "synopsis",
+    n: "00",
+    groupLabel: "the play",
+    status: "synopsis",
+    title: "Synopsis",
+    facets: [],
+    bodyHtml: `<p>${play.blurb}</p>`,
+    coda: null,
+  },
+  {
+    slug: "house",
+    n: "01",
+    groupLabel: "the house",
+    status: "mock",
+    title: "From the house",
+    facets: [],
+    bodyHtml: `<p>The full playbook is generated from the house's programme package (<code>${house.package}</code>) and read here. This is a placeholder while the khai-plays registry is empty.</p>`,
+    coda: null,
+  },
+];
+---
+
+<BaseLayout title={`${play.title} · KHAI Plays · kaihacks`} description={play.blurb}>
+  <Book
+    header={{ domain: "plays", tld: ".kaihacks.ai", location: `${house.id} · ${play.id}` }}
+    cover={{
+      overline: "khai plays · a playbook",
+      title: play.title,
+      subtitle: play.blurb,
+      edition: house.title,
+      ctaHref: `#${spreads[0].slug}`,
+      ctaLabel: "Open the playbook →",
+      backHref: "../",
+      backLabel: `← ${house.title}`,
+    }}
+    spreads={spreads}
+    tocEyebrow={`playbook · ${play.id}`}
+  />
+</BaseLayout>
