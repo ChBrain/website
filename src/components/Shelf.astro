@@ -32,8 +32,12 @@ interface Props {
   location: string;
   /** the small eyebrow above the masthead title (e.g. "§ · the extensions"). */
   sectionLabel: string;
-  /** the masthead title; the trailing period is added by the component. */
+  /** the masthead title; a trailing brick period is added by the component
+   *  unless `accent` is set. */
   title: string;
+  /** a substring of `title` to render in brick (the surface accent), e.g.
+   *  "Plays" in "KHAI Plays". When set, it replaces the trailing brick period. */
+  accent?: string;
   sectionNo: string;
   sectionTitle: string;
   sectionNote: string;
@@ -48,6 +52,7 @@ const {
   location,
   sectionLabel,
   title,
+  accent,
   sectionNo,
   sectionTitle,
   sectionNote,
@@ -61,8 +66,15 @@ const {
 
   <section class="masthead">
     <div class="section-label">{sectionLabel}</div>
-    {/* prettier-ignore */}
-    <h1 class="masthead-title">{title}<em>.</em></h1>
+    {
+      accent && title.includes(accent) ? (
+        /* prettier-ignore */
+        <h1 class="masthead-title">{title.slice(0, title.indexOf(accent))}<em>{accent}</em>{title.slice(title.indexOf(accent) + accent.length)}</h1>
+      ) : (
+        /* prettier-ignore */
+        <h1 class="masthead-title">{title}<em>.</em></h1>
+      )
+    }
     <p class="masthead-subline"><slot name="subline" /></p>
   </section>
 
