@@ -1,0 +1,42 @@
+/* Voice registers — parameterized visual identity.
+ * We override CSS custom properties on a per-voice container basis.
+ * No hex values or font-family strings here, only references to existing tokens.
+ */
+
+/* 1. Clinical / Stripped / Sparse (Buechner / Woyzeck default) */
+.voice-clinical {
+  --font-prose: var(--font-mono);
+  --font-display: var(--font-mono);
+  --color-bg: var(--color-ice);
+  --color-bg-subtle: var(--color-ice);
+  --color-fg: var(--color-ink);
+  --color-fg-muted: var(--color-ink-soft);
+  --color-border: var(--color-ink);
+  --color-accent: var(--color-sea);
+  letter-spacing: -0.01em;
+}
+
+/* 2. Verbose / Melancholy / Patronizing (The Captain) */
+.voice-melancholy {
+  --font-prose: var(--font-display);
+  --font-display: var(--font-display);
+  --color-bg: var(--color-paper-deep);
+  --color-bg-subtle: var(--color-paper-deep);
+  --color-fg: var(--color-ink-soft);
+  --color-fg-muted: var(--color-ink-mute);
+  --color-border: var(--color-rule);
+  --color-accent: var(--color-fjord);
+  font-style: italic;
+}
+
+/* 3. Ornate / Fairy Tale / Editorial (Grimm / Default) */
+.voice-editorial {
+  --font-prose: var(--font-prose);
+  --font-display: var(--font-display);
+  --color-bg: var(--color-paper);
+  --color-bg-subtle: var(--color-paper-warm);
+  --color-fg: var(--color-ink);
+  --color-fg-muted: var(--color-ink-soft);
+  --color-border: var(--color-rule);
+  --color-accent: var(--color-brick);
+}

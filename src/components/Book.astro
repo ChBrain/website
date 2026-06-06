@@ -137,11 +137,12 @@ const groups: BookTocGroup[] = tocGroups ?? [
         // title on its own line (with the optional "Open" CTA pinned right),
         // then the body beneath -- a reference/LORE snap renders its prose
         // full-width, a content snap its 2x2 facet grid. No side-by-side.
-        const proseSnap = s.written !== false && !!s.bodyHtml && s.facets.length === 0;
+        const proseSnap =
+          s.written !== false && !!s.bodyHtml && (!s.facets || s.facets.length === 0);
         return (
           <article
             id={s.slug}
-            class={`pb-spread ${s.written === false ? "pb-spread--draft" : ""} ${s.engine ? "pb-spread--engine" : ""} ${proseSnap ? "pb-spread--prose" : ""} ${s.download ? "pb-spread--download" : ""}`}
+            class={`pb-spread ${s.written === false ? "pb-spread--draft" : ""} ${s.engine ? "pb-spread--engine" : ""} ${proseSnap ? "pb-spread--prose" : ""} ${s.download ? "pb-spread--download" : ""} ${s.classModifier ?? ""}`}
           >
             <header class="pb-spread-head">
               <span class="pb-spread-no">
@@ -185,7 +186,7 @@ const groups: BookTocGroup[] = tocGroups ?? [
               <div class="pb-prose-body book-prose" set:html={s.bodyHtml} />
             )}
 
-            {s.written !== false && s.facets.length > 0 && (
+            {s.written !== false && s.facets && s.facets.length > 0 && (
               <div class="pb-facets">
                 {s.facets.map((f) => (
                   <article class="pb-facet">
@@ -224,7 +225,7 @@ const groups: BookTocGroup[] = tocGroups ?? [
                 (the enginebook back-cover, where the download IS the spread
                 content). When facets are present the download renders as the
                 final card in the grid above. */}
-            {s.written !== false && s.download && s.facets.length === 0 && (
+            {s.written !== false && s.download && (!s.facets || s.facets.length === 0) && (
               <div class="pb-download">
                 <a
                   class="book-cta pb-download-cta"
