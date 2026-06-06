@@ -90,6 +90,14 @@ function buildEngineDownloads() {
   const scope = join(process.cwd(), "node_modules", "@chbrain");
   if (!existsSync(scope)) return;
 
+  let archDir;
+  try {
+    archDir = dirname(_require.resolve("@chbrain/khai-arch/package.json"));
+  } catch {
+    console.log("  engines: @chbrain/khai-arch not found; skipping");
+    return;
+  }
+
   const outDir = join(process.cwd(), "public", "downloads", "engines");
   mkdirSync(outDir, { recursive: true });
 
@@ -99,16 +107,59 @@ function buildEngineDownloads() {
     const id = name.slice("khai-engine-".length);
     const dir = join(scope, name);
 
-    // Overhead: package.json (the khai manifest) + all markdown files.
-    const overhead = [
-      { path: "package.json", data: readFileSync(join(dir, "package.json")) },
-      ...readdirSync(dir)
-        .filter((f) => f.endsWith(".md"))
-        .map((f) => ({ path: f, data: readMarkdownStripped(join(dir, f)) })),
-    ];
+    // Identify overhead files.
+    // Overhead: package.json, README.md, REFERENCES.md, LICENSE, LICENSE-CODE.
+    const overhead = [{ path: "package.json", data: readFileSync(join(dir, "package.json")) }];
+
+    const readmePath = join(dir, "README.md");
+    if (existsSync(readmePath)) {
+      overhead.push({ path: "README.md", data: readMarkdownStripped(readmePath) });
+    }
+
+    const refPath = join(dir, "REFERENCES.md");
+    if (existsSync(refPath)) {
+      overhead.push({ path: "REFERENCES.md", data: readMarkdownStripped(refPath) });
+    }
+
+    // License files from @chbrain/khai-arch
+    const licensePath = join(archDir, "LICENSE");
+    if (existsSync(licensePath)) {
+      overhead.push({ path: "LICENSE", data: readFileSync(licensePath) });
+    }
+    const licenseCodePath = join(archDir, "LICENSE-CODE");
+    if (existsSync(licenseCodePath)) {
+      overhead.push({ path: "LICENSE-CODE", data: readFileSync(licenseCodePath) });
+    }
+
+    // Content: all other markdown files (except package.json, README, REFERENCES, LICENSE, LICENSE-CODE, CHANGELOG).
+    const contentFiles = [];
+    for (const f of readdirSync(dir)) {
+      if (!f.endsWith(".md")) continue;
+      if (
+        f === "README.md" ||
+        f === "REFERENCES.md" ||
+        f === "CHANGELOG.md" ||
+        f === "LICENSE" ||
+        f === "LICENSE-CODE"
+      )
+        continue;
+
+      const filePath = join(dir, f);
+      contentFiles.push({ path: f, data: readMarkdownStripped(filePath) });
+    }
+
     if (overhead.length === 0) continue;
 
-    const packed = packBundle({ name: id, overhead, stamp: { kind: "engine", engine: id } });
+    const packed = packBundle({
+      name: id,
+      overhead,
+      content: {
+        dir: "content",
+        files: contentFiles,
+      },
+      stamp: { kind: "engine", engine: id },
+    });
+
     writeFileSync(join(outDir, `${id}.zip`), packed.zip);
     writeFileSync(
       join(outDir, `${id}.json`),
