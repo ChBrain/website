@@ -24,6 +24,10 @@ export interface ShelfCard {
   cta: string;
   /** when true, the link leaves the site (rel=external) — e.g. a house repo. */
   external?: boolean;
+  /** optional download link for dual-action cards */
+  downloadHref?: string;
+  /** optional download cta label */
+  downloadCta?: string;
 }
 
 interface Props {
@@ -111,24 +115,58 @@ for (let i = 0; i < cards.length; i += per) cardPanels.push(cards.slice(i, i + p
             </h2>
           )}
           <div class="shelf-cards">
-            {panel.map((card) => (
-              <a
-                href={card.href}
-                class="shelf-card"
-                {...(card.external ? { rel: "external" } : {})}
-              >
-                <div class="shelf-card-hue" aria-hidden="true" />
-                <div class="shelf-card-body">
-                  <div class="shelf-card-row">
-                    <span class="shelf-card-eyebrow">{card.eyebrow}</span>
-                    <span class="shelf-card-state">{card.state}</span>
+            {panel.map((card) =>
+              card.downloadHref ? (
+                <div class="shelf-card shelf-card--div">
+                  <div class="shelf-card-hue" aria-hidden="true" />
+                  <div class="shelf-card-body">
+                    <div class="shelf-card-row">
+                      <span class="shelf-card-eyebrow">{card.eyebrow}</span>
+                      <span class="shelf-card-state">{card.state}</span>
+                    </div>
+                    <div class="shelf-card-title">
+                      <a href={card.href} {...(card.external ? { rel: "external" } : {})}>
+                        {card.title}
+                      </a>
+                    </div>
+                    <p class="shelf-card-note">{card.note}</p>
+                    <div class="shelf-card-actions">
+                      <a
+                        href={card.href}
+                        class="shelf-card-cta"
+                        {...(card.external ? { rel: "external" } : {})}
+                      >
+                        {card.cta}
+                      </a>
+                      <a
+                        href={card.downloadHref}
+                        class="shelf-card-cta shelf-card-cta--download"
+                        download
+                      >
+                        {card.downloadCta || "Download →"}
+                      </a>
+                    </div>
                   </div>
-                  <div class="shelf-card-title">{card.title}</div>
-                  <p class="shelf-card-note">{card.note}</p>
-                  <span class="shelf-card-cta">{card.cta}</span>
                 </div>
-              </a>
-            ))}
+              ) : (
+                <a
+                  href={card.href}
+                  class="shelf-card"
+                  {...(card.external ? { rel: "external" } : {})}
+                >
+                  <div class="shelf-card-hue" aria-hidden="true" />
+                  <div class="shelf-card-body">
+                    <div class="shelf-card-row">
+                      <span class="shelf-card-eyebrow">{card.eyebrow}</span>
+                      <span class="shelf-card-state">{card.state}</span>
+                    </div>
+                    <div class="shelf-card-title">{card.title}</div>
+                    <p class="shelf-card-note">{card.note}</p>
+                    <span class="shelf-card-cta">{card.cta}</span>
+                  </div>
+                </a>
+              ),
+            )}
           </div>
         </section>
       ))
@@ -422,5 +460,31 @@ for (let i = 0; i < cards.length; i += per) cardPanels.push(cards.slice(i, i + p
     color: var(--color-ink);
     padding-bottom: 3px;
     border-bottom: 1px solid var(--color-rule);
+  }
+  .shelf-card--div {
+    cursor: default;
+  }
+  .shelf-card--div:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  .shelf-card-title a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .shelf-card-title a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--color-brick);
+  }
+  .shelf-card-actions {
+    display: flex;
+    gap: 1.5rem;
+  }
+  .shelf-card-cta--download {
+    color: var(--color-ink-soft);
+  }
+  .shelf-card-cta--download:hover {
+    color: var(--color-brick);
+    border-bottom-color: var(--color-brick);
   }
 </style>
