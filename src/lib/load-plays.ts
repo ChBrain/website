@@ -6,7 +6,7 @@ import MarkdownIt from "markdown-it";
 import { loadRegistry } from "@chbrain/khai-plays";
 
 const _require = createRequire(import.meta.url);
-const md = new MarkdownIt({ html: true, breaks: true, linkify: false });
+const md = new MarkdownIt({ html: true, breaks: false, linkify: false });
 
 export type VoiceRegister = "clinical" | "melancholy" | "editorial";
 
