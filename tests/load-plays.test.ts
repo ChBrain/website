@@ -20,6 +20,9 @@ describe("load-plays", () => {
     expect(woyzeck!.voiceRegister).toBe("clinical");
     expect(woyzeck!.license).toBe("CC-BY-NC-SA-4.0");
 
+    // Check play description (synopsis)
+    expect(typeof woyzeck!.description).toBe("string");
+
     // Check play sections
     expect(woyzeck!.sections).toHaveProperty("estate");
     expect(woyzeck!.sections).toHaveProperty("name");
