@@ -32,4 +32,4 @@ The download ZIPs generated for engines (e.g., `gender`) should be structured co
 - [x] `LICENSE` and `LICENSE-CODE` resolved dynamically from `@chbrain/khai-arch` and packed in the engine ZIP overhead.
 - [x] All engine content markdown files packed under `content/` in the engine ZIP.
 - [x] ZIP generation verified locally via `npm run prebuild` with correct zip contents for `gender`.
-- [ ] Pull request opened with the changes on `website`.
+- [x] Pull request opened with the changes on `website`.
