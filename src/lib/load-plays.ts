@@ -132,10 +132,15 @@ export function loadAllPlays(): Play[] {
     const playsDir = join(pkgDir, "plays");
     if (!existsSync(playsDir)) continue;
 
-    for (const dirName of readdirSync(playsDir)) {
+    for (const ent of readdirSync(playsDir, { withFileTypes: true })) {
+      if (!ent.isDirectory()) continue;
+      const dirName = ent.name;
       const playPath = join(playsDir, dirName);
-      const mainPlayFile = join(playPath, `play_${dirName}.md`);
-      if (!existsSync(mainPlayFile)) continue;
+      const playFiles = readdirSync(playPath).filter(
+        (f) => f.startsWith("play_") && f.endsWith(".md"),
+      );
+      if (playFiles.length === 0) continue;
+      const mainPlayFile = join(playPath, playFiles[0]);
 
       // Read main play markdown
       const mainPlaySrc = readFileSync(mainPlayFile, "utf8");
