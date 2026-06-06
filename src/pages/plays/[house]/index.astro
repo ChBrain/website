@@ -1,35 +1,62 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import Shelf, { type ShelfCard } from "../../../components/Shelf.astro";
-import { houses } from "@chbrain/khai-plays";
+import { loadRegistry } from "@chbrain/khai-plays";
+import { loadAllPlays } from "../../../lib/load-plays";
 // MOCK -- REMOVE WHEN THE FIRST HOUSE REGISTERS (see ../_mock).
-import { MOCK_HOUSES, type MockHouse, type MockPlay } from "../_mock";
+import { MOCK_HOUSES } from "../_mock";
 
-// One page per house. Real houses (from the registry) drive the routes once
-// registered; their plays will come from each house's programme package (a
-// later capability). While the registry is empty, the mock houses provide the
-// routes and their plays so the flow renders. A house with no plays yet shows
-// the empty-state.
 export function getStaticPaths() {
-  const list = houses.length ? houses : MOCK_HOUSES;
-  return list.map((house: (typeof list)[number]) => ({
+  const realHouses = loadRegistry();
+  const realPaths = realHouses.map((house) => ({
     params: { house: house.id },
     props: { house },
   }));
+
+  const mockPaths = MOCK_HOUSES.filter((mh) => mh.id !== "buechner").map((house) => ({
+    params: { house: house.id },
+    props: { house },
+  }));
+
+  return [...realPaths, ...mockPaths];
 }
 
-const { house } = Astro.props as { house: MockHouse };
-const plays: MockPlay[] = house.plays ?? [];
+const { house } = Astro.props;
 const repoLabel = house.repo.replace(/^https?:\/\//, "");
 
-const cards: ShelfCard[] = plays.map((p) => ({
-  href: `/plays/${house.id}/${p.id}/`,
-  eyebrow: house.package,
-  state: "play",
-  title: p.title,
-  note: p.blurb,
-  cta: "Open the playbook →",
-}));
+// Determine if we load real plays or fall back to mock
+const allRealPlays = loadAllPlays();
+const realPlays = allRealPlays.filter((p) => p.houseId === house.id);
+const isInstalled = realPlays.length > 0;
+
+// Fallback to mock plays only if this house is not installed
+const mockHouse = MOCK_HOUSES.find((mh) => mh.id === house.id);
+const playsToRender = isInstalled ? realPlays : (mockHouse?.plays ?? []);
+
+const stripHtml = (html: string) => html.replace(/<[^>]+>/g, "").trim();
+
+const cards: ShelfCard[] = playsToRender.map((p) => {
+  let note = "";
+  if (isInstalled) {
+    const realPlay = p as (typeof realPlays)[number];
+    const rawNote = realPlay.sections.arc || realPlay.sections.name || "";
+    note = stripHtml(rawNote);
+    if (note.length > 160) {
+      note = note.slice(0, 160) + "...";
+    }
+  } else {
+    note = (p as any).blurb || "";
+  }
+
+  return {
+    href: `/plays/${house.id}/${p.id}/`,
+    eyebrow: house.package,
+    state: "play",
+    title: p.title,
+    note,
+    cta: "Open the playbook →",
+  };
+});
 ---
 
 <BaseLayout title={`${house.title} · Plays · kaihacks`} description={house.blurb}>

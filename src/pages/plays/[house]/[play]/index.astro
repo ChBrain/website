@@ -1,63 +1,241 @@
 ---
 import BaseLayout from "../../../../layouts/BaseLayout.astro";
 import Book from "../../../../components/Book.astro";
-import type { BookSpread } from "../../../../lib/book";
+import type { BookSpread, BookFacet } from "../../../../lib/book";
+import { loadRegistry } from "@chbrain/khai-plays";
+import { loadAllPlays } from "../../../../lib/load-plays";
 // MOCK -- REMOVE WHEN THE FIRST HOUSE REGISTERS (see ../../_mock). A real
 // playbook's spreads come from the house's programme package; these placeholders
 // render the shared Book chassis while the khai-plays registry is empty.
-import { MOCK_HOUSES, type MockHouse, type MockPlay } from "../../_mock";
+import { MOCK_HOUSES } from "../../_mock";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 
 export function getStaticPaths() {
-  return MOCK_HOUSES.flatMap((house) =>
+  const realPlays = loadAllPlays();
+  const houses = loadRegistry();
+
+  const realPaths = realPlays.map((play) => {
+    const house = houses.find((h) => h.id === play.houseId)!;
+    return {
+      params: { house: play.houseId, play: play.id },
+      props: { house, play, isReal: true },
+    };
+  });
+
+  const mockPaths = MOCK_HOUSES.filter((mh) => mh.id !== "buechner").flatMap((house) =>
     house.plays.map((play) => ({
       params: { house: house.id, play: play.id },
-      props: { house, play },
+      props: { house, play, isReal: false },
     })),
   );
+
+  return [...realPaths, ...mockPaths];
 }
 
-const { house, play } = Astro.props as { house: MockHouse; play: MockPlay };
+const { house, play, isReal } = Astro.props;
 
-// The playbook reuses Book.astro (the same chassis as the architecture playbook
-// and the enginebooks) -- one book, no drift. Mock spreads for now.
-const spreads: BookSpread[] = [
-  {
+let spreads: BookSpread[] = [];
+let voiceRegister = "editorial"; // default voice
+let overline = "khai plays · a playbook";
+let title = "";
+let subtitle = "";
+let ctaHref = "";
+let ctaLabel = "Open the playbook →";
+
+if (isReal) {
+  const realPlay = play as any;
+  voiceRegister = realPlay.voiceRegister;
+  title = realPlay.title;
+  ctaHref = `#synopsis`;
+
+  // Start with Synopsis/Estate spread
+  spreads.push({
     slug: "synopsis",
     n: "00",
     groupLabel: "the play",
     status: "synopsis",
     title: "Synopsis",
     facets: [],
-    bodyHtml: `<p>${play.blurb}</p>`,
+    bodyHtml: realPlay.sections.estate || `<p>No estate section provided.</p>`,
     coda: null,
-  },
-  {
-    slug: "house",
-    n: "01",
-    groupLabel: "the house",
-    status: "mock",
-    title: "From the house",
-    facets: [],
-    bodyHtml: `<p>The full playbook is generated from the house's programme package (<code>${house.package}</code>) and read here. This is a placeholder while the khai-plays registry is empty.</p>`,
-    coda: null,
-  },
-];
+  });
+
+  let counter = 1;
+  const nextN = () => String(counter++).padStart(2, "0");
+
+  // Name & Arc spread
+  if (realPlay.sections.name || realPlay.sections.arc) {
+    let body = "";
+    if (realPlay.sections.name) {
+      body += `<h3>Name</h3>${realPlay.sections.name}`;
+    }
+    if (realPlay.sections.arc) {
+      body += `<h3>Arc</h3>${realPlay.sections.arc}`;
+    }
+    spreads.push({
+      slug: "name-arc",
+      n: nextN(),
+      groupLabel: "the play",
+      status: realPlay.voiceRegister,
+      title: "Name & Arc",
+      facets: [],
+      bodyHtml: body,
+      coda: null,
+    });
+  }
+
+  // Company intro spread
+  if (realPlay.sections.company) {
+    spreads.push({
+      slug: "company-intro",
+      n: nextN(),
+      groupLabel: "the play",
+      status: "company",
+      title: "The Company",
+      facets: [],
+      bodyHtml: realPlay.sections.company,
+      coda: null,
+    });
+  }
+
+  // Element spreads (grouped by type)
+  if (realPlay.elements && realPlay.elements.length > 0) {
+    for (const el of realPlay.elements) {
+      const facets: BookFacet[] = Object.entries(el.sections).map(([heading, html]) => {
+        const titleCap = heading.charAt(0).toUpperCase() + heading.slice(1);
+        return {
+          letter: titleCap.charAt(0),
+          name: titleCap,
+          body: "",
+          bodyHtml: html as string,
+        };
+      });
+
+      spreads.push({
+        slug: `el-${el.id}`,
+        n: nextN(),
+        groupLabel: el.type,
+        groupHref: `/architecture/${el.type}/`,
+        status: el.voiceRegister,
+        title: el.title,
+        subtitle: el.voice ? `voice: "${el.voice}"` : null,
+        facets,
+        classModifier: `voice-${el.voiceRegister}`,
+      });
+    }
+  }
+
+  // Stakes spread
+  if (realPlay.sections.stakes) {
+    spreads.push({
+      slug: "stakes",
+      n: nextN(),
+      groupLabel: "the play",
+      status: "stakes",
+      title: "Stakes",
+      facets: [],
+      bodyHtml: realPlay.sections.stakes,
+      coda: null,
+    });
+  }
+
+  // Reference Warrant spread
+  if (realPlay.reference) {
+    const refBody = Object.entries(realPlay.reference.sections)
+      .map(([heading, html]) => `<h3>${heading}</h3>${html}`)
+      .join("");
+
+    spreads.push({
+      slug: "reference",
+      n: nextN(),
+      groupLabel: "reference",
+      status: "warrant",
+      title: realPlay.reference.title,
+      facets: [],
+      bodyHtml: refBody,
+      coda: `updated: ${realPlay.reference.updated}`,
+    });
+  }
+
+  // Download cover spread
+  const jsonPath = join(
+    process.cwd(),
+    "public",
+    "downloads",
+    "plays",
+    realPlay.houseId,
+    `${realPlay.id}.json`,
+  );
+  if (existsSync(jsonPath)) {
+    try {
+      const sidecar = JSON.parse(readFileSync(jsonPath, "utf-8"));
+      spreads.push({
+        slug: "download",
+        n: nextN(),
+        groupLabel: "download",
+        status: "artifact",
+        title: "Download Playbook",
+        facets: [],
+        download: {
+          href: `/downloads/plays/${realPlay.houseId}/${realPlay.id}.zip`,
+          filename: `${realPlay.id}.zip`,
+          size: sidecar.size,
+          sha256: sidecar.sha256,
+          note: `Includes the play configuration and all staged elements.`,
+        },
+      });
+    } catch (e) {
+      console.error("Failed to load play sidecar JSON:", e);
+    }
+  }
+} else {
+  // Mock fallback
+  title = play.title;
+  subtitle = play.blurb;
+  ctaHref = `#synopsis`;
+
+  spreads = [
+    {
+      slug: "synopsis",
+      n: "00",
+      groupLabel: "the play",
+      status: "synopsis",
+      title: "Synopsis",
+      facets: [],
+      bodyHtml: `<p>${play.blurb}</p>`,
+      coda: null,
+    },
+    {
+      slug: "house",
+      n: "01",
+      groupLabel: "the house",
+      status: "mock",
+      title: "From the house",
+      facets: [],
+      bodyHtml: `<p>The full playbook is generated from the house's programme package (<code>${house.package}</code>) and read here. This is a placeholder while the khai-plays registry is empty.</p>`,
+      coda: null,
+    },
+  ];
+}
 ---
 
-<BaseLayout title={`${play.title} · KHAI Plays · kaihacks`} description={play.blurb}>
-  <Book
-    header={{ domain: "plays", tld: ".kaihacks.ai", location: `${house.id} · ${play.id}` }}
-    cover={{
-      overline: "khai plays · a playbook",
-      title: play.title,
-      subtitle: play.blurb,
-      edition: house.title,
-      ctaHref: `#${spreads[0].slug}`,
-      ctaLabel: "Open the playbook →",
-      backHref: "../",
-      backLabel: `← ${house.title}`,
-    }}
-    spreads={spreads}
-    tocEyebrow={`playbook · ${play.id}`}
-  />
+<BaseLayout title={`${title} · KHAI Plays · kaihacks`} description={subtitle}>
+  <div class={`voice-${voiceRegister}`}>
+    <Book
+      header={{ domain: "plays", tld: ".kaihacks.ai", location: `${house.id} · ${play.id}` }}
+      cover={{
+        overline,
+        title,
+        subtitle,
+        edition: house.title,
+        ctaHref,
+        ctaLabel,
+        backHref: "../",
+        backLabel: `← ${house.title}`,
+      }}
+      spreads={spreads}
+      tocEyebrow={`playbook · ${play.id}`}
+    />
+  </div>
 </BaseLayout>
