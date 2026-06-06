@@ -5,6 +5,7 @@ import { loadRegistry } from "@chbrain/khai-plays";
 import { loadAllPlays } from "../../lib/load-plays";
 // MOCK -- REMOVE WHEN THE FIRST HOUSE REGISTERS (see ./_mock).
 import { MOCK_HOUSES } from "./_mock";
+import { URLS } from "../../lib/urls";
 
 const houses = loadRegistry();
 const plays = loadAllPlays();
@@ -23,6 +24,8 @@ const cards: ShelfCard[] = bill.map((h: (typeof bill)[number]) => {
     title: h.title,
     note: isInstalled ? h.blurb : `${h.blurb} Grimm is still in progress.`,
     cta: isInstalled ? "Enter the house →" : "Visit repository →",
+    downloadHref: isInstalled ? `${URLS.plays}downloads/` : undefined,
+    downloadCta: isInstalled ? "Download plays →" : undefined,
   };
 });
 ---

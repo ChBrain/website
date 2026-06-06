@@ -5,6 +5,7 @@ import { loadRegistry } from "@chbrain/khai-plays";
 import { loadAllPlays } from "../../../lib/load-plays";
 // MOCK -- REMOVE WHEN THE FIRST HOUSE REGISTERS (see ../_mock).
 import { MOCK_HOUSES } from "../_mock";
+import { URLS } from "../../../lib/urls";
 
 export function getStaticPaths() {
   const realHouses = loadRegistry();
@@ -38,7 +39,11 @@ const stripHtml = (html: string) => html.replace(/<[^>]+>/g, "").trim();
 
 const cards: ShelfCard[] = playsToRender.map((p) => {
   let note = "";
-  if (isInstalled) {
+  const mockPlay = mockHouse?.plays.find((mp) => mp.id === p.id);
+
+  if (mockPlay) {
+    note = mockPlay.blurb;
+  } else if (isInstalled) {
     const realPlay = p as (typeof realPlays)[number];
     const rawNote = realPlay.sections.arc || realPlay.sections.name || "";
     note = stripHtml(rawNote);
@@ -56,6 +61,8 @@ const cards: ShelfCard[] = playsToRender.map((p) => {
     title: p.title,
     note,
     cta: "Open the playbook →",
+    downloadHref: isInstalled ? `${URLS.plays}downloads/plays/${house.id}/${p.id}.zip` : undefined,
+    downloadCta: "Download playbook →",
   };
 });
 ---

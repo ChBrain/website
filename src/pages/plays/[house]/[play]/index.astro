@@ -4,6 +4,7 @@ import Book from "../../../../components/Book.astro";
 import type { BookSpread, BookFacet } from "../../../../lib/book";
 import { loadRegistry } from "@chbrain/khai-plays";
 import { loadAllPlays } from "../../../../lib/load-plays";
+import { URLS } from "../../../../lib/urls";
 // MOCK -- REMOVE WHEN THE FIRST HOUSE REGISTERS (see ../../_mock). A real
 // playbook's spreads come from the house's programme package; these placeholders
 // render the shared Book chassis while the khai-plays registry is empty.
@@ -103,15 +104,17 @@ if (isReal) {
   // Element spreads (grouped by type)
   if (realPlay.elements && realPlay.elements.length > 0) {
     for (const el of realPlay.elements) {
-      const facets: BookFacet[] = Object.entries(el.sections).map(([heading, html]) => {
-        const titleCap = heading.charAt(0).toUpperCase() + heading.slice(1);
-        return {
-          letter: titleCap.charAt(0),
-          name: titleCap,
-          body: "",
-          bodyHtml: html as string,
-        };
-      });
+      const facets: BookFacet[] = Object.entries(el.sections)
+        .filter(([heading]) => heading !== "taxonomy" && heading !== "owner")
+        .map(([heading, html]) => {
+          const titleCap = heading.charAt(0).toUpperCase() + heading.slice(1);
+          return {
+            letter: titleCap.charAt(0),
+            name: titleCap,
+            body: "",
+            bodyHtml: html as string,
+          };
+        });
 
       spreads.push({
         slug: `el-${el.id}`,
@@ -179,7 +182,7 @@ if (isReal) {
         title: "Download Playbook",
         facets: [],
         download: {
-          href: `/downloads/plays/${realPlay.houseId}/${realPlay.id}.zip`,
+          href: `${URLS.plays}downloads/plays/${realPlay.houseId}/${realPlay.id}.zip`,
           filename: `${realPlay.id}.zip`,
           size: sidecar.size,
           sha256: sidecar.sha256,
