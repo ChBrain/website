@@ -36,3 +36,25 @@ jobs:
       # Deploy exactly the commit CI just validated, not the tip of main.
       ref: ${{ github.event.workflow_run.head_sha }}
     secrets: inherit
+
+  deploy-index:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/kaihacksai
+          chmod 600 ~/.ssh/kaihacksai
+          ssh-keyscan 92.205.150.56 >> ~/.ssh/known_hosts || true
+      - name: Deploy staging index via rsync (NO --delete)
+        run: |
+          # Rsync the staging/ directory to the staging vhost document root.
+          # NO --delete: must not touch sibling directories (main, architecture, cultures, plays).
+          rsync -avz \
+            -e "ssh -i ~/.ssh/kaihacksai" \
+            ./staging/ \
+            "c216mkgp1lzk@92.205.150.56:/home/c216mkgp1lzk/public_html/staging.kaihacks.ai/"
