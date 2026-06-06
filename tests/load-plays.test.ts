@@ -20,13 +20,12 @@ describe("load-plays", () => {
     expect(woyzeck!.voiceRegister).toBe("clinical");
     expect(woyzeck!.license).toBe("CC-BY-NC-SA-4.0");
 
-    // Check play sections
-    expect(woyzeck!.sections).toHaveProperty("estate");
-    expect(woyzeck!.sections).toHaveProperty("name");
-    expect(woyzeck!.sections).toHaveProperty("arc");
-    expect(woyzeck!.sections).toHaveProperty("company");
-    expect(woyzeck!.sections).toHaveProperty("triggers");
-    expect(woyzeck!.sections).toHaveProperty("stakes");
+    // Check play description (synopsis)
+    expect(woyzeck!.description).toContain("Franz Woyzeck, ein einfacher Soldat");
+
+    // Check play sections match ENACTS exactly (architectural guard)
+    const expectedSections = ["estate", "name", "arc", "company", "triggers", "stakes"];
+    expect(Object.keys(woyzeck!.sections).sort()).toEqual(expectedSections.sort());
 
     // Check elements
     expect(woyzeck!.elements.length).toBeGreaterThanOrEqual(24);
