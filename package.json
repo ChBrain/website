@@ -39,6 +39,7 @@
   },
   "devDependencies": {
     "@chbrain/khai-guard": "^0.1.5",
+    "@chbrain/khai-language": "^0.1.0",
     "@chbrain/khai-pack": "^0.0.3",
     "@chbrain/khai-skills": "^0.0.8",
     "@types/jsdom": "^28.0.3",
