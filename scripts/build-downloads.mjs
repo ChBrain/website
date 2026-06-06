@@ -23,6 +23,11 @@ function fmtBytes(n) {
   return `${(n / 1024 / 1024).toFixed(1)} MB`;
 }
 
+function readMarkdownStripped(path) {
+  const raw = readFileSync(path, "utf8");
+  return matter(raw).content.trim() + "\n";
+}
+
 // The subdomain docroots (architecture/cultures) are nested inside
 // /public_html/ and inherit the host's Apache config, which denies this
 // build-generated subtree by default: a direct request for an existing
@@ -99,7 +104,7 @@ function buildEngineDownloads() {
       { path: "package.json", data: readFileSync(join(dir, "package.json")) },
       ...readdirSync(dir)
         .filter((f) => f.endsWith(".md"))
-        .map((f) => ({ path: f, data: readFileSync(join(dir, f)) })),
+        .map((f) => ({ path: f, data: readMarkdownStripped(join(dir, f)) })),
     ];
     if (overhead.length === 0) continue;
 
@@ -247,21 +252,31 @@ async function buildPlayDownloads() {
 
       // Find files under playDir
       const files = readdirSync(playDir);
-      const contentFiles = files
-        .filter((f) => f !== "package.json")
-        .map((f) => ({
-          path: f,
-          data: readFileSync(join(playDir, f)),
-        }));
+      const contentFiles = [];
+      for (const f of files) {
+        if (f === "package.json") continue;
+        if (f === "REFERENCES.md") continue;
+        const filePath = join(playDir, f);
+        if (f.endsWith(".md")) {
+          contentFiles.push({ path: f, data: readMarkdownStripped(filePath) });
+        } else {
+          contentFiles.push({ path: f, data: readFileSync(filePath) });
+        }
+      }
 
       // Overhead: house README and LICENSE
       const overhead = [
-        { path: "README.md", data: readFileSync(join(houseDir, "README.md")) },
+        { path: "README.md", data: readMarkdownStripped(join(houseDir, "README.md")) },
         { path: "LICENSE", data: readFileSync(join(houseDir, "LICENSE")) },
       ];
       const licenseCodePath = join(houseDir, "LICENSE-CODE");
       if (existsSync(licenseCodePath)) {
         overhead.push({ path: "LICENSE-CODE", data: readFileSync(licenseCodePath) });
+      }
+      // Add REFERENCES.md to overhead at the root of the play bundle if it exists
+      const refPath = join(playDir, "REFERENCES.md");
+      if (existsSync(refPath)) {
+        overhead.push({ path: "REFERENCES.md", data: readMarkdownStripped(refPath) });
       }
 
       // Pack the bundle

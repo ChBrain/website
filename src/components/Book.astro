@@ -178,7 +178,13 @@ const groups: BookTocGroup[] = tocGroups ?? [
               )}
             </div>
 
-            {s.subtitle && <p class="pb-spread-sub">{s.subtitle}</p>}
+            {s.subtitle && (
+              <p
+                class={`pb-spread-sub ${s.subtitle.startsWith("voice:") ? "pb-spread-sub--voice" : ""}`}
+              >
+                {s.subtitle}
+              </p>
+            )}
 
             {/* Body: a reference/LORE snap's prose, full-width beneath the
                 title; otherwise the facet grid. */}
@@ -561,6 +567,7 @@ const groups: BookTocGroup[] = tocGroups ?? [
   .pb-cover-title em {
     color: var(--color-brick);
     font-style: normal;
+    font-family: Georgia, serif;
   }
   .pb-cover-sub {
     margin: 22px 0 0;
@@ -754,6 +761,7 @@ const groups: BookTocGroup[] = tocGroups ?? [
   .pb-spread-title em {
     color: var(--color-brick);
     font-style: normal;
+    font-family: Georgia, serif;
   }
   .pb-spread-sub {
     margin: 14px 0 0;
@@ -768,6 +776,22 @@ const groups: BookTocGroup[] = tocGroups ?? [
   @media (min-width: 641px) {
     .pb-spread-sub {
       font-size: 21px;
+    }
+  }
+  .pb-spread-sub--voice {
+    font-family: var(--font-mono);
+    font-style: normal;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink-soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  @media (min-width: 641px) {
+    .pb-spread-sub--voice {
+      font-size: 12px;
     }
   }
 
@@ -947,12 +971,12 @@ const groups: BookTocGroup[] = tocGroups ?? [
 </style>
 
 <script>
-  // Keep the cover title on one line. At the CSS size (168px) a short title
-  // fits; a long one -- a play, "Leonce und Lena" -- would wrap to two lines,
-  // so the shared helper steps the font-size down until it fits. Same helper
-  // drives the Shelf masthead, so the two cannot drift.
+  // Keep the cover title and spread titles on one line. At the CSS size a short
+  // title fits; a long one would wrap to two lines, so the shared helper steps
+  // the font-size down until it fits. Same helper drives the Shelf masthead.
   import { fitOneLine } from "../lib/fit-one-line";
   fitOneLine(".pb-cover-title");
+  fitOneLine(".pb-spread-title");
 </script>
 
 <script>

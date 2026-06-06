@@ -1,0 +1,90 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Shelf, { type ShelfCard } from "../../../components/Shelf.astro";
+import { loadRegistry } from "@chbrain/khai-plays";
+import { loadAllPlays } from "../../../lib/load-plays";
+import { URLS } from "../../../lib/urls";
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
+import { MOCK_HOUSES } from "../_mock";
+
+// Loads all plays from registered houses
+const plays = loadAllPlays();
+const houses = loadRegistry();
+
+interface PlayDownload {
+  filename: string;
+  size: string;
+  sha256: string;
+}
+
+const downloadsDir = join(process.cwd(), "public", "downloads", "plays");
+function downloadFor(houseId: string, playId: string): PlayDownload | null {
+  const path = join(downloadsDir, houseId, `${playId}.json`);
+  return existsSync(path) ? (JSON.parse(readFileSync(path, "utf8")) as PlayDownload) : null;
+}
+
+// Fallback to mock plays only if no real plays are found
+const isInstalled = plays.length > 0;
+const playsToRender = isInstalled
+  ? plays
+  : MOCK_HOUSES.flatMap((house) =>
+      house.plays.map((p) => ({
+        ...p,
+        houseId: house.id,
+        houseTitle: house.title,
+        voice: "",
+      })),
+    );
+
+const cards: ShelfCard[] = playsToRender
+  .map((p) => {
+    // If it's real, load play download sidecar
+    const dl = isInstalled ? downloadFor(p.houseId, p.id) : null;
+
+    // Find mock blurb for English text
+    const mockHouse = MOCK_HOUSES.find((mh) => mh.id === p.houseId);
+    const mockPlay = mockHouse?.plays.find((mp) => mp.id === p.id);
+    const note = mockPlay ? mockPlay.blurb : (p as any).blurb || "";
+
+    // Skip if real but no built download bundle exists
+    if (isInstalled && !dl) return null;
+
+    const size = dl ? dl.size : "0.0 kB";
+    const filename = dl ? dl.filename : `${p.id}.zip`;
+
+    return {
+      href: isInstalled ? `${URLS.plays}downloads/plays/${p.houseId}/${p.id}.zip` : "#",
+      eyebrow: filename,
+      state: `play · ${size}`,
+      title: p.title,
+      note,
+      cta: "Download the playbook →",
+      external: true,
+    };
+  })
+  .filter((card): card is ShelfCard => card !== null);
+---
+
+<BaseLayout
+  title="Playbooks · plays · kaihacks"
+  description="Download playbooks: self-contained play bundles ready to load."
+>
+  <Shelf
+    domain="plays"
+    location="downloads"
+    sectionLabel="§ · the productions"
+    title="Playbooks"
+    sectionNo="§1"
+    sectionTitle="The bundles"
+    sectionNote="downloads"
+    cards={cards}
+    empty="No playbooks built yet. Run the prebuild on a machine with the registry token."
+  >
+    <Fragment slot="subline">
+      khai playbooks, ready to take with you. Each represents a staging of a play, complete with its
+      elements, rules, and structures packaged into a self-contained <code>.zip</code>. To read a
+      playbook, open its <a href={`${URLS.plays}`}>playbook details</a>.
+    </Fragment>
+  </Shelf>
+</BaseLayout>

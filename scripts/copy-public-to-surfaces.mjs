@@ -61,8 +61,37 @@ async function main() {
     for (const dir of SHARED_DIRS) {
       const src = join(DIST, dir);
       if (!(await exists(src))) continue;
-      await cp(src, join(surfaceDir, dir), { recursive: true });
-      copied++;
+
+      if (dir === "downloads") {
+        if (surface === "architecture" || surface === "plays") {
+          const destDir = join(surfaceDir, "downloads");
+          const htaccessSrc = join(src, ".htaccess");
+          if (await exists(htaccessSrc)) {
+            await cp(htaccessSrc, join(destDir, ".htaccess"));
+          }
+
+          if (surface === "architecture") {
+            const enginesSrc = join(src, "engines");
+            if (await exists(enginesSrc)) {
+              await cp(enginesSrc, join(destDir, "engines"), { recursive: true });
+            }
+            const skillsSrc = join(src, "skills");
+            if (await exists(skillsSrc)) {
+              await cp(skillsSrc, join(destDir, "skills"), { recursive: true });
+            }
+            copied++;
+          } else if (surface === "plays") {
+            const playsSrc = join(src, "plays");
+            if (await exists(playsSrc)) {
+              await cp(playsSrc, join(destDir, "plays"), { recursive: true });
+            }
+            copied++;
+          }
+        }
+      } else {
+        await cp(src, join(surfaceDir, dir), { recursive: true });
+        copied++;
+      }
     }
     const total = SHARED.length + SHARED_DIRS.length;
     console.log(`[copy-public-to-surfaces] ${surface}: copied ${copied}/${total}`);
