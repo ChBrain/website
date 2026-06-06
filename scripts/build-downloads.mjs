@@ -246,6 +246,53 @@ async function buildPlayDownloads() {
     const houseOutDir = join(outDir, house.id);
     mkdirSync(houseOutDir, { recursive: true });
 
+    // Pack the entire house package into a ZIP file
+    const houseContentFiles = [];
+    for (const playName of readdirSync(playsDir)) {
+      const playDir = join(playsDir, playName);
+      if (!statSync(playDir).isDirectory()) continue;
+      for (const f of readdirSync(playDir)) {
+        const filePath = join(playDir, f);
+        const relativePath = `${playName}/${f}`;
+        if (f.endsWith(".md")) {
+          houseContentFiles.push({ path: relativePath, data: readMarkdownStripped(filePath) });
+        } else {
+          houseContentFiles.push({ path: relativePath, data: readFileSync(filePath) });
+        }
+      }
+    }
+    const houseOverhead = [
+      { path: "package.json", data: readFileSync(join(houseDir, "package.json")) },
+      { path: "README.md", data: readMarkdownStripped(join(houseDir, "README.md")) },
+      { path: "LICENSE", data: readFileSync(join(houseDir, "LICENSE")) },
+    ];
+    const houseLicenseCodePath = join(houseDir, "LICENSE-CODE");
+    if (existsSync(houseLicenseCodePath)) {
+      houseOverhead.push({ path: "LICENSE-CODE", data: readFileSync(houseLicenseCodePath) });
+    }
+    const housePacked = packBundle({
+      name: house.id,
+      overhead: houseOverhead,
+      content: {
+        dir: "plays",
+        files: houseContentFiles,
+      },
+      stamp: { kind: "house", house: house.id },
+    });
+    // Write house output
+    writeFileSync(join(outDir, `${house.id}.zip`), housePacked.zip);
+    writeFileSync(
+      join(outDir, `${house.id}.json`),
+      JSON.stringify({
+        filename: `${house.id}.zip`,
+        size: fmtBytes(housePacked.zip.length),
+        sha256: housePacked.zipSha256,
+      }) + "\n",
+    );
+    console.log(
+      `  house ${house.id}: ${fmtBytes(housePacked.zip.length)} sha256=${housePacked.zipSha256.slice(0, 12)}…`,
+    );
+
     for (const playName of readdirSync(playsDir)) {
       const playDir = join(playsDir, playName);
       if (!statSync(playDir).isDirectory()) continue;

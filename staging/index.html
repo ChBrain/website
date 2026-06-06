@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Staging environment for the KAI HACKS pre-production surfaces."
+    />
+    <title>Staging · kaihacks</title>
+    <!-- Fonts from Google Fonts to match brand CVI -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300;1,6..72,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;1,8..60,400;1,8..60,500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --color-paper: #f3ede2;
+        --color-paper-warm: #fbf7ee;
+        --color-ink: #16130f;
+        --color-ink-soft: #5b5246;
+        --color-ink-mute: #8a8275;
+        --color-rule: #c9bea7;
+        --color-rule-soft: #e6dfd0;
+        --color-brick: #8d3a2c;
+        --font-prose: "Source Serif 4", Georgia, serif;
+        --font-display: "Newsreader", "Source Serif 4", Georgia, serif;
+        --font-mono: "IBM Plex Mono", monospace;
+        --width-page: 1080px;
+      }
+      *,
+      *:before,
+      *:after {
+        box-sizing: border-box;
+      }
+      html {
+        font-family: var(--font-prose);
+        color: var(--color-ink);
+        background: var(--color-paper);
+        line-height: 1.5;
+        scroll-snap-type: y mandatory;
+        scroll-padding-top: 4rem;
+        scroll-padding-bottom: 4rem;
+        scroll-behavior: smooth;
+      }
+      @media (max-width: 640px) {
+        html {
+          scroll-snap-type: none;
+        }
+      }
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      .shelf {
+        max-width: var(--width-page);
+        margin: 0 auto;
+        padding: 0 1.25rem;
+        background: var(--color-paper);
+        color: var(--color-ink);
+        font-family: var(--font-prose);
+      }
+      @media (min-width: 641px) {
+        .shelf {
+          padding: 0 3.5rem;
+        }
+      }
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: var(--color-paper);
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 0.75rem;
+        padding: 0.5rem 0 0.75rem;
+        border-bottom: 1px solid var(--color-ink);
+      }
+      @media (min-width: 641px) {
+        .topbar {
+          padding: 1.375rem 0 1rem;
+        }
+      }
+      .topbar-location {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.24em;
+        color: var(--color-ink-soft);
+        text-transform: uppercase;
+      }
+      @media (min-width: 641px) {
+        .topbar-location {
+          font-size: 11px;
+        }
+      }
+      .topbar-right {
+        display: flex;
+        align-items: baseline;
+        gap: 1rem;
+      }
+      .topbar-domain {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.24em;
+        color: var(--color-ink-soft);
+        text-transform: uppercase;
+        text-decoration: none;
+      }
+      @media (min-width: 641px) {
+        .topbar-domain {
+          font-size: 11px;
+        }
+      }
+      .topbar-domain-tld {
+        color: var(--color-brick);
+      }
+      .snap-panel {
+        scroll-snap-align: start;
+        scroll-snap-stop: always;
+      }
+      @media (min-width: 641px) {
+        .snap-panel {
+          min-height: calc(100vh - 8rem);
+          display: flex;
+          flex-direction: column;
+          padding-top: 2.25rem;
+          padding-bottom: 2.25rem;
+        }
+        .snap-panel.masthead {
+          justify-content: center;
+        }
+        .snap-panel.section--cards {
+          justify-content: flex-start;
+        }
+      }
+      @media (max-width: 640px) {
+        .snap-panel {
+          scroll-snap-align: none;
+          scroll-snap-stop: normal;
+        }
+      }
+      .masthead {
+        padding: 1.875rem 0 1.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+      @media (min-width: 641px) {
+        .masthead {
+          padding: 4rem 0 2.5rem;
+        }
+      }
+      .section-label {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.26em;
+        color: var(--color-ink-soft);
+        text-transform: uppercase;
+      }
+      .masthead-title {
+        margin: 1.125rem 0 0;
+        font-family: var(--font-display);
+        font-weight: 350;
+        font-size: 52px;
+        line-height: 0.94;
+        letter-spacing: -0.03em;
+        color: var(--color-ink);
+      }
+      @media (min-width: 641px) {
+        .masthead-title {
+          font-size: 128px;
+        }
+      }
+      .masthead-title em {
+        color: var(--color-brick);
+        font-style: normal;
+      }
+      .masthead-subline {
+        margin: 1.375rem 0 0;
+        max-width: 680px;
+        font-family: var(--font-prose);
+        font-style: italic;
+        font-size: 17px;
+        line-height: 1.4;
+        color: var(--color-ink-soft);
+        text-wrap: pretty;
+      }
+      @media (min-width: 641px) {
+        .masthead-subline {
+          margin-top: 1.75rem;
+          font-size: 22px;
+        }
+      }
+      .section {
+        padding: 0.5rem 0 2rem;
+      }
+      .section-heading {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        border-bottom: 1px solid var(--color-rule);
+        padding-bottom: 10px;
+        margin: 0;
+        font-weight: normal;
+      }
+      @media (min-width: 641px) {
+        .section-heading {
+          flex-direction: row;
+          align-items: baseline;
+          gap: 0;
+        }
+      }
+      .section-no {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.2em;
+        color: var(--color-brick);
+        text-transform: uppercase;
+        margin-right: 14px;
+      }
+      .section-title {
+        font-family: var(--font-display);
+        font-size: 22px;
+        font-weight: 400;
+        letter-spacing: -0.01em;
+        color: var(--color-ink);
+      }
+      @media (min-width: 641px) {
+        .section-title {
+          font-size: 26px;
+        }
+      }
+      .section-note {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        color: var(--color-ink-soft);
+        text-transform: uppercase;
+        margin-left: auto;
+      }
+      .shelf-cards {
+        margin-top: 24px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      @media (min-width: 721px) {
+        .shelf-cards {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .shelf-card {
+        display: block;
+        text-decoration: none;
+        color: var(--color-ink);
+        border: 1px solid var(--color-ink);
+        background: var(--color-paper-warm);
+        overflow: hidden;
+        transition:
+          transform 0.16s,
+          box-shadow 0.16s;
+      }
+      .shelf-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px -16px var(--color-ink);
+      }
+      .shelf-card-hue {
+        height: 6px;
+        background: var(--color-brick);
+      }
+      .shelf-card-body {
+        padding: 18px 20px 20px;
+      }
+      @media (min-width: 641px) {
+        .shelf-card-body {
+          padding: 24px 26px;
+        }
+      }
+      .shelf-card-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .shelf-card-eyebrow {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        letter-spacing: -0.01em;
+        color: var(--color-ink);
+      }
+      .shelf-card-state {
+        font-family: var(--font-mono);
+        font-size: 8.5px;
+        letter-spacing: 0.18em;
+        color: var(--color-brick);
+        text-transform: uppercase;
+      }
+      .shelf-card-title {
+        font-family: var(--font-display);
+        font-size: 32px;
+        line-height: 1.06;
+        margin-top: 8px;
+        font-weight: 400;
+        letter-spacing: -0.01em;
+      }
+      @media (min-width: 641px) {
+        .shelf-card-title {
+          font-size: 40px;
+        }
+      }
+      .shelf-card-note {
+        margin: 8px 0 0;
+        max-width: 640px;
+        font-family: var(--font-prose);
+        font-style: italic;
+        font-size: 15px;
+        color: var(--color-ink-soft);
+        line-height: 1.45;
+      }
+      .shelf-card-cta {
+        display: inline-block;
+        margin-top: 14px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        color: var(--color-ink);
+        padding-bottom: 3px;
+        border-bottom: 1px solid var(--color-rule);
+      }
+      .footfed {
+        position: relative;
+        scroll-snap-align: start;
+        background: var(--color-paper);
+        padding: 1rem 0 1.25rem;
+        border-top: 1px solid var(--color-ink);
+        margin-top: auto;
+      }
+      .footfed-row {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: baseline;
+        gap: 24px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        color: var(--color-ink-mute);
+        text-transform: uppercase;
+      }
+      @media (min-width: 641px) {
+        .footfed-row {
+          font-size: 11px;
+        }
+      }
+      .footfed-identity {
+        grid-column: 1;
+        text-align: left;
+      }
+      .footfed-contact {
+        grid-column: 2;
+        text-align: center;
+      }
+      .footfed-legal {
+        grid-column: 3;
+        text-align: right;
+      }
+      .footfed-identity a,
+      .footfed-contact-link,
+      .footfed-legal-link {
+        color: var(--color-ink-mute);
+        text-decoration: none;
+        border-bottom: 1px solid var(--color-rule);
+      }
+      .footfed-identity a:hover,
+      .footfed-contact-link:hover,
+      .footfed-legal-link:hover {
+        color: var(--color-ink);
+      }
+      @media (max-width: 640px) {
+        .footfed {
+          position: static;
+          padding: 0.75rem 0 1rem;
+        }
+        .footfed-row {
+          grid-template-columns: 1fr;
+          row-gap: 8px;
+          justify-items: center;
+        }
+        .footfed-identity,
+        .footfed-contact,
+        .footfed-legal {
+          grid-column: 1;
+          text-align: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shelf">
+      <header class="topbar">
+        <span class="topbar-location" aria-label="Current section">apex</span>
+        <div class="topbar-right">
+          <span class="topbar-domain"
+            >staging<span class="topbar-domain-tld">.kaihacks.ai</span></span
+          >
+        </div>
+      </header>
+
+      <section class="snap-panel masthead">
+        <div class="section-label">§ · the environment</div>
+        <h1 class="masthead-title">KHAI <em>Staging</em></h1>
+        <p class="masthead-subline">
+          Pre-production staging environment. Each panel represents the latest build of a KAI HACKS
+          surface deployed directly from main branch commits.
+        </p>
+      </section>
+
+      <section class="snap-panel section section--cards">
+        <h2 class="section-heading">
+          <span class="section-no">§1</span>
+          <span class="section-title">The surfaces</span>
+          <span class="section-note">pre-production</span>
+        </h2>
+
+        <div class="shelf-cards">
+          <!-- Main / Apex -->
+          <a href="./main/" class="shelf-card">
+            <div class="shelf-card-hue"></div>
+            <div class="shelf-card-body">
+              <div class="shelf-card-row">
+                <span class="shelf-card-eyebrow">kaihacks.ai</span>
+                <span class="shelf-card-state">active</span>
+              </div>
+              <div class="shelf-card-title">Main</div>
+              <p class="shelf-card-note">
+                The front door and corporate visual identity rules of KAI HACKS.
+              </p>
+              <span class="shelf-card-cta">Enter apex →</span>
+            </div>
+          </a>
+
+          <!-- Architecture -->
+          <a href="./architecture/" class="shelf-card">
+            <div class="shelf-card-hue"></div>
+            <div class="shelf-card-body">
+              <div class="shelf-card-row">
+                <span class="shelf-card-eyebrow">architecture.kaihacks.ai</span>
+                <span class="shelf-card-state">active</span>
+              </div>
+              <div class="shelf-card-title">Architecture</div>
+              <p class="shelf-card-note">
+                The kai architecture specification, enginebooks, and playbooks.
+              </p>
+              <span class="shelf-card-cta">Enter spec →</span>
+            </div>
+          </a>
+
+          <!-- Plays -->
+          <a href="./plays/" class="shelf-card">
+            <div class="shelf-card-hue"></div>
+            <div class="shelf-card-body">
+              <div class="shelf-card-row">
+                <span class="shelf-card-eyebrow">plays.kaihacks.ai</span>
+                <span class="shelf-card-state">active</span>
+              </div>
+              <div class="shelf-card-title">Plays</div>
+              <p class="shelf-card-note">
+                The staged productions, houses registry, and playbook download packages.
+              </p>
+              <span class="shelf-card-cta">Enter plays →</span>
+            </div>
+          </a>
+
+          <!-- Cultures -->
+          <a href="./cultures/" class="shelf-card">
+            <div class="shelf-card-hue"></div>
+            <div class="shelf-card-body">
+              <div class="shelf-card-row">
+                <span class="shelf-card-eyebrow">cultures.kaihacks.ai</span>
+                <span class="shelf-card-state">active</span>
+              </div>
+              <div class="shelf-card-title">Cultures</div>
+              <p class="shelf-card-note">The Frisian roots and cultural priming context.</p>
+              <span class="shelf-card-cta">Enter cultures →</span>
+            </div>
+          </a>
+        </div>
+      </section>
+
+      <footer class="footfed">
+        <div class="footfed-row">
+          <div class="footfed-identity"><a href="./main/">KAI HACKS AI</a> · © 2026</div>
+          <div class="footfed-contact">
+            <a class="footfed-contact-link" href="./main/contact/">Contact</a>
+          </div>
+          <nav class="footfed-legal" aria-label="Site">
+            <a class="footfed-legal-link" href="./main/privacy/">Privacy</a> ·
+            <a class="footfed-legal-link" href="./main/cvi/">CVI</a>
+          </nav>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      // Single line title scaling matching fit-one-line
+      function fitTitle() {
+        const titleEl = document.querySelector(".masthead-title");
+        if (!titleEl) return;
+        titleEl.style.whiteSpace = "nowrap";
+        titleEl.style.fontSize = ""; // Reset to CSS default
+
+        const isDesktop = window.innerWidth >= 641;
+        const maxFontSize = isDesktop ? 128 : 52;
+        let fontSize = maxFontSize;
+
+        titleEl.style.fontSize = fontSize + "px";
+        const parentWidth = titleEl.parentElement.clientWidth;
+        while (titleEl.scrollWidth > parentWidth && fontSize > 16) {
+          fontSize -= 2;
+          titleEl.style.fontSize = fontSize + "px";
+        }
+      }
+
+      window.addEventListener("resize", fitTitle);
+      document.addEventListener("DOMContentLoaded", fitTitle);
+      // Run once font faces have loaded to prevent layout shifts
+      if (document.fonts) {
+        document.fonts.ready.then(fitTitle);
+      }
+    </script>
+  </body>
+</html>

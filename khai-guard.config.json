@@ -20,7 +20,14 @@
       {
         "pattern": "governance/*",
         "layer": "governance",
-        "allow": [".github/**", ".husky/**", "khai-guard.config.json", "tests/**", "scripts/**"]
+        "allow": [
+          ".github/**",
+          ".husky/**",
+          "khai-guard.config.json",
+          "tests/**",
+          "scripts/**",
+          "staging/**"
+        ]
       },
       {
         "pattern": "surface/pages/*",
