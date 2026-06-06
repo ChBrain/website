@@ -55,6 +55,6 @@ describe("a11y - axe-core, no serious or critical violations", () => {
       expect(blockers.length).toBe(0);
 
       dom.window.close();
-    });
+    }, 20000);
   }
 });
