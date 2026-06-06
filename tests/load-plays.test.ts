@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { loadAllPlays } from "../src/lib/load-plays";
+import { loadRegistry } from "@chbrain/khai-plays";
 
 describe("load-plays", () => {
   it("successfully loads all installed plays", () => {
@@ -55,5 +56,16 @@ describe("load-plays", () => {
     expect(woyzeck!.reference!.sections).toHaveProperty("origin");
     expect(woyzeck!.reference!.sections).toHaveProperty("restrictions");
     expect(woyzeck!.reference!.sections).toHaveProperty("encoding");
+  });
+});
+
+describe("khai-plays registry", () => {
+  it("enforces all registry blurbs to be in English", () => {
+    const houses = loadRegistry();
+    const GERMAN_WORDS =
+      /\b(und|der|die|das|ist|für|mit|von|im|zu|dem|den|des|ein|eine|einer|eines|auf|aus|bei|nach|um|vor|gegen|ohne|durch|wie|so|ja|nein)\b/i;
+    for (const h of houses) {
+      expect(h.blurb).not.toMatch(GERMAN_WORDS);
+    }
   });
 });
