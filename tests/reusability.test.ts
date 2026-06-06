@@ -136,7 +136,7 @@ describe("reusability — inline-literal drift detector", () => {
     for (const dir of SCAN_ROOTS) {
       const root = join(ROOT, dir);
       for (const absPath of walk(root)) {
-        const relPath = relative(ROOT, absPath);
+        const relPath = relative(ROOT, absPath).replace(/\\/g, "/");
         findings.push(...scanFile(absPath, relPath));
       }
     }

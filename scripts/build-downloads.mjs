@@ -8,7 +8,7 @@
 // not installed (CI sandbox, no registry token) the script exits 0 cleanly so
 // astro build can continue without generating download artifacts.
 
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { createRequire } from "node:module";
 import matter from "gray-matter";
@@ -211,10 +211,93 @@ function buildSkillDownloads() {
   }
 }
 
+// ── plays ──────────────────────────────────────────────────────────────────
+
+async function buildPlayDownloads() {
+  let loadRegistry;
+  try {
+    ({ loadRegistry } = await import("@chbrain/khai-plays"));
+  } catch (e) {
+    console.log(`  plays: skipping plays build — ${e.message}`);
+    return;
+  }
+
+  const outDir = join(process.cwd(), "public", "downloads", "plays");
+  mkdirSync(outDir, { recursive: true });
+
+  const houses = loadRegistry();
+  for (const house of houses) {
+    let houseDir;
+    try {
+      houseDir = dirname(_require.resolve(`${house.package}/package.json`));
+    } catch {
+      console.log(`  plays: house package ${house.package} not found; skipping`);
+      continue;
+    }
+
+    const playsDir = join(houseDir, "plays");
+    if (!existsSync(playsDir)) continue;
+
+    const houseOutDir = join(outDir, house.id);
+    mkdirSync(houseOutDir, { recursive: true });
+
+    for (const playName of readdirSync(playsDir)) {
+      const playDir = join(playsDir, playName);
+      if (!statSync(playDir).isDirectory()) continue;
+
+      // Find files under playDir
+      const files = readdirSync(playDir);
+      const contentFiles = files
+        .filter((f) => f !== "package.json")
+        .map((f) => ({
+          path: f,
+          data: readFileSync(join(playDir, f)),
+        }));
+
+      // Overhead: house README and LICENSE
+      const overhead = [
+        { path: "README.md", data: readFileSync(join(houseDir, "README.md")) },
+        { path: "LICENSE", data: readFileSync(join(houseDir, "LICENSE")) },
+      ];
+      const licenseCodePath = join(houseDir, "LICENSE-CODE");
+      if (existsSync(licenseCodePath)) {
+        overhead.push({ path: "LICENSE-CODE", data: readFileSync(licenseCodePath) });
+      }
+
+      // Pack the bundle
+      const packed = packBundle({
+        name: playName,
+        overhead,
+        content: {
+          dir: "content",
+          files: contentFiles,
+        },
+        stamp: { kind: "play", house: house.id, play: playName },
+      });
+
+      // Write output
+      writeFileSync(join(houseOutDir, `${playName}.zip`), packed.zip);
+      writeFileSync(
+        join(houseOutDir, `${playName}.json`),
+        JSON.stringify({
+          filename: `${playName}.zip`,
+          size: fmtBytes(packed.zip.length),
+          sha256: packed.zipSha256,
+        }) + "\n",
+      );
+
+      console.log(
+        `  play ${house.id}/${playName}: ${fmtBytes(packed.zip.length)} sha256=${packed.zipSha256.slice(0, 12)}…`,
+      );
+    }
+  }
+}
+
 // ── run ────────────────────────────────────────────────────────────────────
 
-console.log("build-downloads: building engine and skill artifacts…");
+console.log("build-downloads: building engine, skill, and play artifacts…");
 writeDownloadsHtaccess();
 buildEngineDownloads();
 buildSkillDownloads();
+await buildPlayDownloads();
 console.log("build-downloads: done");

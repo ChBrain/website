@@ -73,6 +73,8 @@ export interface BookSpread {
    *  engines type spread links out to the download shelf ("Download"). `verb`
    *  is the visible word (default "Open"); `label` is the full aria sentence. */
   deepLink?: { href: string; label: string; verb?: string } | null;
+  /** optional CSS class modifier injected into the spread container */
+  classModifier?: string | null;
 }
 
 /**
