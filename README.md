@@ -1,3 +1,7 @@
+---
+language: en
+---
+
 # kaihacks website
 
 The rendered surface for the kaihacks system. Source for
