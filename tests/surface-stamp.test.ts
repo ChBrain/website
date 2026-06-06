@@ -26,11 +26,11 @@ describe("surface stamp", () => {
 
   it("stamps every built page with x-surface = its surface", () => {
     for (const page of pages) {
-      const meta = new JSDOM(page.html).window.document.querySelector('meta[name="x-surface"]');
-      expect(meta, `${page.path} has no <meta name=x-surface>`).not.toBeNull();
-      expect(meta!.getAttribute("content"), `${page.path} surface`).toBe(
-        expectedSurface(page.path),
-      );
+      const match =
+        page.html.match(/<meta\s+[^>]*name="x-surface"\s+[^>]*content="([^"]*)"/i) ||
+        page.html.match(/<meta\s+[^>]*content="([^"]*)"\s+[^>]*name="x-surface"/i);
+      expect(match, `${page.path} has no <meta name=x-surface>`).not.toBeNull();
+      expect(match![1], `${page.path} surface`).toBe(expectedSurface(page.path));
     }
   });
 });
