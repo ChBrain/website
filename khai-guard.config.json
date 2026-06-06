@@ -3,7 +3,19 @@
   "test": ["tests/**", ".github/workflows/**", ".husky/**"],
   "exemptRenames": true,
   "branchScope": {
-    "shared": [],
+    "shared": [
+      ".changeset/**",
+      "package.json",
+      "package-lock.json",
+      "CHANGELOG.md",
+      ".prettierrc",
+      ".gitignore",
+      ".npmrc",
+      ".nvmrc",
+      "LICENSE",
+      "LICENSE-CODE",
+      "SECURITY.md"
+    ],
     "lanes": [
       {
         "pattern": "chassis/*",
@@ -26,7 +38,11 @@
           "khai-guard.config.json",
           "tests/**",
           "scripts/**",
-          "staging/**"
+          "staging/**",
+          "GEMINI.md",
+          "CLAUDE.md",
+          "README.md",
+          "management/**"
         ]
       },
       {
