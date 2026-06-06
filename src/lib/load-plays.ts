@@ -31,6 +31,7 @@ export interface Play {
   houseId: string;
   houseTitle: string;
   title: string;
+  description: string;
   voice: string;
   voiceRegister: VoiceRegister;
   license: string;
@@ -200,6 +201,7 @@ export function loadAllPlays(): Play[] {
         houseId: house.id,
         houseTitle: house.title,
         title,
+        description: mainFm.description || "",
         voice: playVoice,
         voiceRegister,
         license,
