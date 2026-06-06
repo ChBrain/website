@@ -13,7 +13,8 @@ export function getStaticPaths() {
     props: { house },
   }));
 
-  const mockPaths = MOCK_HOUSES.filter((mh) => mh.id !== "buechner").map((house) => ({
+  const realHouseIds = new Set(realHouses.map((h) => h.id));
+  const mockPaths = MOCK_HOUSES.filter((mh) => !realHouseIds.has(mh.id)).map((house) => ({
     params: { house: house.id },
     props: { house },
   }));
