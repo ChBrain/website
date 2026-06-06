@@ -24,7 +24,7 @@ const cards: ShelfCard[] = bill.map((h: (typeof bill)[number]) => {
     title: h.title,
     note: isInstalled ? h.blurb : `${h.blurb} Grimm is still in progress.`,
     cta: isInstalled ? "Enter the house →" : "Visit repository →",
-    downloadHref: isInstalled ? `${URLS.plays}downloads/` : undefined,
+    downloadHref: isInstalled ? `${URLS.plays}downloads/plays/${h.id}.zip` : undefined,
     downloadCta: isInstalled ? "Download plays →" : undefined,
   };
 });
