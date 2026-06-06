@@ -12,6 +12,19 @@ import { MOCK_HOUSES } from "../../_mock";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
+function extractCompanyCategory(companyHtml: string, categoryName: string): string {
+  if (!companyHtml) return "";
+  const regex = new RegExp(
+    `<p>(?:<strong>)?\\s*${categoryName}\\s*:?\\s*(?:</strong>)?</p>\\s*<ul>([\\s\\S]*?)</ul>`,
+    "i",
+  );
+  const match = companyHtml.match(regex);
+  if (match) {
+    return `<ul>${match[1]}</ul>`;
+  }
+  return "";
+}
+
 export function getStaticPaths() {
   const realPlays = loadAllPlays();
   const houses = loadRegistry();
@@ -92,27 +105,28 @@ if (isReal) {
     { type: "process", slug: "processes", title: "Processes" },
   ];
 
+  const COMPANY_MAP: Record<string, string> = {
+    persona: "Personen",
+    place: "Orte",
+    piece: "Dinge",
+    position: "Positionen",
+    process: "Prozesse",
+  };
+
   if (realPlay.elements && realPlay.elements.length > 0) {
     for (const spec of TYPE_SPECS) {
       const groupElements = realPlay.elements.filter((el: any) => el.type === spec.type);
       if (groupElements.length === 0) continue;
 
-      let groupBodyHtml = "";
-      for (const el of groupElements) {
-        groupBodyHtml += `<h3 id="el-${el.id}">${el.title}</h3>`;
-        if (el.voice) {
-          groupBodyHtml += `<p class="element-voice-overline">voice: "${el.voice}"</p>`;
-        }
-
-        const sectionsHtml = Object.entries(el.sections)
-          .filter(([heading]) => heading !== "taxonomy" && heading !== "owner")
-          .map(([heading, html]) => {
-            const headingCap = heading.charAt(0).toUpperCase() + heading.slice(1);
-            return `<p><strong>${headingCap}</strong>: ${html.replace(/^<p>/i, "")}`;
-          })
-          .join("");
-
-        groupBodyHtml += sectionsHtml;
+      // Chapter Intro Spread
+      let introBodyHtml = "";
+      if (spec.type === "plot") {
+        introBodyHtml = realPlay.sections.triggers || "";
+      } else {
+        introBodyHtml = extractCompanyCategory(
+          realPlay.sections.company || "",
+          COMPANY_MAP[spec.type],
+        );
       }
 
       spreads.push({
@@ -123,9 +137,36 @@ if (isReal) {
         status: realPlay.voiceRegister,
         title: spec.title,
         facets: [],
-        bodyHtml: groupBodyHtml,
+        bodyHtml: introBodyHtml,
         classModifier: `voice-${realPlay.voiceRegister}`,
       });
+
+      // Individual Element Spreads (2x2 facet grids)
+      for (const el of groupElements) {
+        const facets: BookFacet[] = Object.entries(el.sections)
+          .filter(([heading]) => heading !== "taxonomy" && heading !== "owner")
+          .map(([heading, html]) => {
+            const titleCap = heading.charAt(0).toUpperCase() + heading.slice(1);
+            return {
+              letter: titleCap.charAt(0),
+              name: titleCap,
+              body: "",
+              bodyHtml: html as string,
+            };
+          });
+
+        spreads.push({
+          slug: `el-${el.id}`,
+          n: nextN(),
+          groupLabel: el.type,
+          groupHref: `/architecture/${el.type}/`,
+          status: el.voiceRegister,
+          title: el.title,
+          subtitle: el.voice ? `voice: "${el.voice}"` : null,
+          facets,
+          classModifier: `voice-${el.voiceRegister}`,
+        });
+      }
     }
   }
 
