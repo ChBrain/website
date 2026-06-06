@@ -23,7 +23,8 @@ export function getStaticPaths() {
     };
   });
 
-  const mockPaths = MOCK_HOUSES.filter((mh) => mh.id !== "buechner").flatMap((house) =>
+  const installedHouseIds = new Set(realPlays.map((play) => play.houseId));
+  const mockPaths = MOCK_HOUSES.filter((mh) => !installedHouseIds.has(mh.id)).flatMap((house) =>
     house.plays.map((play) => ({
       params: { house: house.id, play: play.id },
       props: { house, play, isReal: false },
