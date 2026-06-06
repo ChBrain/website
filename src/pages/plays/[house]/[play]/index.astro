@@ -51,7 +51,23 @@ if (isReal) {
   title = realPlay.title;
   ctaHref = `#synopsis`;
 
-  // Start with Synopsis/Estate spread
+  // 1. Consolidated Synopsis spread (containing Synopsis, Name, Arc, Stakes, Estate)
+  let synopsisHtml = realPlay.description
+    ? `<p>${realPlay.description}</p>`
+    : `<p>No synopsis provided.</p>`;
+  if (realPlay.sections.name) {
+    synopsisHtml += `<h3>Name</h3>${realPlay.sections.name}`;
+  }
+  if (realPlay.sections.arc) {
+    synopsisHtml += `<h3>Arc</h3>${realPlay.sections.arc}`;
+  }
+  if (realPlay.sections.stakes) {
+    synopsisHtml += `<h3>Stakes</h3>${realPlay.sections.stakes}`;
+  }
+  if (realPlay.sections.estate) {
+    synopsisHtml += `<h3>Estate</h3>${realPlay.sections.estate}`;
+  }
+
   spreads.push({
     slug: "synopsis",
     n: "00",
@@ -59,106 +75,85 @@ if (isReal) {
     status: "synopsis",
     title: "Synopsis",
     facets: [],
-    bodyHtml: realPlay.sections.estate || `<p>No estate section provided.</p>`,
+    bodyHtml: synopsisHtml,
     coda: null,
   });
 
   let counter = 1;
   const nextN = () => String(counter++).padStart(2, "0");
 
-  // Name & Arc spread
-  if (realPlay.sections.name || realPlay.sections.arc) {
-    let body = "";
-    if (realPlay.sections.name) {
-      body += `<h3>Name</h3>${realPlay.sections.name}`;
-    }
-    if (realPlay.sections.arc) {
-      body += `<h3>Arc</h3>${realPlay.sections.arc}`;
-    }
-    spreads.push({
-      slug: "name-arc",
-      n: nextN(),
-      groupLabel: "the play",
-      status: realPlay.voiceRegister,
-      title: "Name & Arc",
-      facets: [],
-      bodyHtml: body,
-      coda: null,
-    });
-  }
+  // 2. Company spreads grouped by type
+  const TYPE_SPECS = [
+    { type: "plot", slug: "plots", title: "Plots" },
+    { type: "persona", slug: "personas", title: "Personas" },
+    { type: "place", slug: "places", title: "Places" },
+    { type: "piece", slug: "pieces", title: "Pieces" },
+    { type: "position", slug: "positions", title: "Positions" },
+    { type: "process", slug: "processes", title: "Processes" },
+  ];
 
-  // Company intro spread
-  if (realPlay.sections.company) {
-    spreads.push({
-      slug: "company-intro",
-      n: nextN(),
-      groupLabel: "the play",
-      status: "company",
-      title: "The Company",
-      facets: [],
-      bodyHtml: realPlay.sections.company,
-      coda: null,
-    });
-  }
-
-  // Element spreads (grouped by type)
   if (realPlay.elements && realPlay.elements.length > 0) {
-    for (const el of realPlay.elements) {
-      const facets: BookFacet[] = Object.entries(el.sections)
-        .filter(([heading]) => heading !== "taxonomy" && heading !== "owner")
-        .map(([heading, html]) => {
-          const titleCap = heading.charAt(0).toUpperCase() + heading.slice(1);
-          return {
-            letter: titleCap.charAt(0),
-            name: titleCap,
-            body: "",
-            bodyHtml: html as string,
-          };
-        });
+    for (const spec of TYPE_SPECS) {
+      const groupElements = realPlay.elements.filter((el: any) => el.type === spec.type);
+      if (groupElements.length === 0) continue;
+
+      let groupBodyHtml = "";
+      for (const el of groupElements) {
+        groupBodyHtml += `<h3 id="el-${el.id}">${el.title}</h3>`;
+        if (el.voice) {
+          groupBodyHtml += `<p class="element-voice-overline">voice: "${el.voice}"</p>`;
+        }
+
+        const sectionsHtml = Object.entries(el.sections)
+          .filter(([heading]) => heading !== "taxonomy" && heading !== "owner")
+          .map(([heading, html]) => {
+            const headingCap = heading.charAt(0).toUpperCase() + heading.slice(1);
+            return `<p><strong>${headingCap}</strong>: ${html.replace(/^<p>/i, "")}`;
+          })
+          .join("");
+
+        groupBodyHtml += sectionsHtml;
+      }
 
       spreads.push({
-        slug: `el-${el.id}`,
+        slug: spec.slug,
         n: nextN(),
-        groupLabel: el.type,
-        groupHref: `/architecture/${el.type}/`,
-        status: el.voiceRegister,
-        title: el.title,
-        subtitle: el.voice ? `voice: "${el.voice}"` : null,
-        facets,
-        classModifier: `voice-${el.voiceRegister}`,
+        groupLabel: spec.title.toLowerCase(),
+        groupHref: `/architecture/${spec.type}/`,
+        status: realPlay.voiceRegister,
+        title: spec.title,
+        facets: [],
+        bodyHtml: groupBodyHtml,
+        classModifier: `voice-${realPlay.voiceRegister}`,
       });
     }
   }
 
-  // Stakes spread
-  if (realPlay.sections.stakes) {
-    spreads.push({
-      slug: "stakes",
-      n: nextN(),
-      groupLabel: "the play",
-      status: "stakes",
-      title: "Stakes",
-      facets: [],
-      bodyHtml: realPlay.sections.stakes,
-      coda: null,
-    });
-  }
-
-  // Reference Warrant spread
+  // 3. Reference Warrant spreads (snap split by chapter (##))
   if (realPlay.reference) {
-    const refBody = Object.entries(realPlay.reference.sections)
-      .map(([heading, html]) => `<h3>${heading}</h3>${html}`)
-      .join("");
+    const keys = Object.keys(realPlay.reference.sections);
+    keys.forEach((heading, i) => {
+      const html = realPlay.reference.sections[heading];
+      const titleCap = heading
+        .split(" ")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(" ");
+      const isLast = i === keys.length - 1;
 
-    spreads.push({
-      slug: "reference",
-      n: nextN(),
-      groupLabel: "reference",
-      status: "warrant",
-      title: realPlay.reference.title,
-      facets: [],
-      bodyHtml: refBody,
-      coda: `updated: ${realPlay.reference.updated}`,
+      spreads.push({
+        slug: `ref-${heading
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/-+/g, "-")
+          .replace(/^-|-$/g, "")}`,
+        n: nextN(),
+        groupLabel: "reference",
+        status: "warrant",
+        title: titleCap,
+        facets: [],
+        bodyHtml: html,
+        coda: isLast ? `updated: ${realPlay.reference.updated}` : null,
+      });
     });
   }
 
