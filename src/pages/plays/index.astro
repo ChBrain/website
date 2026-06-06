@@ -1,24 +1,30 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Shelf, { type ShelfCard } from "../../components/Shelf.astro";
-import { houses } from "@chbrain/khai-plays";
+import { loadRegistry } from "@chbrain/khai-plays";
+import { loadAllPlays } from "../../lib/load-plays";
 // MOCK -- REMOVE WHEN THE FIRST HOUSE REGISTERS (see ./_mock).
 import { MOCK_HOUSES } from "./_mock";
 
-// The bill of houses. Real registrations come from the khai-plays registry
-// (`houses`); while it is empty we fall back to the mock houses so the surface
-// reads end to end. When the first house registers, the mock drops out on its
-// own -- then delete ./_mock and this import.
+const houses = loadRegistry();
+const plays = loadAllPlays();
+
+// Fallback to mock houses only if the registry is completely empty (should not happen since buechner is registered)
 const bill = houses.length ? houses : MOCK_HOUSES;
 
-const cards: ShelfCard[] = bill.map((h: (typeof bill)[number]) => ({
-  href: `/plays/${h.id}/`,
-  eyebrow: h.package,
-  state: "house · a khai-plays collection",
-  title: h.title,
-  note: h.blurb,
-  cta: "Enter the house →",
-}));
+const cards: ShelfCard[] = bill.map((h: (typeof bill)[number]) => {
+  const isInstalled = plays.some((p) => p.houseId === h.id);
+
+  return {
+    href: isInstalled ? `/plays/${h.id}/` : h.repo,
+    external: !isInstalled,
+    eyebrow: h.package,
+    state: isInstalled ? "active · a khai-plays collection" : "work in progress",
+    title: h.title,
+    note: isInstalled ? h.blurb : `${h.blurb} Grimm is still in progress.`,
+    cta: isInstalled ? "Enter the house →" : "Visit repository →",
+  };
+});
 ---
 
 <BaseLayout

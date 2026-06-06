@@ -78,6 +78,11 @@
         "allow": ["src/pages/main/contact/**"]
       },
       {
+        "pattern": "surface/plays/*",
+        "layer": "solution",
+        "allow": ["src/pages/plays/**"]
+      },
+      {
         "pattern": "deps/*",
         "layer": "deps",
         "allow": ["**/package.json", "**/package-lock.json"]

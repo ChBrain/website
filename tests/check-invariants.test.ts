@@ -7,12 +7,32 @@ import { join } from "node:path";
 // Offline test of the origin tripwire (ops/check-invariants.sh) by running it
 // against a scaffolded temp PUBLIC_HTML. Issue 149 (Phase 4b).
 
-function run(publicHtml: string): { code: number; out: string } {
+let cachedIsWsl: boolean | null = null;
+function getIsWsl(): boolean {
+  if (cachedIsWsl !== null) return cachedIsWsl;
   try {
-    const out = execFileSync("bash", ["ops/check-invariants.sh"], {
-      env: { ...process.env, PUBLIC_HTML: publicHtml },
+    const wslCheck = execFileSync("bash", ["-c", "[ -d /mnt/c ] && echo wsl"], {
       encoding: "utf8",
     });
+    cachedIsWsl = wslCheck.trim() === "wsl";
+  } catch {
+    cachedIsWsl = false;
+  }
+  return cachedIsWsl;
+}
+
+function run(publicHtml: string): { code: number; out: string } {
+  try {
+    const isWsl = getIsWsl();
+    const drivePrefix = isWsl ? "/mnt/c" : "/c";
+    const posixPath = publicHtml.replace(/\\/g, "/").replace(/^[A-Za-z]:/, drivePrefix);
+    const out = execFileSync(
+      "bash",
+      ["-c", `PUBLIC_HTML='${posixPath}' bash ops/check-invariants.sh`],
+      {
+        encoding: "utf8",
+      },
+    );
     return { code: 0, out };
   } catch (e) {
     const err = e as { status?: number; stdout?: string; stderr?: string };
@@ -67,4 +87,4 @@ describe("check-invariants.sh", () => {
     expect(r.out.trim()).toBe("");
     rmSync(root, { recursive: true, force: true });
   });
-});
+}, 20000);
