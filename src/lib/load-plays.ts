@@ -8,6 +8,16 @@ import { loadRegistry } from "@chbrain/khai-plays";
 const _require = createRequire(import.meta.url);
 const md = new MarkdownIt({ html: true, breaks: false, linkify: false });
 
+export function cleanText(s: string): string {
+  if (!s) return "";
+  return s.replace(/—/g, " - ").replace(/–/g, " - ");
+}
+
+export function cleanHtml(s: string): string {
+  if (!s) return "";
+  return s.replace(/—/g, "&mdash;").replace(/–/g, "&ndash;");
+}
+
 export type VoiceRegister = "clinical" | "melancholy" | "editorial";
 
 export interface PlayElement {
@@ -120,6 +130,13 @@ export function loadAllPlays(): Play[] {
       continue;
     }
 
+    let registry: any = null;
+    try {
+      registry = _require(`${house.package}/registry.json`);
+    } catch {
+      // Fallback if registry.json is not present or exported
+    }
+
     // Read house voice from README.md
     let houseVoice = "";
     const readmePath = join(pkgDir, "README.md");
@@ -146,13 +163,49 @@ export function loadAllPlays(): Play[] {
       const mainPlaySrc = readFileSync(mainPlayFile, "utf8");
       const { data: mainFm, content: mainContent } = matter(mainPlaySrc);
 
-      const title = mainFm.title || dirName;
+      let title = cleanText(mainFm.title || dirName);
+      let description = "";
+      let foundInRegistry = false;
+
+      if (registry && Array.isArray(registry.plays)) {
+        const regPlay = registry.plays.find((p: any) => p && p.id === dirName);
+        if (regPlay) {
+          title = cleanText(regPlay.title);
+          description = cleanHtml(regPlay.description);
+          foundInRegistry = true;
+        }
+      }
+
+      if (!foundInRegistry) {
+        console.warn(
+          `[Migration Warning] Play "${dirName}" in house "${house.package}" not found in registry.json. Falling back to parsing ## Arc section.`,
+        );
+        const arcMatch = mainContent.match(/^##\s+Arc\s*$/im);
+        if (arcMatch) {
+          const startIndex = arcMatch.index! + arcMatch[0].length;
+          const rest = mainContent.slice(startIndex).trim();
+          const nextHeadingMatch = rest.match(/^##\s+/m);
+          const sectionText = nextHeadingMatch
+            ? rest.slice(0, nextHeadingMatch.index).trim()
+            : rest;
+          const paragraphs = sectionText
+            .split(/\r?\n\r?\n/)
+            .map((p) => p.trim())
+            .filter((p) => p.length > 0);
+          description = cleanHtml(paragraphs[0] || "");
+        } else {
+          description = cleanHtml(mainFm.description || "");
+        }
+      }
       const playVoice = mainFm.voice || houseVoice || "";
       const voiceRegister = getVoiceRegister(playVoice);
       const license = mainFm.license || "";
       const stamp = mainFm.stamp || { owner: "", version: "", date: "" };
 
       const playSections = parseSections(mainContent);
+      for (const k of Object.keys(playSections)) {
+        playSections[k] = cleanHtml(playSections[k]);
+      }
 
       // Read elements in the play directory
       const elements: PlayElement[] = [];
@@ -168,12 +221,16 @@ export function loadAllPlays(): Play[] {
           const refSrc = readFileSync(filePath, "utf8");
           const { data: refFm, content: refContent } = matter(refSrc);
           const h1Match = refContent.match(/^#\s+(.+)$/m);
-          const refTitle = h1Match ? h1Match[1].trim() : `${title} Reference`;
+          const refTitle = cleanText(h1Match ? h1Match[1].trim() : `${title} Reference`);
           const contentWithoutH1 = refContent.replace(/^#\s+.+$/m, "").trim();
+          const refSections = parseSections(contentWithoutH1);
+          for (const k of Object.keys(refSections)) {
+            refSections[k] = cleanHtml(refSections[k]);
+          }
           reference = {
             updated: refFm.updated || "",
             title: refTitle,
-            sections: parseSections(contentWithoutH1),
+            sections: refSections,
           };
           continue;
         }
@@ -183,12 +240,15 @@ export function loadAllPlays(): Play[] {
 
         if (!elFm.khai) continue;
 
-        const elTitle = elFm.title || fileName.replace(/\.md$/, "");
+        const elTitle = cleanText(elFm.title || fileName.replace(/\.md$/, ""));
         const elVoice = elFm.voice;
         const elVoiceResolved = elVoice || playVoice;
         const elVoiceRegister = getVoiceRegister(elVoiceResolved);
         const contentWithoutH1 = elContent.replace(/^#\s+.+$/m, "").trim();
         const elSections = parseSections(contentWithoutH1);
+        for (const k of Object.keys(elSections)) {
+          elSections[k] = cleanHtml(elSections[k]);
+        }
 
         elements.push({
           id: fileName.replace(/\.md$/, "").replace(/^[a-z]+_/, ""),
@@ -206,7 +266,7 @@ export function loadAllPlays(): Play[] {
         houseId: house.id,
         houseTitle: house.title,
         title,
-        description: mainFm.description || "",
+        description: description || "",
         voice: playVoice,
         voiceRegister,
         license,
