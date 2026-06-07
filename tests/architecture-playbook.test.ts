@@ -43,9 +43,10 @@ const SPINE: { n: string; slug: string; role: string }[] = CANON
       { n: "04", slug: "piece", role: "cast" },
       { n: "05", slug: "place", role: "cast" },
       { n: "06", slug: "persona", role: "cast" },
-      { n: "07", slug: "architecture", role: "rests on" },
-      { n: "08", slug: "instructions", role: "rests on" },
-      { n: "09", slug: "engines", role: "enriched by" },
+      { n: "07", slug: "plan", role: "cast" },
+      { n: "08", slug: "architecture", role: "rests on" },
+      { n: "09", slug: "instructions", role: "rests on" },
+      { n: "10", slug: "engines", role: "enriched by" },
     ]
   : [
       { n: "00", slug: "plot", role: "the system" },
@@ -60,7 +61,7 @@ const SPINE: { n: string; slug: string; role: string }[] = CANON
 const GROUP_LABELS = CANON
   ? ["production", "cast", "rests on", "enriched by"]
   : ["the system", "casts", "rests on"];
-const GROUP_COUNTS = CANON ? [2, 5, 2, 1] : [1, 5, 2];
+const GROUP_COUNTS = CANON ? [2, 6, 2, 1] : [1, 5, 2];
 
 // Engine cards (Phase 3, a third axis). Each installed engine renders as a
 // WIRES-card spread appended to the "enriched by" group, alphabetical, after
@@ -88,7 +89,7 @@ const FULL: Spread[] = [
 const TOTAL = String(FULL.length).padStart(2, "0");
 // The "enriched by" group (last) grows by one per installed engine.
 const FULL_GROUP_COUNTS =
-  CANON && ENGINE_SLUGS.length ? [2, 5, 2, 1 + ENGINE_SLUGS.length] : GROUP_COUNTS;
+  CANON && ENGINE_SLUGS.length ? [2, 6, 2, 1 + ENGINE_SLUGS.length] : GROUP_COUNTS;
 const WIRES = ["Wire", "Issue", "Require", "Enforce", "Setup"];
 
 describe("architecture playbook - design contract", () => {
