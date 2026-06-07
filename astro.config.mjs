@@ -13,4 +13,17 @@ export default defineConfig({
   },
   trailingSlash: "always",
   compressHTML: false,
+  vite: {
+    resolve: {
+      preserveSymlinks: true,
+    },
+    ssr: {
+      external: [
+        "@chbrain/khai-arch",
+        "@chbrain/khai-plays",
+        "@chbrain/khai-plays-buechner",
+        "@chbrain/khai-plays-grimm",
+      ],
+    },
+  },
 });
