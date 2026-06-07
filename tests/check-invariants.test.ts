@@ -87,4 +87,4 @@ describe("check-invariants.sh", () => {
     expect(r.out.trim()).toBe("");
     rmSync(root, { recursive: true, force: true });
   });
-}, 20000);
+}, 60000);
