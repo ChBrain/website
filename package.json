@@ -27,7 +27,7 @@
     "prepare": "husky && chmod +x .husky/pre-commit .husky/pre-push"
   },
   "dependencies": {
-    "@chbrain/khai-arch": "^0.1.3",
+    "@chbrain/khai-arch": "^0.1.6",
     "@chbrain/khai-engine-gender": "^0.1.5",
     "@chbrain/khai-engine-language": "^0.1.2",
     "@chbrain/khai-methods": "^0.0.3",
