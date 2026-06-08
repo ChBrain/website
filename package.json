@@ -32,14 +32,14 @@
     "@chbrain/khai-engine-language": "^0.1.2",
     "@chbrain/khai-methods": "^0.0.3",
     "@chbrain/khai-plays": "^0.0.4",
-    "@chbrain/khai-plays-buechner": "^0.8.0",
+    "@chbrain/khai-plays-buechner": "^0.9.0",
     "@chbrain/khai-plays-grimm": "^0.11.0",
     "@fontsource-variable/newsreader": "^5.2.10",
     "@fontsource-variable/source-serif-4": "^5.2.9",
     "@fontsource/ibm-plex-mono": "^5.2.7"
   },
   "devDependencies": {
-    "@chbrain/khai-guard": "^0.1.6",
+    "@chbrain/khai-guard": "^0.1.7",
     "@chbrain/khai-language": "^0.1.1",
     "@chbrain/khai-pack": "^0.0.3",
     "@chbrain/khai-skills": "^0.0.12",
