@@ -247,7 +247,7 @@ for (let i = 0; i < cards.length; i += per) cardPanels.push(cards.slice(i, i + p
       justify-content: center;
     }
     .snap-panel.section--cards {
-      justify-content: flex-start;
+      justify-content: center;
     }
   }
   @media (max-width: 640px) {
@@ -285,6 +285,7 @@ for (let i = 0; i < cards.length; i += per) cardPanels.push(cards.slice(i, i + p
     line-height: 0.94;
     letter-spacing: -0.03em;
     color: var(--color-ink);
+    max-width: 100%;
   }
   @media (min-width: 641px) {
     .masthead-title {
