@@ -24,6 +24,7 @@ export interface PlayElement {
   id: string;
   type: string; // "persona" | "position" | "piece" | "place" | "process" | "plot"
   title: string;
+  declared: string; // the name in the play's declared (original) language; the book reads this
   voice?: string;
   voiceRegister: VoiceRegister;
   frontmatter: any;
@@ -41,6 +42,7 @@ export interface Play {
   houseId: string;
   houseTitle: string;
   title: string;
+  declared: string; // the play's name in its declared (original) language; the book reads this
   description: string;
   voice: string;
   voiceRegister: VoiceRegister;
@@ -164,6 +166,9 @@ export function loadAllPlays(): Play[] {
       const { data: mainFm, content: mainContent } = matter(mainPlaySrc);
 
       let title = cleanText(mainFm.title || dirName);
+      // The declared (original-language) name lives in the play file, never the
+      // registry: the shelf reads the English `title`, the book reads `declared`.
+      const declared = cleanText(mainFm.declared || mainFm.title || dirName);
       let description = "";
       let foundInRegistry = false;
 
@@ -241,6 +246,7 @@ export function loadAllPlays(): Play[] {
         if (!elFm.khai) continue;
 
         const elTitle = cleanText(elFm.title || fileName.replace(/\.md$/, ""));
+        const elDeclared = cleanText(elFm.declared || elFm.title || fileName.replace(/\.md$/, ""));
         const elVoice = elFm.voice;
         const elVoiceResolved = elVoice || playVoice;
         const elVoiceRegister = getVoiceRegister(elVoiceResolved);
@@ -254,6 +260,7 @@ export function loadAllPlays(): Play[] {
           id: fileName.replace(/\.md$/, "").replace(/^[a-z]+_/, ""),
           type: elFm.khai,
           title: elTitle,
+          declared: elDeclared,
           voice: elVoice,
           voiceRegister: elVoiceRegister,
           frontmatter: elFm,
@@ -266,6 +273,7 @@ export function loadAllPlays(): Play[] {
         houseId: house.id,
         houseTitle: house.title,
         title,
+        declared,
         description: description || "",
         voice: playVoice,
         voiceRegister,
