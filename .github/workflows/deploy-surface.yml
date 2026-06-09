@@ -90,6 +90,9 @@ jobs:
               plays)        target="$base/plays.kaihacks.ai/" ;;
               *) echo "::error::unknown surface '$surface'"; exit 1 ;;
             esac
+            # Each production surface is its own document root, so the
+            # absolute /_assets/ the HTML references resolves to <docroot>/_assets/.
+            assets_target="${target}_assets/"
           elif [ "$env" = "staging" ]; then
             # Every surface stages under the single staging vhost.
             case "$surface" in
@@ -97,6 +100,10 @@ jobs:
                 target="$base/staging.kaihacks.ai/$surface/" ;;
               *) echo "::error::unknown surface '$surface'"; exit 1 ;;
             esac
+            # On staging every surface lives under the one vhost, but the
+            # absolute /_assets/ resolves to the vhost ROOT, not the surface
+            # subdir -- so assets go one level up, shared by all staged surfaces.
+            assets_target="$base/staging.kaihacks.ai/_assets/"
           else
             echo "::error::unknown env '$env' (expected staging or production)"
             exit 1
@@ -107,8 +114,17 @@ jobs:
             echo "::error::dist/$surface does not exist - build emitted no '$surface' surface"
             exit 1
           fi
+          # The HTML references bundled JS at /_assets/*.js; that dir must ship
+          # too or every component script 404s in production (CSS dodges this by
+          # being inlined in astro.config).
+          if [ ! -d "dist/_assets" ]; then
+            echo "::error::dist/_assets does not exist - build emitted no assets"
+            exit 1
+          fi
           echo "target=$target" >> "$GITHUB_OUTPUT"
+          echo "assets_target=$assets_target" >> "$GITHUB_OUTPUT"
           echo "Deploying dist/$surface/ -> $target ($env)"
+          echo "Deploying dist/_assets/ -> $assets_target ($env)"
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
@@ -116,8 +132,21 @@ jobs:
           chmod 600 ~/.ssh/kaihacksai
           ssh-keyscan 92.205.150.56 >> ~/.ssh/known_hosts || true
       - name: Deploy surface via rsync
+        # --exclude '/_assets/': on a production docroot the shared assets dir is
+        # a sibling of the surface's files, so --delete would wipe it; the assets
+        # step below owns it. (On staging the surface target is a subdir and has
+        # no _assets sibling, so the exclude is a harmless no-op there.)
         run: |
-          rsync -avz --delete \
+          rsync -avz --delete --exclude '/_assets/' \
             -e "ssh -i ~/.ssh/kaihacksai" \
             "./dist/${{ inputs.surface }}/" \
             "c216mkgp1lzk@92.205.150.56:${{ steps.target.outputs.target }}"
+      - name: Deploy shared assets via rsync (NO --delete)
+        # Ship the hashed /_assets/ bundle the HTML references. No --delete:
+        # filenames are content-hashed, so old entries are harmless, and on the
+        # shared staging root a --delete would clobber other surfaces' assets.
+        run: |
+          rsync -avz \
+            -e "ssh -i ~/.ssh/kaihacksai" \
+            "./dist/_assets/" \
+            "c216mkgp1lzk@92.205.150.56:${{ steps.target.outputs.assets_target }}"
