@@ -268,6 +268,13 @@ export function loadAllPlays(): Play[] {
         });
       }
 
+      // Stable, deterministic order within each chapter: sort elements by their
+      // declared (book) name. readdirSync order is filesystem-dependent, so
+      // without this the book's element order varies across environments. The
+      // page groups by type, so a single sort here orders each type's chapter
+      // alphabetically by declared name (German collation).
+      elements.sort((a, b) => a.declared.localeCompare(b.declared, "de"));
+
       plays.push({
         id: dirName,
         houseId: house.id,
