@@ -61,7 +61,9 @@ let ctaLabel = "Open the playbook →";
 if (isReal) {
   const realPlay = play as any;
   voiceRegister = realPlay.voiceRegister;
-  title = realPlay.title;
+  // The book is the production in its declared (original) language; the shelf
+  // carries the English title, the book reads the declared name.
+  title = realPlay.declared;
   ctaHref = `#synopsis`;
 
   // 1. Consolidated Synopsis spread (containing Synopsis, Name, Arc, Stakes, Estate)
@@ -161,7 +163,7 @@ if (isReal) {
           groupLabel: el.type,
           groupHref: `/architecture/${el.type}/`,
           status: el.voiceRegister,
-          title: el.title,
+          title: el.declared,
           subtitle: el.voice ? `voice: "${el.voice}"` : null,
           facets,
           classModifier: `voice-${el.voiceRegister}`,
