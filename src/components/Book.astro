@@ -554,15 +554,15 @@ const groups: BookTocGroup[] = tocGroups ?? [
     margin: 22px 0 0;
     font-family: var(--font-display);
     font-weight: 380;
-    /* Fit the title on a single line: scale with viewport width and never wrap,
-     * capped so short titles still read large. Long titles (e.g. a house's
-     * "KHAI plays <House>") shrink to stay on one line instead of breaking. */
-    font-size: clamp(2.25rem, 8.5vw, 168px);
+    font-size: 96px;
     line-height: 0.94;
     letter-spacing: -0.03em;
     color: var(--color-ink);
-    white-space: nowrap;
-    max-width: 100%;
+  }
+  @media (min-width: 641px) {
+    .pb-cover-title {
+      font-size: 168px;
+    }
   }
   .pb-cover-title em {
     color: var(--color-brick);
