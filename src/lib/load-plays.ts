@@ -87,7 +87,7 @@ function rewriteLinks(html: string): string {
     .replace(/href="(?:\.\.\/)*README\.md"/g, 'href="../../"')
     .replace(/href="play_[a-zA-Z0-9_-]+\.md"/g, 'href="./"')
     .replace(
-      /href="(?:persona|position|piece|place|process|plot)_([a-zA-Z0-9_-]+)\.md"/g,
+      /href="(?:persona|position|piece|place|process|plot|plan)_([a-zA-Z0-9_-]+)\.md"/g,
       'href="#el-$1"',
     );
 }
