@@ -66,10 +66,11 @@ if (isReal) {
   title = realPlay.declared;
   ctaHref = `#synopsis`;
 
-  // 1. Consolidated Synopsis spread (containing Synopsis, Name, Arc, Stakes, Estate)
-  let synopsisHtml = realPlay.description
-    ? `<p>${realPlay.description}</p>`
-    : `<p>No synopsis provided.</p>`;
+  // 1. Consolidated Synopsis spread (Name, Arc, Stakes, Estate). The book is in
+  // the production's declared language, so it does NOT lead with the registry
+  // `description` (that logline is the English shelf copy); the German `## Arc`
+  // is the synopsis the book reads.
+  let synopsisHtml = "";
   if (realPlay.sections.name) {
     synopsisHtml += `<h3>Name</h3>${realPlay.sections.name}`;
   }
@@ -81,6 +82,9 @@ if (isReal) {
   }
   if (realPlay.sections.estate) {
     synopsisHtml += `<h3>Estate</h3>${realPlay.sections.estate}`;
+  }
+  if (!synopsisHtml) {
+    synopsisHtml = `<p>No synopsis provided.</p>`;
   }
 
   spreads.push({
