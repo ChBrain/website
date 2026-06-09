@@ -176,16 +176,6 @@ for (let i = 0; i < cards.length; i += per) cardPanels.push(cards.slice(i, i + p
   <SiteFooter />
 </div>
 
-<script>
-  // Keep the masthead on one line. At the CSS size (128px, matching the
-  // KAI HACKS AI masthead) a short title fits; a long one -- a house, "KHAI
-  // plays Büchner" -- would overflow, so the shared helper steps the
-  // font-size down until it fits. Same helper drives the Book cover, so the
-  // two cannot drift.
-  import { fitOneLine } from "../lib/fit-one-line";
-  fitOneLine(".masthead-title");
-</script>
-
 <style is:global>
   body:has(.shelf) {
     padding: 0;
