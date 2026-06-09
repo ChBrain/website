@@ -45,7 +45,7 @@ const cards: ShelfCard[] = playsToRender.map((p) => {
     note = mockPlay.blurb;
   } else if (isInstalled) {
     const realPlay = p as (typeof realPlays)[number];
-    const rawNote = realPlay.sections.arc || realPlay.sections.name || "";
+    const rawNote = realPlay.description || realPlay.sections.arc || realPlay.sections.name || "";
     note = stripHtml(rawNote);
     if (note.length > 160) {
       note = note.slice(0, 160) + "...";
