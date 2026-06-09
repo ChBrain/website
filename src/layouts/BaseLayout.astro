@@ -126,5 +126,44 @@ const surface = segments[0] ?? "root";
         color: var(--color-fg);
       }
     </style>
+    {
+      /* Keep big display titles (book cover, spread, shelf masthead) on one
+        line by shrinking them to the page column. MUST be is:inline: the
+        per-surface deploy ships only dist/<surface>/, not dist/_assets/, so a
+        bundled module script 404s in production (the same reason CSS is
+        inlined in astro.config). Self-contained, no imports. */
+    }
+    <script is:inline>
+      (function () {
+        function columnWidth() {
+          var root = getComputedStyle(document.documentElement);
+          var page = parseFloat(root.getPropertyValue("--width-page")) || Infinity;
+          var body = getComputedStyle(document.body);
+          var gutter = (parseFloat(body.paddingLeft) || 0) + (parseFloat(body.paddingRight) || 0);
+          return Math.min(page, document.documentElement.clientWidth - gutter);
+        }
+        function fit() {
+          var avail = columnWidth();
+          document
+            .querySelectorAll(".pb-cover-title, .pb-spread-title, .masthead-title")
+            .forEach(function (el) {
+              el.style.whiteSpace = "nowrap";
+              el.style.fontSize = "";
+              var size = parseFloat(getComputedStyle(el).fontSize);
+              while (el.scrollWidth > avail && size > 28) {
+                size -= 1;
+                el.style.fontSize = size + "px";
+              }
+            });
+        }
+        var kick = function () {
+          requestAnimationFrame(fit);
+        };
+        if (document.readyState === "loading") addEventListener("DOMContentLoaded", kick);
+        else kick();
+        addEventListener("resize", fit);
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+      })();
+    </script>
   </body>
 </html>
