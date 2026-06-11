@@ -1,34 +1,60 @@
 ---
 // The Stage: a full-bleed theatrical view of one play. Underscore-pathed
-// (src/pages/plays/_stage/) so Astro keeps it out of routing; it is a
-// plays-surface component, rendered by [house]/[play]/stage/index.astro.
+// (src/pages/plays/_stage/) so Astro keeps it out of routing; rendered by
+// [house]/[play]/stage/index.astro.
 //
-// Four states, toggled client-side (single page, no route change):
-//   closed  — curtains drawn, the playbill; the resting state.
-//   backstage — the call board overlay (left panel / phone bottom sheet),
-//               cast/set/props from the play's real elements.
-//   open    — curtains parted, the mocked scene + the (static) Souffleur.
-// The scene is a rehearsal placeholder (see _stage/scene.ts); wiring the
-// Souffleur to actually drive it is the later integration work.
-import type { Company, Scene } from "./scene";
+//   closed    — curtains drawn, the playbill; the resting state.
+//   backstage — the Call Board: cast the scene from the play's real elements.
+//   open      — curtains parted, the scene (composed from your casting) + the
+//               Souffleur (the chosen scene's real Business + Objectives).
+//
+// Backstage is interactive (a casting board), Scene Plots preselect a whole
+// scene, and the casting drives the scene. The only mock left is the dialogue
+// (scene.ts composeScene); cast/set/props/business/objectives/blocking are real.
+import type { Stagecraft, Scene, Selection } from "./scene";
 
 interface Props {
   title: string;
   houseTitle: string;
   voiceRegister: string;
   backHref: string;
-  company: Company;
+  craft: Stagecraft;
   scene: Scene;
+  selection: Selection;
 }
 
-const { title, houseTitle, voiceRegister, backHref, company, scene } = Astro.props;
-const { cast, set, props } = company;
+const { title, houseTitle, voiceRegister, backHref, craft, scene, selection } = Astro.props;
+const { cast, set, props, plots, defaultPlotId } = craft;
 
-const stagedCast = new Set(scene.staged.castIds);
-const stagedPlace = scene.staged.placeId;
-const stagedProp = scene.staged.propId;
+const selCast = new Set(selection.cast);
+const selSet = new Set(selection.set);
+const selProps = new Set(selection.props);
+const defaultPlot = plots.find((p) => p.id === defaultPlotId) ?? null;
+const defaultCues = defaultPlot ? [...defaultPlot.business, ...defaultPlot.objectives] : [];
 
 const bulbs = Array.from({ length: 18 });
+
+// Lean data blob for the client: enough to recompute lighting, the Blocking
+// strip, the Souffleur cues, and the (mocked) scene as the casting changes.
+// Inline JSON in the page — no fetch, so the per-surface deploy stays safe.
+const lite = (i: { id: string; name: string }) => ({ id: i.id, name: i.name });
+const data = {
+  cast: cast.map(lite),
+  set: set.map(lite),
+  props: props.map(lite),
+  plots: plots.map((p) => ({
+    id: p.id,
+    cast: p.cast,
+    set: p.set,
+    props: p.props,
+    business: p.business.map(lite),
+    objectives: p.objectives.map(lite),
+    ranks: p.ranks.map(lite),
+  })),
+  sel: selection,
+  defaultPlotId,
+};
+const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
 ---
 
 <section class={`stage voice-${voiceRegister} is-closed`} id="stage" data-state="closed">
@@ -50,9 +76,9 @@ const bulbs = Array.from({ length: 18 });
   <div class="house">
     <div class="vignette" aria-hidden="true"></div>
 
-    <!-- the open scene (revealed when the curtain parts) -->
+    <!-- the open scene (composed from the casting, revealed when curtains part) -->
     <div class="scene" id="scene">
-      <div class="scene-inner">
+      <div class="scene-inner" id="scene-inner">
         <p class="scene-act">{scene.act} · {scene.scene}</p>
         <hr class="scene-rule" />
         {
@@ -102,7 +128,7 @@ const bulbs = Array.from({ length: 18 });
     <span class="wing wing-right" aria-hidden="true">WINGS</span>
     <span class="apron-label" aria-hidden="true">APRON · FORESTAGE</span>
 
-    <!-- souffleur (open state) -->
+    <!-- souffleur (open state): the chosen scene's Business + Objectives -->
     <div class="souffleur" id="souffleur">
       <div class="souffleur-bar">
         <span class="souffleur-label">PROMPT BOX · SOUFFLEUR</span>
@@ -118,112 +144,174 @@ const bulbs = Array.from({ length: 18 });
         />
         <button class="cue" type="button" disabled>CUE</button>
       </div>
-      <div class="chips">
-        <span class="chip">The Abyss</span>
-        <span class="chip">A Sudden Movement</span>
-        <span class="chip">Nature Answers</span>
+      <div class="chips" id="souffleur-chips">
+        {defaultCues.map((c) => <span class="chip">{c.name}</span>)}
       </div>
-      <p class="souffleur-note">The souffleur sleeps · this scene is a rehearsal placeholder.</p>
+      <p class="souffleur-note" id="souffleur-note">
+        The souffleur sleeps · cues are this scene's business &amp; objectives.
+      </p>
     </div>
   </div>
 
-  <!-- backstage overlay -->
+  <!-- backstage: the casting board -->
   <div class="backstage" id="backstage" hidden>
     <div class="backstage-scrim" id="backstage-scrim"></div>
     <aside class="callboard" role="dialog" aria-modal="true" aria-label="Backstage call board">
       <div class="cb-head">
         <div>
           <p class="cb-title">BACKSTAGE</p>
-          <p class="cb-sub">CALL BOARD · ENTER FROM THE WINGS</p>
+          <p class="cb-sub">CALL BOARD · CAST THE SCENE</p>
         </div>
         <button class="cb-close" id="cb-close" type="button" aria-label="Close backstage">×</button>
       </div>
 
-      <div class="cb-scroll">
-        <section class="cb-section">
-          <p class="cb-section-head">
-            <span class="cb-sec-dot" aria-hidden="true"></span>
-            DRESSING ROOMS
-            <span class="cb-meta">CAST · {cast.length}</span>
+      <div class="cb-board">
+        <section class="cb-col">
+          <p class="cb-col-head">
+            <span class="cb-sec-dot" aria-hidden="true"></span>SCENE PLOT
+            <span class="cb-meta">{plots.length}</span>
           </p>
-          {
-            cast.length ? (
-              cast.map((it) => (
-                <div class={`cb-item${stagedCast.has(it.id) ? " is-staged" : ""}`}>
-                  <div class="cb-item-row">
-                    <span class="cb-item-name">{it.name}</span>
-                    {stagedCast.has(it.id) && <span class="cb-badge">IN THE WINGS</span>}
-                  </div>
-                  {it.blurb && <p class="cb-item-blurb">{it.blurb}</p>}
-                </div>
-              ))
-            ) : (
-              <p class="cb-empty">No cast listed.</p>
-            )
-          }
+          <div class="cb-col-scroll">
+            {
+              plots.length ? (
+                plots.map((p) => (
+                  <button
+                    class={`cb-plot${p.id === defaultPlotId ? " is-lit" : ""}`}
+                    type="button"
+                    data-plot={p.id}
+                    aria-pressed={p.id === defaultPlotId ? "true" : "false"}
+                  >
+                    <span class="cb-item-row">
+                      <span class="cb-item-name">{p.name}</span>
+                      <span class="cb-plot-mark" aria-hidden="true">
+                        ▲
+                      </span>
+                    </span>
+                    {p.blurb && <span class="cb-item-blurb">{p.blurb}</span>}
+                  </button>
+                ))
+              ) : (
+                <p class="cb-empty">No scenes plotted.</p>
+              )
+            }
+          </div>
         </section>
 
-        <section class="cb-section">
-          <p class="cb-section-head">
-            <span class="cb-sec-dot" aria-hidden="true"></span>
-            THE SET
-            <span class="cb-meta">BACKDROP · {set.length}</span>
+        <section class="cb-col">
+          <p class="cb-col-head">
+            <span class="cb-sec-dot" aria-hidden="true"></span>DRESSING ROOMS
+            <span class="cb-meta">{cast.length}</span>
           </p>
-          {
-            set.length ? (
-              set.map((it) => (
-                <div class={`cb-item${stagedPlace === it.id ? " is-staged" : ""}`}>
-                  <div class="cb-item-row">
-                    <span class="cb-item-name">{it.name}</span>
-                    {stagedPlace === it.id && <span class="cb-badge">ON STAGE</span>}
-                  </div>
-                  {it.blurb && <p class="cb-item-blurb">{it.blurb}</p>}
-                </div>
-              ))
-            ) : (
-              <p class="cb-empty">No set listed.</p>
-            )
-          }
+          <div class="cb-col-scroll">
+            {
+              cast.length ? (
+                cast.map((it) => (
+                  <button
+                    class={`cb-item${selCast.has(it.id) ? " is-on" : ""}`}
+                    type="button"
+                    data-group="cast"
+                    data-id={it.id}
+                    aria-pressed={selCast.has(it.id) ? "true" : "false"}
+                  >
+                    <span class="cb-item-row">
+                      <span class="cb-check" aria-hidden="true" />
+                      <span class="cb-item-name">{it.name}</span>
+                    </span>
+                    {it.blurb && <span class="cb-item-blurb">{it.blurb}</span>}
+                  </button>
+                ))
+              ) : (
+                <p class="cb-empty">No cast.</p>
+              )
+            }
+          </div>
         </section>
 
-        <section class="cb-section">
-          <p class="cb-section-head">
-            <span class="cb-sec-dot" aria-hidden="true"></span>
-            PROP TABLE
-            <span class="cb-meta">PROPERTIES · {props.length}</span>
+        <section class="cb-col">
+          <p class="cb-col-head">
+            <span class="cb-sec-dot" aria-hidden="true"></span>THE SET
+            <span class="cb-meta">{set.length}</span>
           </p>
-          {
-            props.length ? (
-              props.map((it) => (
-                <div class={`cb-item${stagedProp === it.id ? " is-staged" : ""}`}>
-                  <div class="cb-item-row">
-                    <span class="cb-item-name">{it.name}</span>
-                    {stagedProp === it.id && <span class="cb-badge">IN PLAY</span>}
-                  </div>
-                  {it.blurb && <p class="cb-item-blurb">{it.blurb}</p>}
-                </div>
-              ))
-            ) : (
-              <p class="cb-empty">No props listed.</p>
-            )
-          }
+          <div class="cb-col-scroll">
+            {
+              set.length ? (
+                set.map((it) => (
+                  <button
+                    class={`cb-item${selSet.has(it.id) ? " is-on" : ""}`}
+                    type="button"
+                    data-group="set"
+                    data-id={it.id}
+                    aria-pressed={selSet.has(it.id) ? "true" : "false"}
+                  >
+                    <span class="cb-item-row">
+                      <span class="cb-check" aria-hidden="true" />
+                      <span class="cb-item-name">{it.name}</span>
+                    </span>
+                    {it.blurb && <span class="cb-item-blurb">{it.blurb}</span>}
+                  </button>
+                ))
+              ) : (
+                <p class="cb-empty">No set.</p>
+              )
+            }
+          </div>
         </section>
+
+        <section class="cb-col">
+          <p class="cb-col-head">
+            <span class="cb-sec-dot" aria-hidden="true"></span>PROP TABLE
+            <span class="cb-meta">{props.length}</span>
+          </p>
+          <div class="cb-col-scroll">
+            {
+              props.length ? (
+                props.map((it) => (
+                  <button
+                    class={`cb-item${selProps.has(it.id) ? " is-on" : ""}`}
+                    type="button"
+                    data-group="props"
+                    data-id={it.id}
+                    aria-pressed={selProps.has(it.id) ? "true" : "false"}
+                  >
+                    <span class="cb-item-row">
+                      <span class="cb-check" aria-hidden="true" />
+                      <span class="cb-item-name">{it.name}</span>
+                    </span>
+                    {it.blurb && <span class="cb-item-blurb">{it.blurb}</span>}
+                  </button>
+                ))
+              ) : (
+                <p class="cb-empty">No props.</p>
+              )
+            }
+          </div>
+        </section>
+      </div>
+
+      <div class="cb-blocking">
+        <span class="cb-blocking-label">BLOCKING</span>
+        <span class="cb-ranks" id="cb-ranks">
+          {defaultPlot && defaultPlot.ranks.map((r) => <span class="cb-rank">{r.name}</span>)}
+        </span>
       </div>
 
       <button class="raise raise-cb" id="raise-cb" type="button" data-mode="raise">
         <span class="raise-main">Raise the Curtain</span>
-        <span class="raise-sub">CAST · SET · BEGIN</span>
+        <span class="raise-sub" id="raise-sub"
+          >{defaultPlot ? defaultPlot.name : "custom casting"}</span
+        >
         <span class="raise-ar" aria-hidden="true">▲▲</span>
       </button>
     </aside>
   </div>
+
+  <script is:inline type="application/json" id="stage-data" set:html={dataJson} />
 </section>
 
 <style>
-  /* local theatre palette — the stage breaks the paper/ink system on purpose */
+  /* local theatre palette: every shade derives from the canonical tokens via
+     color-mix (no off-palette hex; the minifier folds rgba() into hex). */
   .stage {
-    /* the theatre is dark, but every shade is derived from the canonical
-       tokens (ink/brick/amber/paper) via color-mix — no off-palette hex. */
     --stage-bg: color-mix(in srgb, var(--color-ink) 86%, black);
     --stage-glow: color-mix(in srgb, var(--color-brick) 22%, var(--color-ink));
     --stage-fg: var(--color-paper);
@@ -649,6 +737,7 @@ const bulbs = Array.from({ length: 18 });
     flex-wrap: wrap;
     gap: 0.4rem;
     margin-top: 0.6rem;
+    min-height: 1.4rem;
   }
   .chip {
     font-family: var(--font-mono);
@@ -667,7 +756,7 @@ const bulbs = Array.from({ length: 18 });
     color: var(--stage-fg-mute);
   }
 
-  /* backstage overlay */
+  /* backstage: the casting board */
   .backstage[hidden] {
     display: none;
   }
@@ -691,7 +780,7 @@ const bulbs = Array.from({ length: 18 });
     top: 0;
     left: 0;
     bottom: 0;
-    width: min(86%, 360px);
+    width: min(95%, 980px);
     display: flex;
     flex-direction: column;
     background: var(--color-paper);
@@ -736,25 +825,34 @@ const bulbs = Array.from({ length: 18 });
     height: 24px;
     cursor: pointer;
   }
-  .cb-scroll {
+
+  /* left -> right: scene plot · cast · set · props */
+  .cb-board {
     flex: 1;
-    overflow-y: auto;
-    padding: 0.5rem 1.1rem 1rem;
+    min-height: 0;
+    display: flex;
   }
-  .cb-section {
-    margin-top: 1rem;
+  .cb-col {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--color-rule);
   }
-  .cb-section-head {
+  .cb-col:last-child {
+    border-right: none;
+  }
+  .cb-col-head {
     display: flex;
     align-items: center;
     gap: 0.4rem;
+    margin: 0;
+    padding: 0.7rem 0.9rem 0.5rem;
     font-family: var(--font-mono);
     font-size: 10px;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.14em;
     color: var(--color-ink-soft);
     border-bottom: 1px solid var(--color-rule);
-    padding-bottom: 0.4rem;
-    margin: 0 0 0.5rem;
   }
   .cb-sec-dot {
     width: 5px;
@@ -765,69 +863,170 @@ const bulbs = Array.from({ length: 18 });
   .cb-meta {
     margin-left: auto;
     color: var(--color-ink-mute);
-    letter-spacing: 0.1em;
   }
-  .cb-item {
-    padding: 0.5rem 0.6rem;
+  .cb-col-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.4rem 0.5rem 0.8rem;
+  }
+  .cb-item,
+  .cb-plot {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
     border-left: 2px solid transparent;
+    padding: 0.45rem 0.55rem;
+    cursor: pointer;
+    color: var(--color-ink);
   }
-  .cb-item.is-staged {
-    border-left-color: var(--color-brick);
+  .cb-item:hover,
+  .cb-plot:hover {
     background: var(--color-paper-warm);
   }
   .cb-item-row {
     display: flex;
-    align-items: baseline;
-    gap: 0.6rem;
+    align-items: center;
+    gap: 0.5rem;
   }
   .cb-item-name {
     font-family: var(--font-display);
-    font-size: 17px;
+    font-size: 16px;
     color: var(--color-ink);
   }
-  .cb-badge {
-    margin-left: auto;
-    font-family: var(--font-mono);
-    font-size: 8px;
-    letter-spacing: 0.14em;
-    color: var(--color-brick);
-    white-space: nowrap;
-  }
   .cb-item-blurb {
-    margin: 0.15rem 0 0;
+    display: block;
+    margin-top: 0.1rem;
     font-family: var(--font-prose);
-    font-size: 12.5px;
-    line-height: 1.4;
+    font-size: 12px;
+    line-height: 1.35;
     color: var(--color-ink-soft);
   }
   .cb-empty {
     font-family: var(--font-mono);
     font-size: 11px;
     color: var(--color-ink-mute);
-    padding: 0.4rem 0.6rem;
+    padding: 0.5rem 0.6rem;
   }
+
+  /* selected cast/set/props */
+  .cb-check {
+    flex: none;
+    width: 13px;
+    height: 13px;
+    border: 1px solid var(--color-rule);
+    border-radius: 3px;
+    position: relative;
+  }
+  .cb-item.is-on {
+    border-left-color: var(--color-brick);
+    background: var(--color-paper-warm);
+  }
+  .cb-item.is-on .cb-check {
+    background: var(--color-brick);
+    border-color: var(--color-brick);
+  }
+  .cb-item.is-on .cb-check::after {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: 0.5px;
+    width: 4px;
+    height: 7px;
+    border: solid var(--color-paper);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+
+  /* lit scene plot */
+  .cb-plot-mark {
+    margin-left: auto;
+    font-size: 9px;
+    color: var(--color-brick);
+    opacity: 0;
+  }
+  .cb-plot.is-lit {
+    border-left-color: var(--color-brick);
+    background: color-mix(in srgb, var(--color-brick) 10%, var(--color-paper));
+  }
+  .cb-plot.is-lit .cb-plot-mark {
+    opacity: 1;
+  }
+
+  /* blocking strip */
+  .cb-blocking {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    padding: 0.6rem 1.1rem;
+    border-top: 1px solid var(--color-rule);
+    background: var(--color-paper-warm);
+  }
+  .cb-blocking-label {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.16em;
+    color: var(--color-ink-mute);
+  }
+  .cb-ranks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+  .cb-ranks:empty::after {
+    content: "no marks set";
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-ink-mute);
+  }
+  .cb-rank {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.02em;
+    color: var(--color-brick);
+    border: 1px solid color-mix(in srgb, var(--color-brick) 40%, transparent);
+    border-radius: 999px;
+    padding: 0.12rem 0.55rem;
+  }
+
   .raise-cb {
     margin: 0;
     width: 100%;
     border: none;
     border-radius: 0;
-    padding: 0.85rem 1rem;
+    padding: 0.8rem 1rem;
   }
 
-  /* phone: backstage becomes a bottom sheet */
-  @media (max-width: 640px) {
+  /* phone: bottom sheet, columns stack */
+  @media (max-width: 720px) {
     .callboard {
       top: auto;
       left: 0;
       right: 0;
       width: 100%;
-      max-height: 84vh;
+      max-height: 88vh;
       border-right: none;
       border-top: 1px solid var(--color-ink);
       transform: translateY(100%);
     }
     .backstage.is-open .callboard {
       transform: translateY(0);
+    }
+    .cb-board {
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    .cb-col {
+      border-right: none;
+      border-bottom: 1px solid var(--color-rule);
+      max-height: 40vh;
+    }
+    .cb-col-head {
+      position: sticky;
+      top: 0;
+      background: var(--color-paper);
     }
     .brand-title {
       max-width: 48vw;
@@ -854,8 +1053,7 @@ const bulbs = Array.from({ length: 18 });
 </style>
 
 <style is:global>
-  /* the stage is full-bleed: drop BaseLayout's paper padding and prose width,
-     and let the dark theatre own the whole viewport. */
+  /* the stage is full-bleed: drop BaseLayout's paper padding and prose width. */
   body:has(.stage) {
     padding: 0;
     background: color-mix(in srgb, var(--color-ink) 88%, black);
@@ -871,7 +1069,178 @@ const bulbs = Array.from({ length: 18 });
     var stage = document.getElementById("stage");
     var backstage = document.getElementById("backstage");
     var bsBtn = document.getElementById("backstage-btn");
-    if (!stage || !backstage) return;
+    var dataEl = document.getElementById("stage-data");
+    if (!stage || !backstage || !dataEl) return;
+
+    var data;
+    try {
+      data = JSON.parse(dataEl.textContent || "{}");
+    } catch (e) {
+      return;
+    }
+
+    var GROUPS = ["cast", "set", "props"];
+    var sel = {
+      cast: new Set((data.sel && data.sel.cast) || []),
+      set: new Set((data.sel && data.sel.set) || []),
+      props: new Set((data.sel && data.sel.props) || []),
+    };
+    var byName = {};
+    GROUPS.forEach(function (g) {
+      byName[g] = {};
+      (data[g] || []).forEach(function (i) {
+        byName[g][i.id] = i.name;
+      });
+    });
+    var plotsById = {};
+    (data.plots || []).forEach(function (p) {
+      plotsById[p.id] = p;
+    });
+
+    var board = document.querySelector(".cb-board");
+    var chipsEl = document.getElementById("souffleur-chips");
+    var noteEl = document.getElementById("souffleur-note");
+    var ranksEl = document.getElementById("cb-ranks");
+    var raiseSub = document.getElementById("raise-sub");
+    var sceneInner = document.getElementById("scene-inner");
+
+    function eqSet(arr, set) {
+      if (arr.length !== set.size) return false;
+      for (var i = 0; i < arr.length; i++) if (!set.has(arr[i])) return false;
+      return true;
+    }
+    // Exact rule: a scene is lit only when the selection equals its company
+    // exactly, group by group.
+    function litPlot() {
+      for (var i = 0; i < (data.plots || []).length; i++) {
+        var p = data.plots[i];
+        if (eqSet(p.cast, sel.cast) && eqSet(p.set, sel.set) && eqSet(p.props, sel.props)) return p;
+      }
+      return null;
+    }
+
+    function esc(s) {
+      return String(s).replace(/[&<>"]/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+      });
+    }
+
+    function chip(name) {
+      return '<span class="chip">' + esc(name) + "</span>";
+    }
+    function rank(name) {
+      return '<span class="cb-rank">' + esc(name) + "</span>";
+    }
+
+    // Mirror of scene.ts composeScene: the casting drives the (mocked) lines.
+    function nameOf(group, id) {
+      return byName[group][id];
+    }
+    function composeScene() {
+      if (!sceneInner) return;
+      var castNames = [];
+      sel.cast.forEach(function (id) {
+        var n = nameOf("cast", id);
+        if (n) castNames.push(n);
+      });
+      var placeName = nameOf("set", sel.set.values().next().value);
+      var propName = nameOf("props", sel.props.values().next().value);
+      var a = castNames[0];
+      var b = castNames[1];
+      var speakerA = a || "A Voice";
+      var speakerB = b || "The House";
+
+      var beats = [];
+      beats.push({
+        dir:
+          "[ " +
+          (placeName ? placeName + " holds the dark" : "The dark holds") +
+          ". " +
+          speakerA +
+          " waits at the edge. ]",
+      });
+      if (a) beats.push({ cue: speakerA, say: "Every entrance is a kind of falling." });
+      if (b) beats.push({ cue: speakerB, say: "Then say the fall has already begun." });
+      beats.push({
+        dir: propName
+          ? "[ " + speakerB + " turns. " + propName + " catches the little light there is. ]"
+          : "[ " + speakerB + " turns toward the house. ]",
+      });
+      if (a) beats.push({ cue: speakerA, say: "The play will find its way without us." });
+      if (b) beats.push({ cue: speakerB, say: "Or we are the way it finds." });
+
+      var html = '<p class="scene-act">Act I · Scene 1</p><hr class="scene-rule" />';
+      beats.forEach(function (bt) {
+        if (bt.dir) {
+          html += '<p class="beat-dir">' + esc(bt.dir) + "</p>";
+        } else {
+          html +=
+            '<div class="beat-line"><p class="cue"><span class="cue-dot" aria-hidden="true">•</span>' +
+            esc(bt.cue) +
+            '</p><p class="say">' +
+            esc(bt.say) +
+            "</p></div>";
+        }
+      });
+      sceneInner.innerHTML = html;
+    }
+
+    function render() {
+      var lit = litPlot();
+      // items
+      stage.querySelectorAll(".cb-item").forEach(function (el) {
+        var on = sel[el.getAttribute("data-group")].has(el.getAttribute("data-id"));
+        el.classList.toggle("is-on", on);
+        el.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+      // plots
+      stage.querySelectorAll(".cb-plot").forEach(function (el) {
+        var on = lit && el.getAttribute("data-plot") === lit.id;
+        el.classList.toggle("is-lit", !!on);
+        el.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+      // blocking
+      if (ranksEl) ranksEl.innerHTML = lit ? lit.ranks.map((r) => rank(r.name)).join("") : "";
+      // souffleur cues
+      if (chipsEl) {
+        var cues = lit ? lit.business.concat(lit.objectives) : [];
+        chipsEl.innerHTML = cues.map((c) => chip(c.name)).join("");
+      }
+      if (noteEl)
+        noteEl.textContent = lit
+          ? "The souffleur sleeps · cues are " + lit.name + "'s business & objectives."
+          : "Custom casting · pick a Scene Plot for its cues.";
+      if (raiseSub) raiseSub.textContent = lit ? lit.name : "custom casting";
+      composeScene();
+    }
+
+    function toggleItem(group, id) {
+      var s = sel[group];
+      if (s.has(id)) s.delete(id);
+      else s.add(id);
+      render();
+    }
+    function selectPlot(id) {
+      var p = plotsById[id];
+      if (!p) return;
+      sel.cast = new Set(p.cast);
+      sel.set = new Set(p.set);
+      sel.props = new Set(p.props);
+      render();
+    }
+
+    if (board)
+      board.addEventListener("click", function (ev) {
+        var item = ev.target.closest(".cb-item");
+        if (item) {
+          toggleItem(item.getAttribute("data-group"), item.getAttribute("data-id"));
+          return;
+        }
+        var plot = ev.target.closest(".cb-plot");
+        if (plot) selectPlot(plot.getAttribute("data-plot"));
+      });
+
+    // curtain + overlay state
     var raiseCb = document.getElementById("raise-cb");
     var raiseCbMain = raiseCb ? raiseCb.querySelector(".raise-main") : null;
     var closeTimer;
@@ -880,10 +1249,8 @@ const bulbs = Array.from({ length: 18 });
       return stage.classList.contains("is-open");
     }
     function syncRaise() {
-      if (!raiseCb) return;
-      var open = isOpen();
-      if (raiseCbMain) raiseCbMain.textContent = open ? "Lower the Curtain" : "Raise the Curtain";
-      raiseCb.setAttribute("data-mode", open ? "lower" : "raise");
+      if (!raiseCbMain) return;
+      raiseCbMain.textContent = isOpen() ? "Lower the Curtain" : "Raise the Curtain";
     }
     function openBackstage() {
       clearTimeout(closeTimer);
@@ -901,9 +1268,6 @@ const bulbs = Array.from({ length: 18 });
         backstage.hidden = true;
       }, 320);
     }
-    function toggleBackstage() {
-      backstage.hidden ? openBackstage() : closeBackstage();
-    }
     function setState(open) {
       stage.classList.toggle("is-open", open);
       stage.classList.toggle("is-closed", !open);
@@ -911,8 +1275,9 @@ const bulbs = Array.from({ length: 18 });
       closeBackstage();
     }
 
-    bsBtn.addEventListener("click", toggleBackstage);
-
+    bsBtn.addEventListener("click", function () {
+      backstage.hidden ? openBackstage() : closeBackstage();
+    });
     var cbClose = document.getElementById("cb-close");
     var scrim = document.getElementById("backstage-scrim");
     var playbillBs = document.getElementById("playbill-backstage");
@@ -928,9 +1293,10 @@ const bulbs = Array.from({ length: 18 });
       raiseCb.addEventListener("click", function () {
         setState(!isOpen());
       });
-
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape" && !backstage.hidden) closeBackstage();
     });
+
+    render();
   })();
 </script>

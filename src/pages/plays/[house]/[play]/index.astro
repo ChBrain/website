@@ -292,41 +292,85 @@ if (isReal) {
   }
   {
     isReal && (
-      <a class="enter-stage" href="./stage/">
-        Enter the Stage <span aria-hidden="true">→</span>
+      <a class="enter-stage" href="./stage/" aria-label="Enter the Stage">
+        <span class="es-bulbs" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+          <span />
+          <span />
+        </span>
+        <span class="es-body">
+          <span class="es-label">Enter the Stage</span>
+          <span class="es-arrow" aria-hidden="true">
+            ▲▲
+          </span>
+        </span>
       </a>
     )
   }
 </BaseLayout>
 
 <style>
+  /* A lit marquee, not a corner pill: the door from the book to the stage. */
   .enter-stage {
     position: fixed;
-    right: 1rem;
-    bottom: 1rem;
+    left: 50%;
+    bottom: 1.4rem;
+    transform: translateX(-50%);
     z-index: 50;
-    display: inline-flex;
+    display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 0.4rem;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.08em;
     text-decoration: none;
+    padding: 0.6rem 1.4rem 0.7rem;
     color: var(--color-paper-warm);
     background: linear-gradient(
       to bottom,
       var(--color-brick),
       color-mix(in srgb, var(--color-brick) 52%, black)
     );
-    border: 1px solid color-mix(in srgb, var(--color-ink) 30%, transparent);
-    box-shadow: 0 10px 30px -14px color-mix(in srgb, var(--color-ink) 70%, transparent);
-    padding: 0.55rem 0.85rem;
+    border: 1px solid color-mix(in srgb, var(--color-ink) 35%, transparent);
+    box-shadow: 0 14px 36px -16px color-mix(in srgb, var(--color-ink) 80%, transparent);
     transition:
       transform 0.16s,
       filter 0.16s;
   }
   .enter-stage:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.08);
+    transform: translateX(-50%) translateY(-2px);
+    filter: brightness(1.1);
+  }
+  .es-bulbs {
+    display: flex;
+    gap: 0.7rem;
+  }
+  .es-bulbs span {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-amber) 72%, white);
+    box-shadow: 0 0 8px 2px color-mix(in srgb, var(--color-amber) 55%, transparent);
+  }
+  .es-body {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+  .es-label {
+    font-family: var(--font-display);
+    font-size: 17px;
+    letter-spacing: 0.01em;
+  }
+  .es-arrow {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    opacity: 0.85;
+  }
+  @media (max-width: 640px) {
+    .es-label {
+      font-size: 15px;
+    }
   }
 </style>
