@@ -18,17 +18,21 @@ import { loadAllPlays } from "../../lib/load-plays";
  *  stored as HTML (markdown-it output, with `&mdash;`/`&ndash;` entities from
  *  `cleanHtml`); search wants words, not tags. */
 function stripHtml(html: string): string {
-  return (html || "")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&mdash;/g, "—")
-    .replace(/&ndash;/g, "–")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&#39;/g, "'")
-    .replace(/&quot;/g, '"')
-    .replace(/\s+/g, " ")
-    .trim();
+  return (
+    (html || "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&mdash;/g, "—")
+      .replace(/&ndash;/g, "–")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&#39;/g, "'")
+      .replace(/&quot;/g, '"')
+      // Unescape the ampersand LAST so a literal "&amp;lt;" survives as "&lt;"
+      // rather than collapsing to "<" (js/double-escaping).
+      .replace(/&amp;/g, "&")
+      .replace(/\s+/g, " ")
+      .trim()
+  );
 }
 
 /** Clip a body to a preview length on a word boundary. */
