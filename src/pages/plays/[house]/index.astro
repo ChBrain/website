@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import Shelf, { type ShelfCard } from "../../../components/Shelf.astro";
+import PlaySearch from "../_PlaySearch.astro";
 import { loadRegistry } from "@chbrain/khai-plays";
 import { loadAllPlays } from "../../../lib/load-plays";
 // MOCK -- REMOVE WHEN THE FIRST HOUSE REGISTERS (see ../_mock).
@@ -68,6 +69,21 @@ const cards: ShelfCard[] = playsToRender.map((p) => {
 ---
 
 <BaseLayout title={`${house.title} · Plays · kaihacks`} description={house.blurb}>
+  {
+    /* Search scoped to this house only — its plays and everything inside them.
+      The sibling search-index.json (this house's endpoint) carries just this
+      house; only installed houses emit one, so gate on isInstalled. */
+  }
+  {
+    isInstalled && (
+      <PlaySearch
+        placeholder={`Search ${house.title} · plays, personas, places…`}
+        label={`Search ${house.title}`}
+        hint={`Type to search everything in ${house.title}.`}
+      />
+    )
+  }
+
   <Shelf
     domain="plays"
     location={house.id}
