@@ -104,6 +104,28 @@ function refsIn(sections: Record<string, string>): string[] {
   return [...ids];
 }
 
+/**
+ * True if any >=4-char token of a name appears at a word start in the prose, so
+ * a German inflection ("Nationalkonvents") still matches its lemma
+ * ("Nationalkonvent"). This is the fallback for plays whose plots NAME their
+ * company in prose but don't link it (Danton's Death), unlike the ones that do
+ * (Woyzeck).
+ */
+function proseNames(proseLc: string, names: (string | undefined)[]): boolean {
+  for (const name of names) {
+    if (!name) continue;
+    for (const tok of name.toLowerCase().split(/[^\p{L}\p{N}]+/u)) {
+      if (tok.length < 4) continue;
+      const re = new RegExp(
+        "(^|[^\\p{L}\\p{N}])" + tok.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+        "u",
+      );
+      if (re.test(proseLc)) return true;
+    }
+  }
+  return false;
+}
+
 export function stagecraft(play: Play): Stagecraft {
   // id -> {type, item}: refs come back type-less (`#el-the_captain`), so we
   // resolve each against the real element it names to recover its bucket.
@@ -119,7 +141,24 @@ export function stagecraft(play: Play): Stagecraft {
     .filter((el) => el.type === "plot")
     .map((pl) => {
       const refs = refsIn(pl.sections);
-      const idsOf = (t: string) => refs.filter((id) => byId.get(id)?.type === t);
+      // Scene description (not the taxonomy/owner boilerplate) for the fallback.
+      const prose = Object.entries(pl.sections)
+        .filter(([h]) => h !== "taxonomy" && h !== "owner")
+        .map(([, html]) => stripHtml(html))
+        .join(" ")
+        .toLowerCase();
+      const linkedOf = (t: string) => refs.filter((id) => byId.get(id)?.type === t);
+      const matchedOf = (t: string) =>
+        play.elements
+          .filter((el) => el.type === t && proseNames(prose, [el.declared, el.title]))
+          .map((el) => el.id);
+      // Prefer the play's own links; per bucket, fall back to naming a type's
+      // elements in the scene prose. A link-rich play (Woyzeck) is untouched; a
+      // play that only names its company (Danton's Death) still casts.
+      const idsOf = (t: string) => {
+        const linked = linkedOf(t);
+        return linked.length ? linked : matchedOf(t);
+      };
       const itemsOf = (t: string) => idsOf(t).map((id) => byId.get(id)!.item);
       return {
         id: pl.id,
