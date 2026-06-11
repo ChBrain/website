@@ -1,12 +1,12 @@
 ---
 // The Stage for one play: /plays/<house>/<play>/stage/. A full-bleed theatrical
-// view that can stage ANY installed play — its cast/set/props are the play's
-// real elements (personas/places/pieces); the scene is a mocked rehearsal
-// placeholder (see ../../../_stage/scene.ts). Generated only for real plays;
-// mock houses have no elements to stage.
+// view that can stage ANY installed play — its cast/set/props and Scene Plots
+// are the play's real elements; the scene's dialogue is a mocked placeholder
+// (see ../../../_stage/scene.ts). Generated only for real plays; mock houses
+// have no elements to stage.
 import BaseLayout from "../../../../../layouts/BaseLayout.astro";
 import Stage from "../../../_stage/Stage.astro";
-import { company, buildScene } from "../../../_stage/scene.ts";
+import { stagecraft, defaultSelection, composeScene } from "../../../_stage/scene.ts";
 import { loadAllPlays } from "../../../../../lib/load-plays";
 
 export function getStaticPaths() {
@@ -17,8 +17,9 @@ export function getStaticPaths() {
 }
 
 const { play } = Astro.props;
-const co = company(play);
-const scene = buildScene(play, co);
+const craft = stagecraft(play);
+const selection = defaultSelection(craft);
+const scene = composeScene(craft, selection);
 ---
 
 <BaseLayout title={`${play.title} · The Stage · kaihacks`} description={`${play.title}, staged.`}>
@@ -27,7 +28,8 @@ const scene = buildScene(play, co);
     houseTitle={play.houseTitle}
     voiceRegister={play.voiceRegister}
     backHref="../"
-    company={co}
+    craft={craft}
+    selection={selection}
     scene={scene}
   />
 </BaseLayout>
