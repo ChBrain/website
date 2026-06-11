@@ -286,4 +286,47 @@ if (isReal) {
       tocEyebrow={`playbook · ${play.id}`}
     />
   </div>
+  {
+    /* The book and the stage are two doors into the same play. Only real plays
+      have a stage (the mock fallback has no company to stage). */
+  }
+  {
+    isReal && (
+      <a class="enter-stage" href="./stage/">
+        Enter the Stage <span aria-hidden="true">→</span>
+      </a>
+    )
+  }
 </BaseLayout>
+
+<style>
+  .enter-stage {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 50;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    color: var(--color-paper-warm);
+    background: linear-gradient(
+      to bottom,
+      var(--color-brick),
+      color-mix(in srgb, var(--color-brick) 52%, black)
+    );
+    border: 1px solid color-mix(in srgb, var(--color-ink) 30%, transparent);
+    box-shadow: 0 10px 30px -14px color-mix(in srgb, var(--color-ink) 70%, transparent);
+    padding: 0.55rem 0.85rem;
+    transition:
+      transform 0.16s,
+      filter 0.16s;
+  }
+  .enter-stage:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.08);
+  }
+</style>
