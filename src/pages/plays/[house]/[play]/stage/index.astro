@@ -1,0 +1,33 @@
+---
+// The Stage for one play: /plays/<house>/<play>/stage/. A full-bleed theatrical
+// view that can stage ANY installed play — its cast/set/props are the play's
+// real elements (personas/places/pieces); the scene is a mocked rehearsal
+// placeholder (see ../../../_stage/scene.ts). Generated only for real plays;
+// mock houses have no elements to stage.
+import BaseLayout from "../../../../../layouts/BaseLayout.astro";
+import Stage from "../../../_stage/Stage.astro";
+import { company, buildScene } from "../../../_stage/scene.ts";
+import { loadAllPlays } from "../../../../../lib/load-plays";
+
+export function getStaticPaths() {
+  return loadAllPlays().map((play) => ({
+    params: { house: play.houseId, play: play.id },
+    props: { play },
+  }));
+}
+
+const { play } = Astro.props;
+const co = company(play);
+const scene = buildScene(play, co);
+---
+
+<BaseLayout title={`${play.title} · The Stage · kaihacks`} description={`${play.title}, staged.`}>
+  <Stage
+    title={play.title}
+    houseTitle={play.houseTitle}
+    voiceRegister={play.voiceRegister}
+    backHref="../"
+    company={co}
+    scene={scene}
+  />
+</BaseLayout>
