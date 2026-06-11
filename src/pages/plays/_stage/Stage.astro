@@ -105,8 +105,6 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
     <div class="curtain curtain-left" aria-hidden="true"></div>
     <div class="curtain curtain-right" aria-hidden="true"></div>
     <div class="valance" aria-hidden="true"></div>
-    <div class="tieback tieback-left" aria-hidden="true"></div>
-    <div class="tieback tieback-right" aria-hidden="true"></div>
 
     <!-- closed-state playbill -->
     <div class="playbill" id="playbill">
@@ -122,11 +120,8 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       </button>
     </div>
 
-    <!-- footlights, wings, apron -->
+    <!-- footlights -->
     <div class="footlights" aria-hidden="true">{bulbs.map(() => <span class="bulb" />)}</div>
-    <span class="wing wing-left" aria-hidden="true">WINGS</span>
-    <span class="wing wing-right" aria-hidden="true">WINGS</span>
-    <span class="apron-label" aria-hidden="true">APRON · FORESTAGE</span>
 
     <!-- souffleur (open state): the chosen scene's Business + Objectives -->
     <div class="souffleur" id="souffleur">
@@ -511,31 +506,6 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       0 6px 14px color-mix(in srgb, var(--color-ink) 50%, transparent),
       inset 0 -6px 16px color-mix(in srgb, var(--color-ink) 40%, transparent);
   }
-  .tieback {
-    position: absolute;
-    top: 46%;
-    width: 12%;
-    height: 8px;
-    border-radius: 4px;
-    z-index: 17;
-    background: linear-gradient(
-      to bottom,
-      color-mix(in srgb, var(--color-brick) 95%, white),
-      var(--curtain-b)
-    );
-    box-shadow: 0 2px 6px color-mix(in srgb, var(--color-ink) 50%, transparent);
-    opacity: 0;
-    transition: opacity 0.4s ease 0.5s;
-  }
-  .tieback-left {
-    left: 0.5%;
-  }
-  .tieback-right {
-    right: 0.5%;
-  }
-  .stage.is-open .tieback {
-    opacity: 1;
-  }
 
   /* playbill (closed) */
   .playbill {
@@ -652,29 +622,6 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       0 0 10px 3px color-mix(in srgb, var(--color-amber) 50%, transparent),
       0 0 22px 8px color-mix(in srgb, var(--color-amber) 20%, transparent);
   }
-  .wing,
-  .apron-label {
-    position: absolute;
-    z-index: 18;
-    font-family: var(--font-mono);
-    font-size: 9px;
-    letter-spacing: 0.22em;
-    color: var(--stage-fg-mute);
-    opacity: 0.6;
-  }
-  .wing-left {
-    left: 1rem;
-    bottom: 52px;
-  }
-  .wing-right {
-    right: 1rem;
-    bottom: 52px;
-  }
-  .apron-label {
-    left: 1rem;
-    bottom: 12px;
-  }
-
   /* souffleur */
   .souffleur {
     position: absolute;
@@ -1045,7 +992,6 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
     .playbill,
     .souffleur,
     .callboard,
-    .tieback,
     .backstage-scrim {
       transition: none;
     }
