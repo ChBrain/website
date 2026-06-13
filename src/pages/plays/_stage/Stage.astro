@@ -11,7 +11,7 @@
 // Backstage is interactive (a casting board), Scene Plots preselect a whole
 // scene, and the casting drives the scene. The only mock left is the dialogue
 // (scene.ts composeScene); cast/set/props/business/objectives/blocking are real.
-import type { Stagecraft, Scene, Selection } from "./scene";
+import type { Stagecraft, Selection } from "./scene";
 
 interface Props {
   title: string;
@@ -19,11 +19,10 @@ interface Props {
   voiceRegister: string;
   backHref: string;
   craft: Stagecraft;
-  scene: Scene;
   selection: Selection;
 }
 
-const { title, houseTitle, voiceRegister, backHref, craft, scene, selection } = Astro.props;
+const { title, houseTitle, voiceRegister, backHref, craft, selection } = Astro.props;
 const { cast, set, props, plots, defaultPlotId } = craft;
 
 const selCast = new Set(selection.cast);
@@ -76,29 +75,11 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
   <div class="house">
     <div class="vignette" aria-hidden="true"></div>
 
-    <!-- the open scene (composed from the casting, revealed when curtains part) -->
+    <!-- the open scene: composed client-side from the casting (see the script).
+         Server-rendered empty because the client recomposes it on load anyway;
+         the stage is JS-only (you can't raise the curtain without it). -->
     <div class="scene" id="scene">
-      <div class="scene-inner" id="scene-inner">
-        <p class="scene-act">{scene.act} · {scene.scene}</p>
-        <hr class="scene-rule" />
-        {
-          scene.beats.map((b) =>
-            b.type === "direction" ? (
-              <p class="beat-dir">{b.text}</p>
-            ) : (
-              <div class="beat-line">
-                <p class="cue">
-                  <span class="cue-dot" aria-hidden="true">
-                    •
-                  </span>
-                  {b.cue}
-                </p>
-                <p class="say">{b.text}</p>
-              </div>
-            ),
-          )
-        }
-      </div>
+      <div class="scene-inner" id="scene-inner"></div>
     </div>
 
     <!-- the theatre frame -->
@@ -137,7 +118,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
           aria-label="Whisper a direction to the players"
           disabled
         />
-        <button class="cue" type="button" disabled>CUE</button>
+        <button class="souffleur-cue" type="button" disabled>CUE</button>
       </div>
       <div class="chips" id="souffleur-chips">
         {defaultCues.map((c) => <span class="chip">{c.name}</span>)}
@@ -415,53 +396,9 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
     max-width: 600px;
     margin: 0 auto;
   }
-  .scene-act {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--stage-fg-mute);
-    margin: 0;
-  }
-  .scene-rule {
-    border: none;
-    border-top: 1px solid color-mix(in srgb, var(--color-paper) 10%, transparent);
-    margin: 0.9rem 0 1.6rem;
-  }
-  .beat-dir {
-    font-family: var(--font-prose);
-    font-style: italic;
-    font-size: 15px;
-    line-height: 1.55;
-    color: var(--stage-fg-soft);
-    border-left: 2px solid var(--curtain-a);
-    padding-left: 0.8rem;
-    margin: 1.4rem 0;
-  }
-  .beat-line {
-    margin: 1.2rem 0;
-  }
-  .cue {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    margin: 0 0 0.25rem;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--stage-fg-soft);
-  }
-  .cue-dot {
-    color: var(--curtain-a);
-  }
-  .say {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: 19px;
-    line-height: 1.4;
-    color: var(--stage-fg);
-  }
+  /* The scene's inner nodes (.scene-act, .beat-dir, .cue, .say, …) are built
+     client-side, so their rules can't be scoped — they live in the is:global
+     block below, qualified by .stage so they don't leak. */
 
   /* curtains */
   .curtain {
@@ -669,7 +606,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
     border: 1px solid color-mix(in srgb, var(--color-paper) 12%, transparent);
     padding: 0.5rem 0.7rem;
   }
-  .cue {
+  .souffleur-cue {
     font-family: var(--font-mono);
     font-size: 11px;
     letter-spacing: 0.12em;
@@ -1008,6 +945,56 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
     max-width: none;
     margin: 0;
   }
+
+  /* Scene-content rules: global (the client builds these nodes, so scoped
+     attributes never land on them), qualified by .stage to contain them. */
+  .stage .scene-act {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--stage-fg-mute);
+    margin: 0;
+  }
+  .stage .scene-rule {
+    border: none;
+    border-top: 1px solid color-mix(in srgb, var(--color-paper) 10%, transparent);
+    margin: 0.9rem 0 1.6rem;
+  }
+  .stage .beat-dir {
+    font-family: var(--font-prose);
+    font-style: italic;
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--stage-fg-soft);
+    border-left: 2px solid var(--curtain-a);
+    padding-left: 0.8rem;
+    margin: 1.4rem 0;
+  }
+  .stage .beat-line {
+    margin: 1.2rem 0;
+  }
+  .stage .cue {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0 0 0.25rem;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--stage-fg-soft);
+  }
+  .stage .cue-dot {
+    color: var(--curtain-a);
+  }
+  .stage .say {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 19px;
+    line-height: 1.4;
+    color: var(--stage-fg);
+  }
 </style>
 
 <script is:inline>
@@ -1050,6 +1037,11 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
     var raiseSub = document.getElementById("raise-sub");
     var sceneInner = document.getElementById("scene-inner");
 
+    // Cast/set/props/plot buttons are server-rendered and never added/removed,
+    // so query them once.
+    var itemEls = stage.querySelectorAll(".cb-item");
+    var plotEls = stage.querySelectorAll(".cb-plot");
+
     function eqSet(arr, set) {
       if (arr.length !== set.size) return false;
       for (var i = 0; i < arr.length; i++) if (!set.has(arr[i])) return false;
@@ -1082,7 +1074,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
     function nameOf(group, id) {
       return byName[group][id];
     }
-    function composeScene() {
+    function composeScene(lit) {
       if (!sceneInner) return;
       var castNames = [];
       sel.cast.forEach(function (id) {
@@ -1115,7 +1107,9 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       if (a) beats.push({ cue: speakerA, say: "The play will find its way without us." });
       if (b) beats.push({ cue: speakerB, say: "Or we are the way it finds." });
 
-      var html = '<p class="scene-act">Act I · Scene 1</p><hr class="scene-rule" />';
+      // The eyebrow names the lit scene (or flags a custom casting).
+      var eyebrow = lit ? lit.name : "Custom casting";
+      var html = '<p class="scene-act">' + esc(eyebrow) + '</p><hr class="scene-rule" />';
       beats.forEach(function (bt) {
         if (bt.dir) {
           html += '<p class="beat-dir">' + esc(bt.dir) + "</p>";
@@ -1134,13 +1128,13 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
     function render() {
       var lit = litPlot();
       // items
-      stage.querySelectorAll(".cb-item").forEach(function (el) {
+      itemEls.forEach(function (el) {
         var on = sel[el.getAttribute("data-group")].has(el.getAttribute("data-id"));
         el.classList.toggle("is-on", on);
         el.setAttribute("aria-pressed", on ? "true" : "false");
       });
       // plots
-      stage.querySelectorAll(".cb-plot").forEach(function (el) {
+      plotEls.forEach(function (el) {
         var on = lit && el.getAttribute("data-plot") === lit.id;
         el.classList.toggle("is-lit", !!on);
         el.setAttribute("aria-pressed", on ? "true" : "false");
@@ -1157,7 +1151,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
           ? "The souffleur sleeps · cues are " + lit.name + "'s business & objectives."
           : "Custom casting · pick a Scene Plot for its cues.";
       if (raiseSub) raiseSub.textContent = lit ? lit.name : "custom casting";
-      composeScene();
+      composeScene(lit);
     }
 
     function toggleItem(group, id) {
@@ -1190,6 +1184,10 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
     var raiseCb = document.getElementById("raise-cb");
     var raiseCbMain = raiseCb ? raiseCb.querySelector(".raise-main") : null;
     var closeTimer;
+    var headEl = stage.querySelector(".stage-head");
+    var houseEl = stage.querySelector(".house");
+    var cbCloseEl = document.getElementById("cb-close");
+    var opener = null;
 
     function isOpen() {
       return stage.classList.contains("is-open");
@@ -1198,18 +1196,34 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       if (!raiseCbMain) return;
       raiseCbMain.textContent = isOpen() ? "Lower the Curtain" : "Raise the Curtain";
     }
+    // The dialog lives outside .house/.stage-head, so inert-ing those two traps
+    // focus in the call board (nothing else is tabbable) and hides the stage
+    // behind it from assistive tech.
+    function setBackgroundInert(on) {
+      [headEl, houseEl].forEach(function (el) {
+        if (!el) return;
+        if (on) el.setAttribute("inert", "");
+        else el.removeAttribute("inert");
+      });
+    }
     function openBackstage() {
       clearTimeout(closeTimer);
+      opener = document.activeElement;
       backstage.hidden = false;
       requestAnimationFrame(function () {
         backstage.classList.add("is-open");
       });
       bsBtn.setAttribute("aria-expanded", "true");
+      setBackgroundInert(true);
+      if (cbCloseEl) cbCloseEl.focus();
       syncRaise();
     }
     function closeBackstage() {
       backstage.classList.remove("is-open");
       bsBtn.setAttribute("aria-expanded", "false");
+      setBackgroundInert(false);
+      if (opener && opener.focus) opener.focus();
+      opener = null;
       closeTimer = setTimeout(function () {
         backstage.hidden = true;
       }, 320);

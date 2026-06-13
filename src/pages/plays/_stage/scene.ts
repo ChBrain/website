@@ -9,8 +9,8 @@
 // recover the graph — so "select a Scene Plot and it casts the scene" is the
 // play's own wiring, not a mock.
 //
-// The only thing still mocked is the dialogue (composeScene) — the play has no
-// script. Cast/Set/Props/Business/Objectives are all real.
+// The only thing still mocked is the dialogue, composed client-side in
+// Stage.astro from the casting. Cast/Set/Props/Business/Objectives are real.
 import type { Play } from "../../../lib/load-plays";
 import { stripHtml } from "../_search-index";
 
@@ -47,18 +47,6 @@ export interface Selection {
   cast: string[];
   set: string[];
   props: string[];
-}
-
-export interface SceneBeat {
-  type: "direction" | "line";
-  cue?: string;
-  text: string;
-}
-
-export interface Scene {
-  act: string;
-  scene: string;
-  beats: SceneBeat[];
 }
 
 /** First sentence of a blob, clipped — the call-board one-liner. */
@@ -105,15 +93,19 @@ function refsIn(sections: Record<string, string>): string[] {
 }
 
 export function stagecraft(play: Play): Stagecraft {
-  // id -> {type, item}: refs come back type-less (`#el-the_captain`), so we
-  // resolve each against the real element it names to recover its bucket.
-  const byId = new Map<string, { type: string; item: StageItem }>();
-  for (const el of play.elements) byId.set(el.id, { type: el.type, item: toItem(el) });
-
-  const ofType = (t: string) => play.elements.filter((el) => el.type === t).map(toItem);
-  const cast = ofType("persona");
-  const set = ofType("place");
-  const props = ofType("piece");
+  // Per-type id -> item maps. A `#el-<id>` ref is type-less, so resolving it
+  // against the map for the *type* being asked avoids cross-type collisions
+  // when a stripped id is shared (e.g. a piece and a place both "x").
+  const byType = new Map<string, Map<string, StageItem>>();
+  for (const el of play.elements) {
+    let m = byType.get(el.type);
+    if (!m) byType.set(el.type, (m = new Map()));
+    m.set(el.id, toItem(el));
+  }
+  const itemsOfType = (t: string) => [...(byType.get(t)?.values() ?? [])];
+  const cast = itemsOfType("persona");
+  const set = itemsOfType("place");
+  const props = itemsOfType("piece");
 
   const plots: ScenePlot[] = play.elements
     .filter((el) => el.type === "plot")
@@ -123,8 +115,11 @@ export function stagecraft(play: Play): Stagecraft {
       // link their company casts nothing, which surfaces the data gap instead
       // of papering over it with a guess.
       const refs = refsIn(pl.sections);
-      const idsOf = (t: string) => refs.filter((id) => byId.get(id)?.type === t);
-      const itemsOf = (t: string) => idsOf(t).map((id) => byId.get(id)!.item);
+      const idsOf = (t: string) => {
+        const m = byType.get(t);
+        return m ? refs.filter((id) => m.has(id)) : [];
+      };
+      const itemsOf = (t: string) => idsOf(t).map((id) => byType.get(t)!.get(id)!);
       return {
         id: pl.id,
         name: pl.title,
@@ -146,41 +141,4 @@ export function stagecraft(play: Play): Stagecraft {
 export function defaultSelection(craft: Stagecraft): Selection {
   const p = craft.plots.find((pl) => pl.id === craft.defaultPlotId);
   return p ? { cast: p.cast, set: p.set, props: p.props } : { cast: [], set: [], props: [] };
-}
-
-/**
- * The mocked opening scene, composed from a casting selection. Generic on
- * purpose: it weaves in whatever cast/place/prop you've selected so it reads
- * for any casting, but the lines are placeholder stagecraft. The client mirrors
- * this exactly so the scene recomposes live as you re-cast.
- */
-export function composeScene(craft: Stagecraft, sel: Selection): Scene {
-  const nameOf = (arr: StageItem[], id?: string) => arr.find((i) => i.id === id)?.name;
-  const castNames = sel.cast.map((id) => nameOf(craft.cast, id)).filter(Boolean) as string[];
-  const placeName = nameOf(craft.set, sel.set[0]);
-  const propName = nameOf(craft.props, sel.props[0]);
-  const speakerA = castNames[0] ?? "A Voice";
-  const speakerB = castNames[1] ?? "The House";
-
-  const beats: SceneBeat[] = [];
-  beats.push({
-    type: "direction",
-    text: `[ ${placeName ? `${placeName} holds the dark` : "The dark holds"}. ${speakerA} waits at the edge. ]`,
-  });
-  if (castNames[0])
-    beats.push({ type: "line", cue: speakerA, text: "Every entrance is a kind of falling." });
-  if (castNames[1])
-    beats.push({ type: "line", cue: speakerB, text: "Then say the fall has already begun." });
-  beats.push({
-    type: "direction",
-    text: propName
-      ? `[ ${speakerB} turns. ${propName} catches the little light there is. ]`
-      : `[ ${speakerB} turns toward the house. ]`,
-  });
-  if (castNames[0])
-    beats.push({ type: "line", cue: speakerA, text: "The play will find its way without us." });
-  if (castNames[1])
-    beats.push({ type: "line", cue: speakerB, text: "Or we are the way it finds." });
-
-  return { act: "Act I", scene: "Scene 1", beats };
 }
