@@ -6,7 +6,7 @@
 // have no elements to stage.
 import BaseLayout from "../../../../../layouts/BaseLayout.astro";
 import Stage from "../../../_stage/Stage.astro";
-import { stagecraft, defaultSelection, composeScene } from "../../../_stage/scene.ts";
+import { stagecraft, defaultSelection } from "../../../_stage/scene.ts";
 import { loadAllPlays } from "../../../../../lib/load-plays";
 
 export function getStaticPaths() {
@@ -19,7 +19,6 @@ export function getStaticPaths() {
 const { play } = Astro.props;
 const craft = stagecraft(play);
 const selection = defaultSelection(craft);
-const scene = composeScene(craft, selection);
 ---
 
 <BaseLayout title={`${play.title} · The Stage · kaihacks`} description={`${play.title}, staged.`}>
@@ -30,6 +29,5 @@ const scene = composeScene(craft, selection);
     backHref="../"
     craft={craft}
     selection={selection}
-    scene={scene}
   />
 </BaseLayout>
