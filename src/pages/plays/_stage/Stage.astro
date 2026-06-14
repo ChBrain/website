@@ -400,6 +400,17 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
             </label>
           </div>
         </section>
+
+        <section class="cb-section" id="director-section" style="margin-top: 2rem;" hidden>
+          <p class="cb-section-head">
+            <span class="cb-sec-dot" aria-hidden="true"></span>DIRECTOR · SCENE TARGETS
+          </p>
+          <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
+            Set what each plan must reach; the souffleur plays toward these. One target per line.
+            Seed draws a first pass from the play's own prose; edit freely.
+          </p>
+          <div id="director-body"></div>
+        </section>
       </div>
     </aside>
   </div>
@@ -993,6 +1004,33 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       line-height: 1.35;
       color: var(--color-ink-soft);
     }
+    .director-plan {
+      margin-bottom: 1rem;
+    }
+    .director-plan-name {
+      margin: 0 0 0.35rem;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-ink);
+    }
+    .director-targets {
+      width: 100%;
+      box-sizing: border-box;
+      resize: vertical;
+      margin-bottom: 0.4rem;
+      padding: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--color-ink);
+      background: color-mix(in srgb, var(--color-paper) 6%, transparent);
+      border: 1px solid var(--color-rule);
+    }
+    .director-seed {
+      font-size: 9px;
+    }
     .cb-empty {
       font-family: var(--font-mono);
       font-size: 11px;
@@ -1296,6 +1334,25 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       var busy = false;
       var eyebrow = "Live scene";
 
+      // Director mode: the success targets the director authors per plan, keyed
+      // by plot then plan. Persisted per play so they outlive a reload or a
+      // re-light of the same plot. The souffleur plays toward them; Play mode
+      // (phase 2) will judge them.
+      var RUBRIC_KEY = "kai.stage.rubric:" + location.pathname;
+      function loadRubric() {
+        try {
+          return JSON.parse(localStorage.getItem(RUBRIC_KEY) || "{}") || {};
+        } catch (e) {
+          return {};
+        }
+      }
+      function saveRubric() {
+        try {
+          localStorage.setItem(RUBRIC_KEY, JSON.stringify(rubric));
+        } catch (e) {}
+      }
+      var rubric = loadRubric();
+
       function reflectKey() {
         var has = !!apiKey;
         if (keyPanel) keyPanel.hidden = has;
@@ -1495,12 +1552,18 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
         // Phase 0 sends each plan's intent with a static status; later phases
         // author targets (Director mode) and judge them per move (Play mode).
         if (lit && lit.objectives.length && ctx.plans) {
+          var plotRubric = rubric[lit.id] || {};
           var conds = lit.objectives
             .map(function (o) {
               var p = ctx.plans[o.id];
               if (!p) return "";
               var st = (ledger[o.id] && ledger[o.id].status) || "open";
-              return "- " + p.name + " [" + st + "]: " + p.text;
+              var line = "- " + p.name + " [" + st + "]: " + p.text;
+              var r = plotRubric[o.id];
+              if (r && r.targets && r.targets.length) {
+                line += "\n  Targets: " + r.targets.join("; ");
+              }
+              return line;
             })
             .filter(Boolean);
           if (conds.length) {
@@ -1826,8 +1889,143 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
           backstage.hidden = true;
         }, 320);
       }
+      // --- Director mode -----------------------------------------------------
+      // Targets are scoped to the lit plot's plans, so the panel is only shown
+      // when a plot is lit. Rebuilt on open (not every render) so live edits in
+      // the textareas aren't clobbered.
+      function setTargets(plotId, planId, raw) {
+        var list = raw
+          .split("\n")
+          .map(function (s) {
+            return s.trim();
+          })
+          .filter(Boolean);
+        if (!rubric[plotId]) rubric[plotId] = {};
+        if (!rubric[plotId][planId]) rubric[plotId][planId] = {};
+        rubric[plotId][planId].targets = list;
+        saveRubric();
+      }
+      function resetSeedBtn(btn) {
+        if (!btn) return;
+        btn.disabled = false;
+        btn.textContent = "SEED FROM PROSE";
+      }
+      function seedTargets(name, prose) {
+        var url =
+          "https://generativelanguage.googleapis.com/v1beta/models/" + MODEL + ":generateContent";
+        var body = {
+          systemInstruction: {
+            parts: [
+              {
+                text:
+                  "You are a dramaturg. Propose 2 to 4 concrete, checkable success targets a " +
+                  "scene could reach for the given plan/objective. Write each as a short clause " +
+                  "in the same language as the prose. Return JSON.",
+              },
+            ],
+          },
+          contents: [{ role: "user", parts: [{ text: "Plan: " + name + "\n\n" + prose }] }],
+          generationConfig: {
+            temperature: 0.3,
+            maxOutputTokens: 512,
+            thinkingConfig: { thinkingBudget: 0 },
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "object",
+              properties: { targets: { type: "array", items: { type: "string" } } },
+              required: ["targets"],
+            },
+          },
+        };
+        return fetch(url, {
+          method: "POST",
+          headers: { "content-type": "application/json", "x-goog-api-key": apiKey },
+          body: JSON.stringify(body),
+        })
+          .then(function (res) {
+            if (!res.ok) throw new Error("seed-" + res.status);
+            return res.json();
+          })
+          .then(function (data) {
+            var c = data.candidates && data.candidates[0];
+            var part = c && c.content && c.content.parts && c.content.parts[0];
+            var obj = part && part.text ? JSON.parse(part.text) : {};
+            return (obj && obj.targets) || [];
+          });
+      }
+      function seedPlan(plotId, planId, ta, btn) {
+        if (!apiKey) {
+          if (btn) btn.textContent = "ADD A KEY FIRST";
+          return;
+        }
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = "SEEDING…";
+        }
+        loadContext()
+          .then(function (c) {
+            var plan = c && c.plans && c.plans[planId];
+            if (!plan) {
+              resetSeedBtn(btn);
+              return;
+            }
+            return seedTargets(plan.name, plan.text).then(function (targets) {
+              if (targets.length && ta) {
+                ta.value = targets.join("\n");
+                setTargets(plotId, planId, ta.value);
+              }
+              resetSeedBtn(btn);
+            });
+          })
+          .catch(function () {
+            resetSeedBtn(btn);
+          });
+      }
+      function renderDirector() {
+        var section = document.getElementById("director-section");
+        var body = document.getElementById("director-body");
+        if (!section || !body) return;
+        var lit = litPlot();
+        if (!lit || !lit.objectives.length) {
+          section.hidden = true;
+          body.innerHTML = "";
+          return;
+        }
+        section.hidden = false;
+        var plotRubric = rubric[lit.id] || {};
+        body.innerHTML = lit.objectives
+          .map(function (o) {
+            var r = plotRubric[o.id] || {};
+            var targets = esc((r.targets || []).join("\n"));
+            return (
+              '<div class="director-plan" data-plan="' +
+              esc(o.id) +
+              '"><p class="director-plan-name">' +
+              esc(o.name) +
+              '</p><textarea class="director-targets" rows="3" placeholder="One target per line…">' +
+              targets +
+              '</textarea><button class="souffleur-cue director-seed" type="button">SEED FROM PROSE</button></div>'
+            );
+          })
+          .join("");
+        body.querySelectorAll(".director-plan").forEach(function (block) {
+          var planId = block.getAttribute("data-plan");
+          var ta = block.querySelector(".director-targets");
+          var seed = block.querySelector(".director-seed");
+          if (ta)
+            ta.addEventListener("input", function () {
+              setTargets(lit.id, planId, ta.value);
+            });
+          if (seed)
+            seed.addEventListener("click", function () {
+              seedPlan(lit.id, planId, ta, seed);
+            });
+        });
+      }
+
       function openGridiron() {
         if (!gridironOverlay) return;
+        renderDirector();
         clearTimeout(gridironCloseTimer);
         gridironOpener = document.activeElement;
         gridironOverlay.hidden = false;
