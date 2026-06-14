@@ -18,6 +18,9 @@ export interface StageItem {
   id: string;
   /** English face (the call board reads titles, like the shelf) */
   name: string;
+  /** original-language face (the `declared` name, like the book); shown when
+   *  the stage is set to Original Language */
+  declared: string;
   /** one line, derived from the element's real declared-language prose */
   blurb: string;
 }
@@ -26,6 +29,7 @@ export interface StageItem {
 export interface ScenePlot {
   id: string;
   name: string;
+  declared: string;
   blurb: string;
   cast: string[];
   set: string[];
@@ -77,10 +81,12 @@ function deriveBlurb(sections: Record<string, string>): string {
 const toItem = (el: {
   id: string;
   title: string;
+  declared: string;
   sections: Record<string, string>;
 }): StageItem => ({
   id: el.id,
   name: el.title,
+  declared: el.declared,
   blurb: deriveBlurb(el.sections),
 });
 
@@ -123,6 +129,7 @@ export function stagecraft(play: Play): Stagecraft {
       return {
         id: pl.id,
         name: pl.title,
+        declared: pl.declared,
         blurb: deriveBlurb(pl.sections),
         cast: idsOf("persona"),
         set: idsOf("place"),
