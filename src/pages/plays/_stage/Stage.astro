@@ -1290,7 +1290,6 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       var ctx = null; // lazily fetched stage-context.json
       var transcript = []; // [{ role: "user"|"model", text }]
       var busy = false;
-      var isGerman = false;
       var eyebrow = "Live scene";
 
       function reflectKey() {
@@ -1539,6 +1538,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
           body: JSON.stringify(body),
         }).then(function (res) {
           if (!res.ok || !res.body) {
+            if (res.status === 429) throw new Error("rate-limited");
             var rejected = res.status === 400 || res.status === 403;
             throw new Error(rejected ? "key-rejected" : "http-" + res.status);
           }
@@ -1622,7 +1622,8 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
               busy = false;
               setBusy(false);
               if (dirInput) dirInput.focus();
-              if (String(err && err.message) === "key-rejected") {
+              var failure = String(err && err.message);
+              if (failure === "key-rejected") {
                 apiKey = "";
                 try {
                   sessionStorage.removeItem(KEY_NAME);
@@ -1630,6 +1631,8 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
                 } catch (e) {}
                 reflectKey();
                 setThinking(true, "That key was rejected. Try another.");
+              } else if (failure === "rate-limited") {
+                setThinking(true, "Google is rate-limiting that key. Wait a moment and try the cue again.");
               } else {
                 setThinking(true, "The line failed. Try the cue again.");
               }

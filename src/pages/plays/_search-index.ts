@@ -30,8 +30,11 @@ export function stripHtml(html: string): string {
   return (
     (html || "")
       .replace(/<[^>]+>/g, " ")
-      .replace(/&mdash;/g, "—")
-      .replace(/&ndash;/g, "–")
+      // Keep previews U+2014-free, matching the site-wide dash invariant the
+      // built HTML upholds (cleanText). The em-dash test only scans .html, so
+      // normalize here or these .json previews would smuggle raw em-dashes in.
+      .replace(/&mdash;/g, " - ")
+      .replace(/&ndash;/g, " - ")
       .replace(/&lt;/g, "<")
       .replace(/&gt;/g, ">")
       .replace(/&#39;/g, "'")

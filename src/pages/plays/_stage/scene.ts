@@ -88,7 +88,7 @@ const toItem = (el: {
 function refsIn(sections: Record<string, string>): string[] {
   const ids = new Set<string>();
   const html = Object.values(sections).join(" ");
-  for (const m of html.matchAll(/#el-([a-z0-9_]+)/g)) ids.add(m[1]);
+  for (const m of html.matchAll(/#el-([a-zA-Z0-9_-]+)/g)) ids.add(m[1]);
   return [...ids];
 }
 
