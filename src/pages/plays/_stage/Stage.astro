@@ -1632,7 +1632,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
                 reflectKey();
                 setThinking(true, "That key was rejected. Try another.");
               } else if (failure === "rate-limited") {
-                setThinking(true, "Google is rate-limiting that key. Wait a moment and try the cue again.");
+                setThinking(true, "Rate limited by Google. Try the cue again shortly.");
               } else {
                 setThinking(true, "The line failed. Try the cue again.");
               }
