@@ -850,6 +850,30 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
     .ledger-cond {
       color: var(--stage-fg-mute);
     }
+    .ledger-plan {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .ledger-target {
+      align-self: flex-start;
+      margin-left: 0.9rem;
+      padding: 0;
+      border: none;
+      background: none;
+      cursor: pointer;
+      text-align: left;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.02em;
+      color: var(--stage-fg-mute);
+    }
+    .ledger-target:hover {
+      color: var(--stage-fg-soft);
+    }
+    .ledger-target.is-met {
+      color: var(--color-marsh);
+    }
     .key-panel[hidden],
     #direction-field[hidden],
     #souffleur-chips[hidden],
@@ -2201,20 +2225,51 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
               .filter(Boolean)
           : [];
       }
+      // A ledger entry keeps the model's verdict (`judged`) and the director's
+      // overrides (`manual`) apart; the effective `met` is the merge, with the
+      // director winning so a correction survives the next judgment.
+      function deriveStatus(met, targetsLen) {
+        var n = Object.keys(met).length;
+        return n === 0 ? "open" : targetsLen && n >= targetsLen ? "achieved" : "active";
+      }
+      function refreshEntry(planId, targetsLen) {
+        var e = ledger[planId] || (ledger[planId] = {});
+        var met = {};
+        var j = e.judged || {};
+        for (var a in j) if (j[a]) met[a] = true;
+        var m = e.manual || {};
+        for (var b in m) {
+          if (m[b]) met[b] = true;
+          else delete met[b];
+        }
+        e.met = met;
+        e.status = deriveStatus(met, targetsLen);
+      }
       function applyJudgment(plotId, verdicts) {
         var plotRubric = rubric[plotId] || {};
         (verdicts || []).forEach(function (v) {
           if (!v || !v.id) return;
           var targets = (plotRubric[v.id] && plotRubric[v.id].targets) || [];
-          var met = {};
+          var e = ledger[v.id] || (ledger[v.id] = {});
+          var judged = {};
           (v.met || []).forEach(function (i) {
-            if (i >= 0 && i < targets.length) met[i] = true;
+            if (i >= 0 && i < targets.length) judged[i] = true;
           });
-          var n = Object.keys(met).length;
-          var status =
-            n === 0 ? "open" : targets.length && n >= targets.length ? "achieved" : "active";
-          ledger[v.id] = { status: status, condition: v.condition || "", met: met };
+          e.judged = judged;
+          e.condition = v.condition || e.condition || "";
+          refreshEntry(v.id, targets.length);
         });
+      }
+      // Director override: flip a single target's effective met-state and keep it
+      // (manual wins over the model). Folds straight into the next prompt.
+      function toggleTarget(plotId, planId, i) {
+        var targets =
+          (rubric[plotId] && rubric[plotId][planId] && rubric[plotId][planId].targets) || [];
+        var e = ledger[planId] || (ledger[planId] = {});
+        if (!e.manual) e.manual = {};
+        e.manual[i] = !(e.met && e.met[i]);
+        refreshEntry(planId, targets.length);
+        renderLedger();
       }
       function judgePlans(lit) {
         var plans = plansWithTargets(lit);
@@ -2342,19 +2397,44 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
         box.innerHTML = plans
           .map(function (p) {
             var e = ledger[p.id] || { status: "open", condition: "", met: {} };
-            var n = e.met ? Object.keys(e.met).length : 0;
-            var note = e.condition || n + "/" + p.targets.length + " targets";
-            return (
+            var met = e.met || {};
+            var head =
               '<div class="ledger-row"><span class="ledger-dot is-' +
               esc(e.status || "open") +
               '" aria-hidden="true">●</span><span class="ledger-name">' +
               esc(p.name) +
-              '</span><span class="ledger-cond">' +
-              esc(note) +
-              "</span></div>"
-            );
+              "</span>" +
+              (e.condition ? '<span class="ledger-cond">' + esc(e.condition) + "</span>" : "") +
+              "</div>";
+            var targets = p.targets
+              .map(function (t, i) {
+                return (
+                  '<button class="ledger-target' +
+                  (met[i] ? " is-met" : "") +
+                  '" type="button" data-plan="' +
+                  esc(p.id) +
+                  '" data-i="' +
+                  i +
+                  '">' +
+                  (met[i] ? "[x] " : "[ ] ") +
+                  esc(t) +
+                  "</button>"
+                );
+              })
+              .join("");
+            return '<div class="ledger-plan">' + head + targets + "</div>";
           })
           .join("");
+        var plotId = lit ? lit.id : "";
+        box.querySelectorAll(".ledger-target").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            toggleTarget(
+              plotId,
+              btn.getAttribute("data-plan"),
+              parseInt(btn.getAttribute("data-i"), 10),
+            );
+          });
+        });
       }
       function renderDirector() {
         var section = document.getElementById("director-section");
