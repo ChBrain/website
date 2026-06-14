@@ -19,6 +19,7 @@ describe("load-plays", () => {
     expect(woyzeck!.voice).toBe("stripped, clinical, direct; rhythmic, simple sentences");
     expect(woyzeck!.voiceRegister).toBe("clinical");
     expect(woyzeck!.license).toBe("CC-BY-NC-SA-4.0");
+    expect(woyzeck!.language).toBe("de");
 
     // Check play description (synopsis)
     expect(typeof woyzeck!.description).toBe("string");
