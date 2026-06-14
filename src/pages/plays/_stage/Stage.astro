@@ -514,7 +514,9 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       opacity: 1;
     }
     .scene-inner {
-      max-width: 600px;
+      /* Use the stage's width: the scene was a narrow 600px ribbon stranded in
+         a full-bleed theatre. Widen to a readable measure that fills the house. */
+      max-width: min(68rem, 88%);
       margin: 0 auto;
     }
     /* The scene's inner nodes (.scene-act, .beat-dir, .cue, .say, …) are built
@@ -1172,8 +1174,8 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
     .stage .beat-dir {
       font-family: var(--font-prose);
       font-style: italic;
-      font-size: 15px;
-      line-height: 1.55;
+      font-size: 16px;
+      line-height: 1.6;
       color: var(--stage-fg-soft);
       border-left: 2px solid var(--curtain-a);
       padding-left: 0.8rem;
@@ -1199,8 +1201,8 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
     .stage .say {
       margin: 0;
       font-family: var(--font-display);
-      font-size: 19px;
-      line-height: 1.4;
+      font-size: 21px;
+      line-height: 1.45;
       color: var(--stage-fg);
     }
   </style>
