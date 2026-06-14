@@ -36,6 +36,9 @@ export interface StageContext {
   synopsis: string;
   elements: Record<string, { name: string; declared: string; text: string }>;
   plots: Record<string, { name: string; declared: string; text: string }>;
+  // The lit plot's objectives. Plans are the scene's progress carriers, so the
+  // Souffleur needs their full prose to reason about conditions in play.
+  plans: Record<string, { name: string; declared: string; text: string }>;
 }
 
 export function getStaticPaths() {
@@ -56,9 +59,11 @@ export const GET: APIRoute = ({ props }) => {
 
   const elements: StageContext["elements"] = {};
   const plots: StageContext["plots"] = {};
+  const plans: StageContext["plans"] = {};
   for (const el of play.elements) {
     const entry = { name: el.title, declared: el.declared, text: sectionsText(el.sections) };
     if (el.type === "plot") plots[el.id] = entry;
+    else if (el.type === "plan") plans[el.id] = entry;
     else if (el.type === "persona" || el.type === "place" || el.type === "piece")
       elements[el.id] = entry;
   }
@@ -72,6 +77,7 @@ export const GET: APIRoute = ({ props }) => {
     synopsis,
     elements,
     plots,
+    plans,
   };
 
   return new Response(JSON.stringify(ctx), {
