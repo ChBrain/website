@@ -1524,6 +1524,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       var ledger = {}; // planId -> { status, condition, met }; the scene's progress
       var busy = false;
       var eyebrow = "Live scene";
+      var anchorNew = false; // on a fresh turn, scroll its first line to the top
 
       // Director mode: the success targets the director authors per plan, keyed
       // by plot then plan. Persisted per play so they outlive a reload or a
@@ -1722,6 +1723,11 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
           );
         }
         L.push("Keep it taut and in the play's spirit, and use ONLY the company below.");
+        L.push(
+          "Never end or resolve the scene: no final curtain, no 'Vorhang fällt' or " +
+            "'the curtain falls', no closing stage direction. Stop mid-beat so the next " +
+            "cue continues the action.",
+        );
         if (ctx.synopsis) L.push("Synopsis: " + ctx.synopsis);
         if (lit && ctx.plots[lit.id])
           L.push("This scene (" + ctx.plots[lit.id].name + "): " + ctx.plots[lit.id].text);
@@ -1781,26 +1787,8 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       // are cues. `liveText` is the turn being streamed; every completed model
       // turn before it stays on screen so the reader can scroll back through the
       // whole scene instead of losing it on the next cue.
-      function renderScene(liveText) {
-        if (!sceneInner) return;
-        var blocks = [];
-        transcript.forEach(function (t) {
-          if (t.role === "model" && t.text) blocks.push(t.text);
-        });
-        if (liveText) blocks.push(liveText);
-
-        var sceneEl = document.getElementById("scene");
-        // Stick to the bottom only if the reader is already there; if they have
-        // scrolled up to read back, leave their position alone as text streams.
-        var stick = true;
-        var prevTop = 0;
-        if (sceneEl) {
-          prevTop = sceneEl.scrollTop;
-          stick = sceneEl.scrollHeight - sceneEl.scrollTop - sceneEl.clientHeight < 48;
-        }
-
-        var textRaw = blocks.join("\n\n");
-        var html = '<p class="scene-act">' + esc(eyebrow) + '</p><hr class="scene-rule" />';
+      function beatsHtml(textRaw) {
+        var html = "";
         textRaw.split("\n").forEach(function (ln) {
           var t = ln.trim();
           if (!t) return;
@@ -1820,8 +1808,30 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
             html += '<p class="say">' + esc(t) + "</p>";
           }
         });
+        return html;
+      }
+      function renderScene(liveText) {
+        if (!sceneInner) return;
+        var prior = [];
+        transcript.forEach(function (t) {
+          if (t.role === "model" && t.text) prior.push(t.text);
+        });
+
+        var html = '<p class="scene-act">' + esc(eyebrow) + '</p><hr class="scene-rule" />';
+        html += beatsHtml(prior.join("\n\n"));
+        // A zero-height marker at the new turn's start, so we can bring the fresh
+        // beat to the top instead of fast-forwarding to the bottom of the stream.
+        if (liveText) html += '<div id="live-start"></div>' + beatsHtml(liveText);
         sceneInner.innerHTML = html;
-        if (sceneEl) sceneEl.scrollTop = stick ? sceneEl.scrollHeight : prevTop;
+
+        var sceneEl = document.getElementById("scene");
+        if (sceneEl && anchorNew) {
+          // Once per turn: park the new beat's first line near the top, then let
+          // the reader read down at their own pace without chasing the stream.
+          var marker = document.getElementById("live-start");
+          sceneEl.scrollTop = marker ? Math.max(0, marker.offsetTop - 16) : 0;
+          anchorNew = false;
+        }
       }
 
       function streamGemini(system, turns) {
@@ -1936,6 +1946,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
             role: "user",
             text: userText,
           });
+          anchorNew = true; // bring this fresh beat to the top as it streams
           streamGemini(stagedSystem(lit), transcript)
             .then(function (res) {
               var full = res && res.text;
