@@ -163,6 +163,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       <p class="souffleur-note" id="souffleur-note">
         The souffleur sleeps · cues are this scene's business &amp; objectives.
       </p>
+      <div class="ledger" id="ledger" hidden></div>
     </div>
   </div>
 
@@ -810,6 +811,44 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
     }
     .souffleur-note.is-thinking {
       color: var(--foot);
+    }
+    .ledger {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      margin-top: 0.6rem;
+    }
+    .ledger[hidden] {
+      display: none;
+    }
+    .ledger-row {
+      display: flex;
+      align-items: baseline;
+      gap: 0.4rem;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.03em;
+      color: var(--stage-fg-mute);
+    }
+    .ledger-dot {
+      font-size: 9px;
+    }
+    .ledger-dot.is-open {
+      color: var(--stage-fg-mute);
+    }
+    .ledger-dot.is-active {
+      color: var(--color-amber);
+    }
+    .ledger-dot.is-achieved {
+      color: var(--color-marsh);
+    }
+    .ledger-name {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--stage-fg-soft);
+    }
+    .ledger-cond {
+      color: var(--stage-fg-mute);
     }
     .key-panel[hidden],
     #direction-field[hidden],
@@ -1685,12 +1724,20 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
             .map(function (o) {
               var p = ctx.plans[o.id];
               if (!p) return "";
-              var st = (ledger[o.id] && ledger[o.id].status) || "open";
-              var line = "- " + p.name + " [" + st + "]: " + p.text;
+              var e = ledger[o.id] || {};
+              var line = "- " + p.name + " [" + (e.status || "open") + "]: " + p.text;
               var r = plotRubric[o.id];
               if (r && r.targets && r.targets.length) {
-                line += "\n  Targets: " + r.targets.join("; ");
+                var met = e.met || {};
+                line +=
+                  "\n  Targets: " +
+                  r.targets
+                    .map(function (t, i) {
+                      return (met[i] ? "[x] " : "[ ] ") + t;
+                    })
+                    .join("; ");
               }
+              if (e.condition) line += "\n  Condition: " + e.condition;
               return line;
             })
             .filter(Boolean);
@@ -1885,6 +1932,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
                   ? "The scene ran long. Cue again to continue."
                   : "Whisper another direction, or re-cast backstage.",
               );
+              maybeJudge(lit); // Play mode: judge the plans against the scene so far
             })
             .catch(function (err) {
               transcript.pop(); // a failed turn shouldn't poison the history
@@ -1944,6 +1992,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
             ? "The souffleur sleeps · cues are " + lit.name + "'s business & objectives."
             : "Custom casting · pick a Scene Plot for its cues.";
         if (raiseSub) raiseSub.textContent = lit ? lit.name : "custom casting";
+        renderLedger();
         // Don't clobber a live (AI) scene with the mock; re-casting resets the
         // transcript (below), so a fresh cast falls back to the mock placeholder.
         if (!transcript.length) composeScene(lit);
@@ -2133,6 +2182,179 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
             if (msg.indexOf("rate-limited") === 0) setLimit(MODEL, msg.split("|")[1] || "");
             resetSeedBtn(btn);
           });
+      }
+
+      // --- Play mode: judge the plans -------------------------------------------
+      // After a move, ask the model which of each plan's authored targets the
+      // scene has now reached. A separate JSON-mode call (structured, temp ~0)
+      // keeps the creative cue stream untouched. Best-effort: any failure leaves
+      // the ledger as-is.
+      function plansWithTargets(lit) {
+        var plotRubric = (lit && rubric[lit.id]) || {};
+        return lit
+          ? lit.objectives
+              .map(function (o) {
+                var r = plotRubric[o.id];
+                if (!r || !r.targets || !r.targets.length) return null;
+                return { id: o.id, name: o.name, targets: r.targets };
+              })
+              .filter(Boolean)
+          : [];
+      }
+      function applyJudgment(plotId, verdicts) {
+        var plotRubric = rubric[plotId] || {};
+        (verdicts || []).forEach(function (v) {
+          if (!v || !v.id) return;
+          var targets = (plotRubric[v.id] && plotRubric[v.id].targets) || [];
+          var met = {};
+          (v.met || []).forEach(function (i) {
+            if (i >= 0 && i < targets.length) met[i] = true;
+          });
+          var n = Object.keys(met).length;
+          var status =
+            n === 0 ? "open" : targets.length && n >= targets.length ? "achieved" : "active";
+          ledger[v.id] = { status: status, condition: v.condition || "", met: met };
+        });
+      }
+      function judgePlans(lit) {
+        var plans = plansWithTargets(lit);
+        if (!plans.length) return Promise.resolve(null);
+        var scene = transcript
+          .filter(function (t) {
+            return t.role === "model" && t.text;
+          })
+          .map(function (t) {
+            return t.text;
+          })
+          .join("\n\n");
+        if (!scene) return Promise.resolve(null);
+        var rubricText = plans
+          .map(function (p) {
+            return (
+              p.name +
+              " (id " +
+              p.id +
+              "):\n" +
+              p.targets
+                .map(function (t, i) {
+                  return "  [" + i + "] " + t;
+                })
+                .join("\n")
+            );
+          })
+          .join("\n\n");
+        var url =
+          "https://generativelanguage.googleapis.com/v1beta/models/" + MODEL + ":generateContent";
+        var body = {
+          systemInstruction: {
+            parts: [
+              {
+                text:
+                  "You are the stage manager judging scene progress. For each plan, decide from " +
+                  "the scene which of its numbered targets are now met, and write a one-line " +
+                  "condition for where the plan stands. Mark a target met only if the scene " +
+                  "clearly shows it; be conservative. Write the condition in the scene's language.",
+              },
+            ],
+          },
+          contents: [
+            {
+              role: "user",
+              parts: [
+                { text: "Plans and targets:\n" + rubricText + "\n\nScene so far:\n" + scene },
+              ],
+            },
+          ],
+          generationConfig: {
+            temperature: 0,
+            maxOutputTokens: 1024,
+            thinkingConfig: thinkingConfigFor(MODEL),
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: "object",
+              properties: {
+                plans: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      id: { type: "string" },
+                      met: { type: "array", items: { type: "integer" } },
+                      condition: { type: "string" },
+                    },
+                    required: ["id", "met", "condition"],
+                  },
+                },
+              },
+              required: ["plans"],
+            },
+          },
+        };
+        return fetch(url, {
+          method: "POST",
+          headers: { "content-type": "application/json", "x-goog-api-key": apiKey },
+          body: JSON.stringify(body),
+        })
+          .then(function (res) {
+            if (res.ok) return res.json();
+            return res
+              .json()
+              .catch(function () {
+                return null;
+              })
+              .then(function (errBody) {
+                if (res.status === 429) throw new Error("rate-limited|" + retryDelayOf(errBody));
+                throw new Error("judge-" + res.status);
+              });
+          })
+          .then(function (data) {
+            var c = data.candidates && data.candidates[0];
+            var part = c && c.content && c.content.parts && c.content.parts[0];
+            var obj = part && part.text ? JSON.parse(part.text) : {};
+            return (obj && obj.plans) || [];
+          });
+      }
+      function maybeJudge(lit) {
+        if (!lit || !apiKey || !plansWithTargets(lit).length) return;
+        judgePlans(lit)
+          .then(function (verdicts) {
+            if (!verdicts) return;
+            applyJudgment(lit.id, verdicts);
+            renderLedger();
+          })
+          .catch(function (err) {
+            var msg = String(err && err.message);
+            if (msg.indexOf("rate-limited") === 0) setLimit(MODEL, msg.split("|")[1] || "");
+            // otherwise silent: judgment is best-effort, the scene already played
+          });
+      }
+      function renderLedger() {
+        var box = document.getElementById("ledger");
+        if (!box) return;
+        var lit = litPlot();
+        var plans = plansWithTargets(lit);
+        if (!plans.length) {
+          box.hidden = true;
+          box.innerHTML = "";
+          return;
+        }
+        box.hidden = false;
+        box.innerHTML = plans
+          .map(function (p) {
+            var e = ledger[p.id] || { status: "open", condition: "", met: {} };
+            var n = e.met ? Object.keys(e.met).length : 0;
+            var note = e.condition || n + "/" + p.targets.length + " targets";
+            return (
+              '<div class="ledger-row"><span class="ledger-dot is-' +
+              esc(e.status || "open") +
+              '" aria-hidden="true">●</span><span class="ledger-name">' +
+              esc(p.name) +
+              '</span><span class="ledger-cond">' +
+              esc(note) +
+              "</span></div>"
+            );
+          })
+          .join("");
       }
       function renderDirector() {
         var section = document.getElementById("director-section");
