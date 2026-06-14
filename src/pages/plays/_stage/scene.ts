@@ -74,13 +74,25 @@ function deriveBlurb(sections: Record<string, string>): string {
   return "";
 }
 
+/** The element/plot titles in the play data are slugs ("youngest-kid",
+ *  "02_three-attempts"). The call board and the stage eyebrow are the English
+ *  face, so present them as words: drop a leading ordering prefix, unhyphenate,
+ *  and title-case. (The German `declared` name, read by the book, is untouched.) */
+function prettyName(s: string): string {
+  return (s || "")
+    .replace(/^\d+[_-]/, "")
+    .replace(/[_-]+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 const toItem = (el: {
   id: string;
   title: string;
   sections: Record<string, string>;
 }): StageItem => ({
   id: el.id,
-  name: el.title,
+  name: prettyName(el.title),
   blurb: deriveBlurb(el.sections),
 });
 
@@ -122,7 +134,7 @@ export function stagecraft(play: Play): Stagecraft {
       const itemsOf = (t: string) => idsOf(t).map((id) => byType.get(t)!.get(id)!);
       return {
         id: pl.id,
-        name: pl.title,
+        name: prettyName(pl.title),
         blurb: deriveBlurb(pl.sections),
         cast: idsOf("persona"),
         set: idsOf("place"),
