@@ -380,6 +380,23 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
 
         <section class="cb-section" style="margin-top: 2rem;">
           <p class="cb-section-head">
+            <span class="cb-sec-dot" aria-hidden="true"></span>STAGE MODEL
+          </p>
+          <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
+            Which Gemini model plays the scene. Flash Lite has the most free-tier headroom; the
+            others read better but cap near 20 calls a day. A red dot means that model is rate
+            limited; it shows when it frees up.
+          </p>
+          <div
+            id="model-options"
+            class="language-options"
+            style="display: flex; flex-direction: column; gap: 0.6rem;"
+          >
+          </div>
+        </section>
+
+        <section class="cb-section" style="margin-top: 2rem;">
+          <p class="cb-section-head">
             <span class="cb-sec-dot" aria-hidden="true"></span>STAGE LANGUAGE
           </p>
           <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
@@ -1031,6 +1048,24 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
     .director-seed {
       font-size: 9px;
     }
+    .model-opt {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      cursor: pointer;
+      color: var(--color-ink);
+    }
+    .model-dot {
+      font-size: 9px;
+    }
+    .model-dot.is-free {
+      color: var(--color-marsh);
+    }
+    .model-dot.is-limited {
+      color: var(--color-brick);
+    }
     .cb-empty {
       font-family: var(--font-mono);
       font-size: 11px;
@@ -1293,9 +1328,102 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       // --- Souffleur (bring-your-own Gemini key) ---------------------------------
       // The key lives only in the browser (sessionStorage, or localStorage if the
       // visitor opts in) and is sent straight to Google with the x-goog-api-key
-      // header, never to kaihacks (there is no server). Swap MODEL for a newer
-      // flash id as they ship.
-      var MODEL = "gemini-2.5-flash";
+      // header, never to kaihacks (there is no server). Models are free-tier
+      // Gemini text models, chosen in the Gridiron panel.
+      var MODELS = [
+        { id: "gemini-3.1-flash-lite", label: "Gemini 3.1 Flash Lite · 500/day" },
+        { id: "gemini-3.5-flash", label: "Gemini 3.5 Flash · 20/day" },
+        { id: "gemini-3-flash", label: "Gemini 3 Flash · 20/day" },
+        { id: "gemini-2.5-flash", label: "Gemini 2.5 Flash · 20/day" },
+        { id: "gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite · 20/day" },
+      ];
+      var MODEL_KEY = "kai.stage.model";
+      function loadModel() {
+        try {
+          return localStorage.getItem(MODEL_KEY) || "gemini-3.1-flash-lite";
+        } catch (e) {
+          return "gemini-3.1-flash-lite";
+        }
+      }
+      var MODEL = loadModel();
+      // Gemini 3.x can't fully disable thinking and takes thinkingLevel, not
+      // thinkingBudget (sending the wrong knob is a 400); "minimal" is the floor.
+      // 2.5 takes thinkingBudget: 0. Choosing per model keeps the cue and the
+      // seed call from truncating or erroring as you switch models.
+      function thinkingConfigFor(model) {
+        return /^gemini-3/.test(model) ? { thinkingLevel: "minimal" } : { thinkingBudget: 0 };
+      }
+      // Pull Google's RetryInfo.retryDelay out of a 429 body so we can tell the
+      // visitor when the quota frees up rather than a vague "try later".
+      function retryDelayOf(errBody) {
+        try {
+          var details = (errBody && errBody.error && errBody.error.details) || [];
+          for (var i = 0; i < details.length; i++) {
+            var d = details[i];
+            if (d && /RetryInfo/.test(d["@type"] || "") && d.retryDelay) return d.retryDelay;
+          }
+        } catch (e) {}
+        return "";
+      }
+      // Per-model rate-limit backstop: when a model returns 429 we remember when
+      // its quota frees up (from RetryInfo) so the selector shows it red with a
+      // "free at" time. Persisted, so a reload doesn't paint a false green.
+      var LIMIT_KEY = "kai.stage.limited";
+      function loadLimits() {
+        try {
+          return JSON.parse(localStorage.getItem(LIMIT_KEY) || "{}") || {};
+        } catch (e) {
+          return {};
+        }
+      }
+      var limits = loadLimits(); // modelId -> epoch-ms the quota frees up
+      function setLimit(model, retryDelay) {
+        var secs = parseFloat((retryDelay || "").replace(/[^\d.]/g, "")) || 0;
+        limits[model] = Date.now() + (secs > 0 ? secs * 1000 : 60000);
+        try {
+          localStorage.setItem(LIMIT_KEY, JSON.stringify(limits));
+        } catch (e) {}
+        renderModelOptions();
+      }
+      function limitedUntil(model) {
+        var t = limits[model] || 0;
+        return t > Date.now() ? t : 0;
+      }
+      function freeAtLabel(ts) {
+        try {
+          return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        } catch (e) {
+          return "";
+        }
+      }
+      function renderModelOptions() {
+        var box = document.getElementById("model-options");
+        if (!box) return;
+        box.innerHTML = MODELS.map(function (m) {
+          var until = limitedUntil(m.id);
+          var note = until ? " · free " + freeAtLabel(until) : "";
+          return (
+            '<label class="model-opt"><input type="radio" name="stage-model" value="' +
+            esc(m.id) +
+            '"' +
+            (m.id === MODEL ? " checked" : "") +
+            '/> <span class="model-dot ' +
+            (until ? "is-limited" : "is-free") +
+            '" aria-hidden="true">●</span><span>' +
+            esc(m.label + note) +
+            "</span></label>"
+          );
+        }).join("");
+        box.querySelectorAll('input[name="stage-model"]').forEach(function (r) {
+          r.addEventListener("change", function (e) {
+            MODEL = e.target.value;
+            try {
+              localStorage.setItem(MODEL_KEY, MODEL);
+            } catch (err) {}
+          });
+        });
+      }
+
       var KEY_NAME = "kai.gemini.key";
       var souffleurEl = document.getElementById("souffleur");
       var keyPanel = document.getElementById("key-panel");
@@ -1638,11 +1766,10 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
           generationConfig: {
             temperature: 0.9,
             maxOutputTokens: 2048,
-            // gemini-2.5-flash is a thinking model and reasoning tokens count
-            // against maxOutputTokens; left on, thinking ate the budget and the
-            // visible reply was truncated mid-sentence. Turn it off so the scene
-            // gets prose, not chain-of-thought.
-            thinkingConfig: { thinkingBudget: 0 },
+            // Reasoning tokens count against maxOutputTokens; left on, thinking
+            // ate the budget and the reply was truncated mid-sentence. Hold it to
+            // the floor per model (see thinkingConfigFor) so the scene gets prose.
+            thinkingConfig: thinkingConfigFor(MODEL),
           },
         };
         return fetch(url, {
@@ -1651,9 +1778,16 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
           body: JSON.stringify(body),
         }).then(function (res) {
           if (!res.ok || !res.body) {
-            if (res.status === 429) throw new Error("rate-limited");
-            var rejected = res.status === 400 || res.status === 403;
-            throw new Error(rejected ? "key-rejected" : "http-" + res.status);
+            return res
+              .json()
+              .catch(function () {
+                return null;
+              })
+              .then(function (errBody) {
+                if (res.status === 429) throw new Error("rate-limited|" + retryDelayOf(errBody));
+                var rejected = res.status === 400 || res.status === 403;
+                throw new Error(rejected ? "key-rejected" : "http-" + res.status);
+              });
           }
           var reader = res.body.getReader();
           var dec = new TextDecoder();
@@ -1766,8 +1900,17 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
                 } catch (e) {}
                 reflectKey();
                 setThinking(true, "That key was rejected. Try another.");
-              } else if (failure === "rate-limited") {
-                setThinking(true, "Rate limited by Google. Try the cue again shortly.");
+              } else if (failure.indexOf("rate-limited") === 0) {
+                setLimit(MODEL, failure.split("|")[1] || "");
+                var at = freeAtLabel(limitedUntil(MODEL));
+                setThinking(
+                  true,
+                  at
+                    ? "Rate limited. This model frees up around " +
+                        at +
+                        "; pick another in Gridiron."
+                    : "Rate limited by Google. Try the cue again shortly.",
+                );
               } else {
                 setThinking(true, "The line failed. Try the cue again.");
               }
@@ -1928,7 +2071,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
           generationConfig: {
             temperature: 0.3,
             maxOutputTokens: 512,
-            thinkingConfig: { thinkingBudget: 0 },
+            thinkingConfig: thinkingConfigFor(MODEL),
             responseMimeType: "application/json",
             responseSchema: {
               type: "object",
@@ -1943,8 +2086,16 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
           body: JSON.stringify(body),
         })
           .then(function (res) {
-            if (!res.ok) throw new Error("seed-" + res.status);
-            return res.json();
+            if (res.ok) return res.json();
+            return res
+              .json()
+              .catch(function () {
+                return null;
+              })
+              .then(function (errBody) {
+                if (res.status === 429) throw new Error("rate-limited|" + retryDelayOf(errBody));
+                throw new Error("seed-" + res.status);
+              });
           })
           .then(function (data) {
             var c = data.candidates && data.candidates[0];
@@ -1977,7 +2128,9 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
               resetSeedBtn(btn);
             });
           })
-          .catch(function () {
+          .catch(function (err) {
+            var msg = String(err && err.message);
+            if (msg.indexOf("rate-limited") === 0) setLimit(MODEL, msg.split("|")[1] || "");
             resetSeedBtn(btn);
           });
       }
@@ -2026,6 +2179,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       function openGridiron() {
         if (!gridironOverlay) return;
         renderDirector();
+        renderModelOptions();
         clearTimeout(gridironCloseTimer);
         gridironOpener = document.activeElement;
         gridironOverlay.hidden = false;
@@ -2166,6 +2320,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
         });
 
       reflectKey();
+      renderModelOptions();
       render();
     })();
   </script>
