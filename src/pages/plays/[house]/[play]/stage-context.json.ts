@@ -34,6 +34,7 @@ export interface StageContext {
   declared: string;
   house: string;
   voiceRegister: string;
+  language: string;
   synopsis: string;
   elements: Record<string, { name: string; declared: string; text: string }>;
   plots: Record<string, { name: string; declared: string; text: string }>;
@@ -70,6 +71,7 @@ export const GET: APIRoute = ({ props }) => {
     declared: play.declared,
     house: play.houseTitle,
     voiceRegister: play.voiceRegister,
+    language: play.language,
     synopsis,
     elements,
     plots,
