@@ -10,22 +10,20 @@ import type { APIRoute } from "astro";
 import { loadAllPlays } from "../../../../lib/load-plays";
 import { stripHtml } from "../../_search-index";
 
-/** Plain text from rendered HTML, dash-normalised (no U+2014) and clipped. */
-function text(html: string | undefined, max: number): string {
-  const s = stripHtml(html || "").replace(/\s*[—–]\s*/g, " - ");
-  if (s.length <= max) return s;
-  const cut = s.slice(0, max);
-  const sp = cut.lastIndexOf(" ");
-  return (sp > max * 0.6 ? cut.slice(0, sp) : cut).trimEnd() + "…";
+/** Plain text from rendered HTML, dash-normalised (no U+2014). Deliberately
+ *  unclipped: the user controls the prompt payload by what they cast, so the
+ *  Souffleur gets each chosen element's full prose. gemini-2.5-flash accepts
+ *  ~1M input tokens, so play prose never approaches the limit. */
+function plain(html: string | undefined): string {
+  return stripHtml(html || "").replace(/\s*[—–]\s*/g, " - ");
 }
 
-function sectionsText(sections: Record<string, string>, max: number): string {
-  return text(
+function sectionsText(sections: Record<string, string>): string {
+  return plain(
     Object.entries(sections)
       .filter(([h]) => h !== "taxonomy" && h !== "owner")
       .map(([, html]) => html)
       .join(" "),
-    max,
   );
 }
 
@@ -52,15 +50,14 @@ export const prerender = true;
 export const GET: APIRoute = ({ props }) => {
   const play = (props as any).play;
 
-  const synopsis = text(
+  const synopsis = plain(
     [play.sections.arc, play.sections.stakes, play.sections.estate].filter(Boolean).join(" "),
-    700,
   );
 
   const elements: StageContext["elements"] = {};
   const plots: StageContext["plots"] = {};
   for (const el of play.elements) {
-    const entry = { name: el.title, declared: el.declared, text: sectionsText(el.sections, 600) };
+    const entry = { name: el.title, declared: el.declared, text: sectionsText(el.sections) };
     if (el.type === "plot") plots[el.id] = entry;
     else if (el.type === "persona" || el.type === "place" || el.type === "piece")
       elements[el.id] = entry;
