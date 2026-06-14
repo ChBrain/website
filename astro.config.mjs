@@ -23,6 +23,7 @@ export default defineConfig({
         "@chbrain/khai-plays",
         "@chbrain/khai-plays-buechner",
         "@chbrain/khai-plays-grimm",
+        "@chbrain/khai-plays-kleist",
       ],
     },
   },
