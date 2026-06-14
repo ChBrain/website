@@ -315,98 +315,95 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
         <span class="raise-ar" aria-hidden="true">▲▲</span>
       </button>
     </aside>
-
-    <!-- gridiron: the settings panel -->
-    <div class="backstage" id="gridiron-overlay" hidden>
-      <div class="backstage-scrim" id="gridiron-scrim"></div>
-      <aside
-        class="gridiron"
-        id="gridiron"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Gridiron settings"
-      >
-        <div class="cb-head">
-          <div>
-            <p class="cb-title">GRIDIRON</p>
-            <p class="cb-sub">FLY LOFT · STAGE SETTINGS</p>
-          </div>
-          <button class="cb-close" id="gridiron-close" type="button" aria-label="Close settings"
-            >×</button
-          >
-        </div>
-
-        <div class="cb-scroll">
-          <section class="cb-section">
-            <p class="cb-section-head">
-              <span class="cb-sec-dot" aria-hidden="true"></span>GEMINI API KEY
-            </p>
-            <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
-              Provide a Gemini API key. It stays in your browser and is sent directly to Google,
-              never touching any server.
-            </p>
-            <div class="souffleur-field" style="margin-bottom: 0.5rem;">
-              <input
-                class="souffleur-input"
-                id="gridiron-key-input"
-                type="password"
-                autocomplete="off"
-                spellcheck="false"
-                placeholder="Paste API key here…"
-                aria-label="Gemini API key"
-              />
-              <button class="souffleur-cue" id="gridiron-key-save" type="button">SAVE</button>
-            </div>
-            <div
-              style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.6rem;"
-            >
-              <label
-                class="key-remember"
-                style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; color: var(--stage-fg-mute); display: flex; align-items: center; gap: 0.35rem;"
-              >
-                <input type="checkbox" id="gridiron-key-remember" /> remember key
-              </label>
-              <button
-                class="key-forget"
-                id="gridiron-key-forget"
-                type="button"
-                style="font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.05em; color: var(--color-brick); background: none; border: 1px solid var(--color-rule); padding: 0.2rem 0.4rem;"
-                hidden>forget key</button
-              >
-            </div>
-          </section>
-
-          <section class="cb-section" style="margin-top: 2rem;">
-            <p class="cb-section-head">
-              <span class="cb-sec-dot" aria-hidden="true"></span>STAGE LANGUAGE
-            </p>
-            <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
-              Choose the language for the stage directions and character dialogue.
-            </p>
-            <div
-              class="language-options"
-              style="display: flex; flex-direction: column; gap: 0.6rem;"
-            >
-              <label
-                style="display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 11px; cursor: pointer; color: var(--color-ink);"
-              >
-                <input type="radio" name="stage-language" value="declared" checked />
-                <span id="declared-lang-label">Original Language</span>
-              </label>
-              <label
-                style="display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 11px; cursor: pointer; color: var(--color-ink);"
-              >
-                <input type="radio" name="stage-language" value="en" />
-                <span>English Translation</span>
-              </label>
-            </div>
-          </section>
-        </div>
-      </aside>
-    </div>
-
-    <script is:inline type="application/json" id="stage-data" set:html={dataJson} />
   </div>
+
+  <!-- gridiron: the settings panel -->
+  <div class="backstage" id="gridiron-overlay" hidden>
+    <div class="backstage-scrim" id="gridiron-scrim"></div>
+    <aside
+      class="gridiron"
+      id="gridiron"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Gridiron settings"
+    >
+      <div class="cb-head">
+        <div>
+          <p class="cb-title">GRIDIRON</p>
+          <p class="cb-sub">FLY LOFT · STAGE SETTINGS</p>
+        </div>
+        <button class="cb-close" id="gridiron-close" type="button" aria-label="Close settings"
+          >×</button
+        >
+      </div>
+
+      <div class="cb-scroll">
+        <section class="cb-section">
+          <p class="cb-section-head">
+            <span class="cb-sec-dot" aria-hidden="true"></span>GEMINI API KEY
+          </p>
+          <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
+            Provide a Gemini API key. It stays in your browser and is sent directly to Google, never
+            touching any server.
+          </p>
+          <div class="souffleur-field" style="margin-bottom: 0.5rem;">
+            <input
+              class="souffleur-input"
+              id="gridiron-key-input"
+              type="password"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="Paste API key here…"
+              aria-label="Gemini API key"
+            />
+            <button class="souffleur-cue" id="gridiron-key-save" type="button">SAVE</button>
+          </div>
+          <div
+            style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.6rem;"
+          >
+            <label
+              class="key-remember"
+              style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; color: var(--stage-fg-mute); display: flex; align-items: center; gap: 0.35rem;"
+            >
+              <input type="checkbox" id="gridiron-key-remember" /> remember key
+            </label>
+            <button
+              class="key-forget"
+              id="gridiron-key-forget"
+              type="button"
+              style="font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.05em; color: var(--color-brick); background: none; border: 1px solid var(--color-rule); padding: 0.2rem 0.4rem;"
+              hidden>forget key</button
+            >
+          </div>
+        </section>
+
+        <section class="cb-section" style="margin-top: 2rem;">
+          <p class="cb-section-head">
+            <span class="cb-sec-dot" aria-hidden="true"></span>STAGE LANGUAGE
+          </p>
+          <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
+            Choose the language for the stage directions and character dialogue.
+          </p>
+          <div class="language-options" style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label
+              style="display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 11px; cursor: pointer; color: var(--color-ink);"
+            >
+              <input type="radio" name="stage-language" value="declared" checked />
+              <span id="declared-lang-label">Original Language</span>
+            </label>
+            <label
+              style="display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 11px; cursor: pointer; color: var(--color-ink);"
+            >
+              <input type="radio" name="stage-language" value="en" />
+              <span>English Translation</span>
+            </label>
+          </div>
+        </section>
+      </div>
+    </aside>
+  </div>
+
+  <script is:inline type="application/json" id="stage-data" set:html={dataJson} />
 
   <style>
     /* local theatre palette: every shade derives from the canonical tokens via
