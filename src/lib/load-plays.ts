@@ -43,6 +43,7 @@ export interface Play {
   houseTitle: string;
   title: string;
   declared: string; // the play's name in its declared (original) language; the book reads this
+  language: string; // the play's declared language (e.g. "de", "en")
   description: string;
   voice: string;
   voiceRegister: VoiceRegister;
@@ -139,12 +140,14 @@ export function loadAllPlays(): Play[] {
       // Fallback if registry.json is not present or exported
     }
 
-    // Read house voice from README.md
+    // Read house language and voice from README.md
+    let houseLanguage = "en";
     let houseVoice = "";
     const readmePath = join(pkgDir, "README.md");
     if (existsSync(readmePath)) {
       const readmeSrc = readFileSync(readmePath, "utf8");
       const { data: readmeFm } = matter(readmeSrc);
+      houseLanguage = readmeFm.language || "en";
       houseVoice = readmeFm.voice || "";
     }
 
@@ -281,6 +284,7 @@ export function loadAllPlays(): Play[] {
         houseTitle: house.title,
         title,
         declared,
+        language: mainFm.language || houseLanguage || "en",
         description: description || "",
         voice: playVoice,
         voiceRegister,
