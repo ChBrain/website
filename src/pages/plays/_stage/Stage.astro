@@ -62,14 +62,24 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       <span class="brand-k" aria-hidden="true">k</span>
       <span class="brand-title">{title}</span>
     </a>
-    <button
-      class="backstage-btn"
-      id="backstage-btn"
-      aria-controls="backstage"
-      aria-expanded="false"
-    >
-      <span class="bs-ico" aria-hidden="true">‖</span> BACKSTAGE
-    </button>
+    <div style="display: flex; gap: 0.5rem;">
+      <button
+        class="backstage-btn"
+        id="gridiron-btn"
+        aria-controls="gridiron-overlay"
+        aria-expanded="false"
+      >
+        <span class="bs-ico" aria-hidden="true">⚙</span> GRIDIRON
+      </button>
+      <button
+        class="backstage-btn"
+        id="backstage-btn"
+        aria-controls="backstage"
+        aria-expanded="false"
+      >
+        <span class="bs-ico" aria-hidden="true">‖</span> BACKSTAGE
+      </button>
+    </div>
   </header>
 
   <div class="house">
@@ -111,29 +121,22 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
         <span class="souffleur-meta">STAGE DIRECTION</span>
       </div>
 
-      <!-- key panel: shown until a key is provided -->
+      <!-- key warning panel: shown until a key is provided -->
       <div class="key-panel" id="key-panel" hidden>
-        <p class="key-copy">
-          Give the players a voice. Paste a
+        <p
+          class="key-copy"
+          style="margin: 0.5rem 0; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; color: var(--stage-fg-soft);"
+        >
+          Give the players a voice. Configure a
           <a href="https://aistudio.google.com/apikey" rel="external noopener" target="_blank"
             >Gemini API key</a
-          >: it stays in your browser, is sent only to Google, never to kaihacks.
+          > in the <button
+            type="button"
+            id="open-gridiron-link"
+            style="background: none; border: none; padding: 0; margin: 0; color: var(--foot); text-decoration: underline; cursor: pointer; font-family: inherit; font-size: inherit;"
+            >Gridiron settings</button
+          > to enable the live souffleur.
         </p>
-        <div class="souffleur-field">
-          <input
-            class="souffleur-input"
-            id="key-input"
-            type="password"
-            autocomplete="off"
-            spellcheck="false"
-            placeholder="Gemini API key…"
-            aria-label="Gemini API key"
-          />
-          <button class="souffleur-cue" id="key-save" type="button">USE</button>
-        </div>
-        <label class="key-remember">
-          <input type="checkbox" id="key-remember" /> remember on this device
-        </label>
       </div>
 
       <!-- direction field: shown once a key is present -->
@@ -159,7 +162,6 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       <p class="souffleur-note" id="souffleur-note">
         The souffleur sleeps · cues are this scene's business &amp; objectives.
       </p>
-      <button class="key-forget" id="key-forget" type="button" hidden>forget key</button>
     </div>
   </div>
 
@@ -313,1311 +315,1587 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
         <span class="raise-ar" aria-hidden="true">▲▲</span>
       </button>
     </aside>
+
+    <!-- gridiron: the settings panel -->
+    <div class="backstage" id="gridiron-overlay" hidden>
+      <div class="backstage-scrim" id="gridiron-scrim"></div>
+      <aside
+        class="gridiron"
+        id="gridiron"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Gridiron settings"
+      >
+        <div class="cb-head">
+          <div>
+            <p class="cb-title">GRIDIRON</p>
+            <p class="cb-sub">FLY LOFT · STAGE SETTINGS</p>
+          </div>
+          <button class="cb-close" id="gridiron-close" type="button" aria-label="Close settings"
+            >×</button
+          >
+        </div>
+
+        <div class="cb-scroll">
+          <section class="cb-section">
+            <p class="cb-section-head">
+              <span class="cb-sec-dot" aria-hidden="true"></span>GEMINI API KEY
+            </p>
+            <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
+              Provide a Gemini API key. It stays in your browser and is sent directly to Google,
+              never touching any server.
+            </p>
+            <div class="souffleur-field" style="margin-bottom: 0.5rem;">
+              <input
+                class="souffleur-input"
+                id="gridiron-key-input"
+                type="password"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="Paste API key here…"
+                aria-label="Gemini API key"
+              />
+              <button class="souffleur-cue" id="gridiron-key-save" type="button">SAVE</button>
+            </div>
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.6rem;"
+            >
+              <label
+                class="key-remember"
+                style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; color: var(--stage-fg-mute); display: flex; align-items: center; gap: 0.35rem;"
+              >
+                <input type="checkbox" id="gridiron-key-remember" /> remember key
+              </label>
+              <button
+                class="key-forget"
+                id="gridiron-key-forget"
+                type="button"
+                style="font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.05em; color: var(--color-brick); background: none; border: 1px solid var(--color-rule); padding: 0.2rem 0.4rem;"
+                hidden>forget key</button
+              >
+            </div>
+          </section>
+
+          <section class="cb-section" style="margin-top: 2rem;">
+            <p class="cb-section-head">
+              <span class="cb-sec-dot" aria-hidden="true"></span>STAGE LANGUAGE
+            </p>
+            <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
+              Choose the language for the stage directions and character dialogue.
+            </p>
+            <div
+              class="language-options"
+              style="display: flex; flex-direction: column; gap: 0.6rem;"
+            >
+              <label
+                style="display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 11px; cursor: pointer; color: var(--color-ink);"
+              >
+                <input type="radio" name="stage-language" value="declared" checked />
+                <span id="declared-lang-label">Original Language</span>
+              </label>
+              <label
+                style="display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 11px; cursor: pointer; color: var(--color-ink);"
+              >
+                <input type="radio" name="stage-language" value="en" />
+                <span>English Translation</span>
+              </label>
+            </div>
+          </section>
+        </div>
+      </aside>
+    </div>
+
+    <script is:inline type="application/json" id="stage-data" set:html={dataJson} />
   </div>
 
-  <script is:inline type="application/json" id="stage-data" set:html={dataJson} />
-</section>
-
-<style>
-  /* local theatre palette: every shade derives from the canonical tokens via
+  <style>
+    /* local theatre palette: every shade derives from the canonical tokens via
      color-mix (no off-palette hex; the minifier folds rgba() into hex). */
-  .stage {
-    --stage-bg: color-mix(in srgb, var(--color-ink) 86%, black);
-    --stage-glow: color-mix(in srgb, var(--color-brick) 22%, var(--color-ink));
-    --stage-fg: var(--color-paper);
-    --stage-fg-soft: color-mix(in srgb, var(--color-paper) 64%, var(--color-ink));
-    --stage-fg-mute: color-mix(in srgb, var(--color-paper) 42%, var(--color-ink));
-    --curtain-a: color-mix(in srgb, var(--color-brick) 85%, black);
-    --curtain-b: color-mix(in srgb, var(--color-brick) 52%, black);
-    --foot: color-mix(in srgb, var(--color-amber) 72%, white);
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    overflow: hidden;
-    color: var(--stage-fg);
-    background:
-      radial-gradient(120% 80% at 50% -10%, var(--stage-glow), transparent 60%), var(--stage-bg);
-    font-family: var(--font-prose);
-  }
+    .stage {
+      --stage-bg: color-mix(in srgb, var(--color-ink) 86%, black);
+      --stage-glow: color-mix(in srgb, var(--color-brick) 22%, var(--color-ink));
+      --stage-fg: var(--color-paper);
+      --stage-fg-soft: color-mix(in srgb, var(--color-paper) 64%, var(--color-ink));
+      --stage-fg-mute: color-mix(in srgb, var(--color-paper) 42%, var(--color-ink));
+      --curtain-a: color-mix(in srgb, var(--color-brick) 85%, black);
+      --curtain-b: color-mix(in srgb, var(--color-brick) 52%, black);
+      --foot: color-mix(in srgb, var(--color-amber) 72%, white);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      overflow: hidden;
+      color: var(--stage-fg);
+      background:
+        radial-gradient(120% 80% at 50% -10%, var(--stage-glow), transparent 60%), var(--stage-bg);
+      font-family: var(--font-prose);
+    }
 
-  /* header */
-  .stage-head {
-    position: relative;
-    z-index: 40;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.85rem 1.25rem;
-    border-bottom: 1px solid color-mix(in srgb, var(--color-paper) 6%, transparent);
-    background: linear-gradient(
-      to bottom,
-      color-mix(in srgb, var(--color-ink) 50%, transparent),
-      transparent
-    );
-  }
-  .brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    text-decoration: none;
-    color: var(--stage-fg);
-  }
-  .brand-k {
-    display: inline-grid;
-    place-items: center;
-    width: 22px;
-    height: 22px;
-    font-family: var(--font-display);
-    font-size: 15px;
-    border: 1px solid var(--stage-fg-soft);
-    color: var(--stage-fg);
-  }
-  .brand-title {
-    font-family: var(--font-display);
-    font-size: 17px;
-    letter-spacing: 0.01em;
-  }
-  .backstage-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.18em;
-    color: var(--stage-fg);
-    background: color-mix(in srgb, var(--color-ink) 35%, transparent);
-    border: 1px solid color-mix(in srgb, var(--color-paper) 16%, transparent);
-    padding: 0.45rem 0.7rem;
-    cursor: pointer;
-  }
-  .backstage-btn:hover {
-    border-color: var(--curtain-a);
-  }
-  .bs-ico {
-    color: var(--curtain-a);
-    font-size: 12px;
-  }
+    /* header */
+    .stage-head {
+      position: relative;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 1.25rem;
+      border-bottom: 1px solid color-mix(in srgb, var(--color-paper) 6%, transparent);
+      background: linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--color-ink) 50%, transparent),
+        transparent
+      );
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      text-decoration: none;
+      color: var(--stage-fg);
+    }
+    .brand-k {
+      display: inline-grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      font-family: var(--font-display);
+      font-size: 15px;
+      border: 1px solid var(--stage-fg-soft);
+      color: var(--stage-fg);
+    }
+    .brand-title {
+      font-family: var(--font-display);
+      font-size: 17px;
+      letter-spacing: 0.01em;
+    }
+    .backstage-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      color: var(--stage-fg);
+      background: color-mix(in srgb, var(--color-ink) 35%, transparent);
+      border: 1px solid color-mix(in srgb, var(--color-paper) 16%, transparent);
+      padding: 0.45rem 0.7rem;
+      cursor: pointer;
+    }
+    .backstage-btn:hover {
+      border-color: var(--curtain-a);
+    }
+    .bs-ico {
+      color: var(--curtain-a);
+      font-size: 12px;
+    }
 
-  /* the stage box */
-  .house {
-    position: relative;
-    flex: 1;
-    overflow: hidden;
-  }
-  .vignette {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    box-shadow: inset 0 0 220px 60px color-mix(in srgb, var(--color-ink) 70%, transparent);
-    z-index: 5;
-  }
+    /* the stage box */
+    .house {
+      position: relative;
+      flex: 1;
+      overflow: hidden;
+    }
+    .vignette {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      box-shadow: inset 0 0 220px 60px color-mix(in srgb, var(--color-ink) 70%, transparent);
+      z-index: 5;
+    }
 
-  /* scene */
-  .scene {
-    position: absolute;
-    inset: 0;
-    z-index: 6;
-    overflow-y: auto;
-    padding: 2.5rem 1.25rem 8.5rem;
-    opacity: 0;
-    transition: opacity 0.5s ease 0.35s;
-  }
-  .stage.is-open .scene {
-    opacity: 1;
-  }
-  .scene-inner {
-    max-width: 600px;
-    margin: 0 auto;
-  }
-  /* The scene's inner nodes (.scene-act, .beat-dir, .cue, .say, …) are built
+    .scene {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      overflow-y: auto;
+      padding: 2.5rem 1.25rem 16rem;
+      opacity: 0;
+      transition: opacity 0.5s ease 0.35s;
+    }
+    .stage.is-open .scene {
+      opacity: 1;
+    }
+    .scene-inner {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    /* The scene's inner nodes (.scene-act, .beat-dir, .cue, .say, …) are built
      client-side, so their rules can't be scoped — they live in the is:global
      block below, qualified by .stage so they don't leak. */
 
-  /* curtains */
-  .curtain {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    width: 52%;
-    z-index: 14;
-    background:
-      repeating-linear-gradient(
-        90deg,
-        color-mix(in srgb, var(--color-ink) 45%, transparent) 0,
-        color-mix(in srgb, var(--color-paper) 5%, transparent) 14px,
-        color-mix(in srgb, var(--color-ink) 45%, transparent) 30px
-      ),
-      linear-gradient(to bottom, var(--curtain-a), var(--curtain-b));
-    box-shadow: inset 0 -40px 80px color-mix(in srgb, var(--color-ink) 50%, transparent);
-    transition: transform 0.9s cubic-bezier(0.7, 0, 0.2, 1);
-    will-change: transform;
-  }
-  .curtain-left {
-    left: 0;
-  }
-  .curtain-right {
-    right: 0;
-  }
-  .stage.is-open .curtain-left {
-    transform: translateX(-86%);
-  }
-  .stage.is-open .curtain-right {
-    transform: translateX(86%);
-  }
-  .valance {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 42px;
-    z-index: 16;
-    background: linear-gradient(to bottom, var(--curtain-a), var(--curtain-b));
-    box-shadow:
-      0 6px 14px color-mix(in srgb, var(--color-ink) 50%, transparent),
-      inset 0 -6px 16px color-mix(in srgb, var(--color-ink) 40%, transparent);
-  }
-
-  /* playbill (closed) */
-  .playbill {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 20;
-    width: min(90%, 460px);
-    text-align: center;
-    transition:
-      opacity 0.45s ease,
-      transform 0.45s ease;
-  }
-  .stage.is-open .playbill {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.96);
-    pointer-events: none;
-  }
-  .playbill-eyebrow {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.26em;
-    text-transform: uppercase;
-    color: var(--foot);
-    margin: 0 0 0.6rem;
-  }
-  .playbill-title {
-    font-family: var(--font-display);
-    font-weight: 350;
-    font-size: clamp(40px, 9vw, 84px);
-    line-height: 0.96;
-    letter-spacing: -0.02em;
-    margin: 0;
-    color: var(--color-paper-warm);
-  }
-  .playbill-sub {
-    font-family: var(--font-prose);
-    font-style: italic;
-    font-size: 16px;
-    color: var(--stage-fg-soft);
-    margin: 0.8rem 0 1.8rem;
-  }
-  .playbill-backstage {
-    display: block;
-    margin: 1rem auto 0;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    color: var(--stage-fg-mute);
-    background: none;
-    border: none;
-    cursor: pointer;
-  }
-  .playbill-backstage:hover {
-    color: var(--stage-fg);
-  }
-
-  /* raise buttons */
-  .raise {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    cursor: pointer;
-    color: var(--color-paper-warm);
-    background: linear-gradient(to bottom, var(--color-brick), var(--curtain-b));
-    border: 1px solid color-mix(in srgb, var(--color-ink) 30%, transparent);
-    box-shadow: 0 10px 30px -12px color-mix(in srgb, var(--color-ink) 80%, transparent);
-    transition:
-      transform 0.16s,
-      filter 0.16s;
-  }
-  .raise:hover {
-    transform: translateY(-1px);
-    filter: brightness(1.08);
-  }
-  .raise-main {
-    font-family: var(--font-display);
-    font-size: 19px;
-  }
-  .raise-sub,
-  .raise-ar {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    letter-spacing: 0.18em;
-    opacity: 0.85;
-  }
-  .raise-front {
-    padding: 0.7rem 1.6rem;
-  }
-  .raise-front .raise-ar {
-    margin-top: 2px;
-  }
-
-  /* footlights / wings / apron */
-  .footlights {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 30px;
-    z-index: 18;
-    display: flex;
-    justify-content: center;
-    gap: clamp(14px, 3.4vw, 40px);
-    pointer-events: none;
-  }
-  .bulb {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: var(--foot);
-    box-shadow:
-      0 0 10px 3px color-mix(in srgb, var(--color-amber) 50%, transparent),
-      0 0 22px 8px color-mix(in srgb, var(--color-amber) 20%, transparent);
-  }
-  /* souffleur */
-  .souffleur {
-    position: absolute;
-    left: 50%;
-    bottom: 18px;
-    transform: translate(-50%, 18px);
-    z-index: 24;
-    width: min(92%, 560px);
-    padding: 0.7rem 0.85rem 0.85rem;
-    background: color-mix(in srgb, var(--color-ink) 92%, transparent);
-    border: 1px solid color-mix(in srgb, var(--color-paper) 12%, transparent);
-    box-shadow: 0 18px 50px -20px color-mix(in srgb, var(--color-ink) 90%, transparent);
-    opacity: 0;
-    pointer-events: none;
-    transition:
-      opacity 0.4s ease 0.5s,
-      transform 0.4s ease 0.5s;
-  }
-  .stage.is-open .souffleur {
-    opacity: 1;
-    transform: translate(-50%, 0);
-    pointer-events: auto;
-  }
-  .souffleur-bar {
-    display: flex;
-    justify-content: space-between;
-    font-family: var(--font-mono);
-    font-size: 9px;
-    letter-spacing: 0.18em;
-    color: var(--stage-fg-mute);
-    margin-bottom: 0.5rem;
-  }
-  .souffleur-field {
-    display: flex;
-    gap: 0.5rem;
-  }
-  .souffleur-input {
-    flex: 1;
-    min-width: 0;
-    font-family: var(--font-prose);
-    font-style: italic;
-    font-size: 14px;
-    color: var(--stage-fg-soft);
-    background: color-mix(in srgb, var(--color-ink) 35%, transparent);
-    border: 1px solid color-mix(in srgb, var(--color-paper) 12%, transparent);
-    padding: 0.5rem 0.7rem;
-  }
-  .souffleur-cue {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    color: var(--color-paper-warm);
-    background: linear-gradient(to bottom, var(--color-brick), var(--curtain-b));
-    border: none;
-    padding: 0 1.1rem;
-    cursor: not-allowed;
-  }
-  .chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-top: 0.6rem;
-    min-height: 1.4rem;
-  }
-  .chip {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.04em;
-    color: var(--stage-fg-soft);
-    background: none;
-    border: 1px solid color-mix(in srgb, var(--color-paper) 14%, transparent);
-    border-radius: 999px;
-    padding: 0.25rem 0.7rem;
-    cursor: pointer;
-  }
-  .chip:hover {
-    border-color: var(--curtain-a);
-    color: var(--stage-fg);
-  }
-  .souffleur-note {
-    margin: 0.6rem 0 0;
-    font-family: var(--font-mono);
-    font-size: 9px;
-    letter-spacing: 0.06em;
-    color: var(--stage-fg-mute);
-  }
-  .souffleur-note.is-thinking {
-    color: var(--foot);
-  }
-  .key-panel[hidden],
-  #direction-field[hidden],
-  #souffleur-chips[hidden],
-  .key-forget[hidden] {
-    display: none;
-  }
-  .key-copy {
-    margin: 0 0 0.5rem;
-    font-family: var(--font-prose);
-    font-size: 12.5px;
-    line-height: 1.45;
-    color: var(--stage-fg-soft);
-  }
-  .key-copy a {
-    color: var(--foot);
-  }
-  .key-remember {
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
-    margin-top: 0.5rem;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.04em;
-    color: var(--stage-fg-mute);
-  }
-  .key-forget {
-    margin-top: 0.5rem;
-    font-family: var(--font-mono);
-    font-size: 9px;
-    letter-spacing: 0.06em;
-    color: var(--stage-fg-mute);
-    background: none;
-    border: none;
-    text-decoration: underline;
-    cursor: pointer;
-  }
-  .key-forget:hover {
-    color: var(--stage-fg-soft);
-  }
-
-  /* backstage: the casting board */
-  .backstage[hidden] {
-    display: none;
-  }
-  .backstage {
-    position: fixed;
-    inset: 0;
-    z-index: 60;
-  }
-  .backstage-scrim {
-    position: absolute;
-    inset: 0;
-    background: color-mix(in srgb, var(--color-ink) 55%, transparent);
-    opacity: 0;
-    transition: opacity 0.25s ease;
-  }
-  .backstage.is-open .backstage-scrim {
-    opacity: 1;
-  }
-  .callboard {
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: min(95%, 980px);
-    display: flex;
-    flex-direction: column;
-    background: var(--color-paper);
-    color: var(--color-ink);
-    border-right: 1px solid var(--color-ink);
-    box-shadow: 24px 0 60px -30px color-mix(in srgb, var(--color-ink) 80%, transparent);
-    transform: translateX(-100%);
-    transition: transform 0.32s cubic-bezier(0.5, 0, 0.2, 1);
-  }
-  .backstage.is-open .callboard {
-    transform: translateX(0);
-  }
-  .cb-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 1rem 1.1rem 0.75rem;
-    border-bottom: 1px solid var(--color-rule);
-  }
-  .cb-title {
-    font-family: var(--font-mono);
-    font-size: 12px;
-    letter-spacing: 0.16em;
-    margin: 0;
-    color: var(--color-ink);
-  }
-  .cb-sub {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    letter-spacing: 0.14em;
-    color: var(--color-ink-mute);
-    margin: 0.25rem 0 0;
-  }
-  .cb-close {
-    font-size: 18px;
-    line-height: 1;
-    color: var(--color-ink-soft);
-    background: none;
-    border: 1px solid var(--color-rule);
-    border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    cursor: pointer;
-  }
-
-  /* left -> right: scene plot · cast · set · props */
-  .cb-board {
-    flex: 1;
-    min-height: 0;
-    display: flex;
-  }
-  .cb-col {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    border-right: 1px solid var(--color-rule);
-  }
-  .cb-col:last-child {
-    border-right: none;
-  }
-  .cb-col-head {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    margin: 0;
-    padding: 0.7rem 0.9rem 0.5rem;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.14em;
-    color: var(--color-ink-soft);
-    border-bottom: 1px solid var(--color-rule);
-  }
-  .cb-sec-dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: var(--color-brick);
-  }
-  .cb-meta {
-    margin-left: auto;
-    color: var(--color-ink-mute);
-  }
-  .cb-col-scroll {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0.4rem 0.5rem 0.8rem;
-  }
-  .cb-item,
-  .cb-plot {
-    display: block;
-    width: 100%;
-    text-align: left;
-    background: none;
-    border: none;
-    border-left: 2px solid transparent;
-    padding: 0.45rem 0.55rem;
-    cursor: pointer;
-    color: var(--color-ink);
-  }
-  .cb-item:hover,
-  .cb-plot:hover {
-    background: var(--color-paper-warm);
-  }
-  .cb-item-row {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-  .cb-item-name {
-    font-family: var(--font-display);
-    font-size: 16px;
-    color: var(--color-ink);
-  }
-  .cb-item-blurb {
-    display: block;
-    margin-top: 0.1rem;
-    font-family: var(--font-prose);
-    font-size: 12px;
-    line-height: 1.35;
-    color: var(--color-ink-soft);
-  }
-  .cb-empty {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--color-ink-mute);
-    padding: 0.5rem 0.6rem;
-  }
-
-  /* selected cast/set/props */
-  .cb-check {
-    flex: none;
-    width: 13px;
-    height: 13px;
-    border: 1px solid var(--color-rule);
-    border-radius: 3px;
-    position: relative;
-  }
-  .cb-item.is-on {
-    border-left-color: var(--color-brick);
-    background: var(--color-paper-warm);
-  }
-  .cb-item.is-on .cb-check {
-    background: var(--color-brick);
-    border-color: var(--color-brick);
-  }
-  .cb-item.is-on .cb-check::after {
-    content: "";
-    position: absolute;
-    left: 3px;
-    top: 0.5px;
-    width: 4px;
-    height: 7px;
-    border: solid var(--color-paper);
-    border-width: 0 2px 2px 0;
-    transform: rotate(45deg);
-  }
-
-  /* lit scene plot */
-  .cb-plot-mark {
-    margin-left: auto;
-    font-size: 9px;
-    color: var(--color-brick);
-    opacity: 0;
-  }
-  .cb-plot.is-lit {
-    border-left-color: var(--color-brick);
-    background: color-mix(in srgb, var(--color-brick) 10%, var(--color-paper));
-  }
-  .cb-plot.is-lit .cb-plot-mark {
-    opacity: 1;
-  }
-
-  /* blocking strip */
-  .cb-blocking {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    flex-wrap: wrap;
-    padding: 0.6rem 1.1rem;
-    border-top: 1px solid var(--color-rule);
-    background: var(--color-paper-warm);
-  }
-  .cb-blocking-label {
-    font-family: var(--font-mono);
-    font-size: 9px;
-    letter-spacing: 0.16em;
-    color: var(--color-ink-mute);
-  }
-  .cb-ranks {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.35rem;
-  }
-  .cb-ranks:empty::after {
-    content: "no marks set";
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--color-ink-mute);
-  }
-  .cb-rank {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.02em;
-    color: var(--color-brick);
-    border: 1px solid color-mix(in srgb, var(--color-brick) 40%, transparent);
-    border-radius: 999px;
-    padding: 0.12rem 0.55rem;
-  }
-
-  .raise-cb {
-    margin: 0;
-    width: 100%;
-    border: none;
-    border-radius: 0;
-    padding: 0.8rem 1rem;
-  }
-
-  /* phone: bottom sheet, columns stack */
-  @media (max-width: 720px) {
-    .callboard {
-      top: auto;
+    /* curtains */
+    .curtain {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 52%;
+      z-index: 14;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          color-mix(in srgb, var(--color-ink) 45%, transparent) 0,
+          color-mix(in srgb, var(--color-paper) 5%, transparent) 14px,
+          color-mix(in srgb, var(--color-ink) 45%, transparent) 30px
+        ),
+        linear-gradient(to bottom, var(--curtain-a), var(--curtain-b));
+      box-shadow: inset 0 -40px 80px color-mix(in srgb, var(--color-ink) 50%, transparent);
+      transition: transform 0.9s cubic-bezier(0.7, 0, 0.2, 1);
+      will-change: transform;
+    }
+    .curtain-left {
+      left: 0;
+    }
+    .curtain-right {
+      right: 0;
+    }
+    .stage.is-open .curtain-left {
+      transform: translateX(-86%);
+    }
+    .stage.is-open .curtain-right {
+      transform: translateX(86%);
+    }
+    .valance {
+      position: absolute;
+      top: 0;
       left: 0;
       right: 0;
-      width: 100%;
-      max-height: 88vh;
-      border-right: none;
-      border-top: 1px solid var(--color-ink);
-      transform: translateY(100%);
+      height: 42px;
+      z-index: 16;
+      background: linear-gradient(to bottom, var(--curtain-a), var(--curtain-b));
+      box-shadow:
+        0 6px 14px color-mix(in srgb, var(--color-ink) 50%, transparent),
+        inset 0 -6px 16px color-mix(in srgb, var(--color-ink) 40%, transparent);
+    }
+
+    /* playbill (closed) */
+    .playbill {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 20;
+      width: min(90%, 460px);
+      text-align: center;
+      transition:
+        opacity 0.45s ease,
+        transform 0.45s ease;
+    }
+    .stage.is-open .playbill {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.96);
+      pointer-events: none;
+    }
+    .playbill-eyebrow {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: var(--foot);
+      margin: 0 0 0.6rem;
+    }
+    .playbill-title {
+      font-family: var(--font-display);
+      font-weight: 350;
+      font-size: clamp(40px, 9vw, 84px);
+      line-height: 0.96;
+      letter-spacing: -0.02em;
+      margin: 0;
+      color: var(--color-paper-warm);
+    }
+    .playbill-sub {
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 16px;
+      color: var(--stage-fg-soft);
+      margin: 0.8rem 0 1.8rem;
+    }
+    .playbill-backstage {
+      display: block;
+      margin: 1rem auto 0;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--stage-fg-mute);
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+    .playbill-backstage:hover {
+      color: var(--stage-fg);
+    }
+
+    /* raise buttons */
+    .raise {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+      color: var(--color-paper-warm);
+      background: linear-gradient(to bottom, var(--color-brick), var(--curtain-b));
+      border: 1px solid color-mix(in srgb, var(--color-ink) 30%, transparent);
+      box-shadow: 0 10px 30px -12px color-mix(in srgb, var(--color-ink) 80%, transparent);
+      transition:
+        transform 0.16s,
+        filter 0.16s;
+    }
+    .raise:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.08);
+    }
+    .raise-main {
+      font-family: var(--font-display);
+      font-size: 19px;
+    }
+    .raise-sub,
+    .raise-ar {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      opacity: 0.85;
+    }
+    .raise-front {
+      padding: 0.7rem 1.6rem;
+    }
+    .raise-front .raise-ar {
+      margin-top: 2px;
+    }
+
+    /* footlights / wings / apron */
+    .footlights {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 30px;
+      z-index: 18;
+      display: flex;
+      justify-content: center;
+      gap: clamp(14px, 3.4vw, 40px);
+      pointer-events: none;
+    }
+    .bulb {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--foot);
+      box-shadow:
+        0 0 10px 3px color-mix(in srgb, var(--color-amber) 50%, transparent),
+        0 0 22px 8px color-mix(in srgb, var(--color-amber) 20%, transparent);
+    }
+    /* souffleur */
+    .souffleur {
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      transform: translate(-50%, 18px);
+      z-index: 24;
+      width: min(92%, 560px);
+      padding: 0.7rem 0.85rem 0.85rem;
+      background: color-mix(in srgb, var(--color-ink) 92%, transparent);
+      border: 1px solid color-mix(in srgb, var(--color-paper) 12%, transparent);
+      box-shadow: 0 18px 50px -20px color-mix(in srgb, var(--color-ink) 90%, transparent);
+      opacity: 0;
+      pointer-events: none;
+      transition:
+        opacity 0.4s ease 0.5s,
+        transform 0.4s ease 0.5s;
+    }
+    .stage.is-open .souffleur {
+      opacity: 1;
+      transform: translate(-50%, 0);
+      pointer-events: auto;
+    }
+    .souffleur-bar {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      color: var(--stage-fg-mute);
+      margin-bottom: 0.5rem;
+    }
+    .souffleur-field {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .souffleur-input {
+      flex: 1;
+      min-width: 0;
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 14px;
+      color: var(--stage-fg-soft);
+      background: color-mix(in srgb, var(--color-ink) 35%, transparent);
+      border: 1px solid color-mix(in srgb, var(--color-paper) 12%, transparent);
+      padding: 0.5rem 0.7rem;
+    }
+    .souffleur-cue {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--color-paper-warm);
+      background: linear-gradient(to bottom, var(--color-brick), var(--curtain-b));
+      border: none;
+      padding: 0 1.1rem;
+      cursor: pointer;
+    }
+    .souffleur-cue:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    .souffleur-input:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    .chip:disabled {
+      cursor: not-allowed;
+      opacity: 0.4;
+    }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.6rem;
+      min-height: 1.4rem;
+    }
+    .chip {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      color: var(--stage-fg-soft);
+      background: none;
+      border: 1px solid color-mix(in srgb, var(--color-paper) 14%, transparent);
+      border-radius: 999px;
+      padding: 0.25rem 0.7rem;
+      cursor: pointer;
+    }
+    .chip:hover {
+      border-color: var(--curtain-a);
+      color: var(--stage-fg);
+    }
+    .souffleur-note {
+      margin: 0.6rem 0 0;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.06em;
+      color: var(--stage-fg-mute);
+    }
+    .souffleur-note.is-thinking {
+      color: var(--foot);
+    }
+    .key-panel[hidden],
+    #direction-field[hidden],
+    #souffleur-chips[hidden],
+    .key-forget[hidden] {
+      display: none;
+    }
+    .key-copy {
+      margin: 0 0 0.5rem;
+      font-family: var(--font-prose);
+      font-size: 12.5px;
+      line-height: 1.45;
+      color: var(--stage-fg-soft);
+    }
+    .key-copy a {
+      color: var(--foot);
+    }
+    .key-remember {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-top: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.04em;
+      color: var(--stage-fg-mute);
+    }
+    .key-forget {
+      margin-top: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.06em;
+      color: var(--stage-fg-mute);
+      background: none;
+      border: none;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .key-forget:hover {
+      color: var(--stage-fg-soft);
+    }
+    .key-forget:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    /* backstage: the casting board */
+    .backstage[hidden] {
+      display: none;
+    }
+    .backstage {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+    }
+    .backstage-scrim {
+      position: absolute;
+      inset: 0;
+      background: color-mix(in srgb, var(--color-ink) 55%, transparent);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .backstage.is-open .backstage-scrim {
+      opacity: 1;
+    }
+    .callboard {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: min(95%, 980px);
+      display: flex;
+      flex-direction: column;
+      background: var(--color-paper);
+      color: var(--color-ink);
+      border-right: 1px solid var(--color-ink);
+      box-shadow: 24px 0 60px -30px color-mix(in srgb, var(--color-ink) 80%, transparent);
+      transform: translateX(-100%);
+      transition: transform 0.32s cubic-bezier(0.5, 0, 0.2, 1);
     }
     .backstage.is-open .callboard {
-      transform: translateY(0);
+      transform: translateX(0);
     }
-    .cb-board {
+    .gridiron {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: min(86%, 360px);
+      display: flex;
       flex-direction: column;
-      overflow-y: auto;
+      background: var(--color-paper);
+      color: var(--color-ink);
+      border-left: 1px solid var(--color-ink);
+      box-shadow: -24px 0 60px -30px color-mix(in srgb, var(--color-ink) 80%, transparent);
+      transform: translateX(100%);
+      transition: transform 0.32s cubic-bezier(0.5, 0, 0.2, 1);
+    }
+    .backstage.is-open .gridiron {
+      transform: translateX(0);
+    }
+    .cb-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 1rem 1.1rem 0.75rem;
+      border-bottom: 1px solid var(--color-rule);
+    }
+    .cb-title {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      margin: 0;
+      color: var(--color-ink);
+    }
+    .cb-sub {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      color: var(--color-ink-mute);
+      margin: 0.25rem 0 0;
+    }
+    .cb-close {
+      font-size: 18px;
+      line-height: 1;
+      color: var(--color-ink-soft);
+      background: none;
+      border: 1px solid var(--color-rule);
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+    }
+
+    /* left -> right: scene plot · cast · set · props */
+    .cb-board {
+      flex: 1;
+      min-height: 0;
+      display: flex;
     }
     .cb-col {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--color-rule);
+    }
+    .cb-col:last-child {
       border-right: none;
-      border-bottom: 1px solid var(--color-rule);
-      max-height: 40vh;
     }
     .cb-col-head {
-      position: sticky;
-      top: 0;
-      background: var(--color-paper);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin: 0;
+      padding: 0.7rem 0.9rem 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      color: var(--color-ink-soft);
+      border-bottom: 1px solid var(--color-rule);
     }
-    .brand-title {
-      max-width: 48vw;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+    .cb-sec-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--color-brick);
     }
-    .scene {
-      padding-top: 4rem;
+    .cb-meta {
+      margin-left: auto;
+      color: var(--color-ink-mute);
     }
-  }
+    .cb-col-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.4rem 0.5rem 0.8rem;
+    }
+    .cb-item,
+    .cb-plot {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      border-left: 2px solid transparent;
+      padding: 0.45rem 0.55rem;
+      cursor: pointer;
+      color: var(--color-ink);
+    }
+    .cb-item:hover,
+    .cb-plot:hover {
+      background: var(--color-paper-warm);
+    }
+    .cb-item-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .cb-item-name {
+      font-family: var(--font-display);
+      font-size: 16px;
+      color: var(--color-ink);
+    }
+    .cb-item-blurb {
+      display: block;
+      margin-top: 0.1rem;
+      font-family: var(--font-prose);
+      font-size: 12px;
+      line-height: 1.35;
+      color: var(--color-ink-soft);
+    }
+    .cb-empty {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--color-ink-mute);
+      padding: 0.5rem 0.6rem;
+    }
 
-  @media (prefers-reduced-motion: reduce) {
-    .curtain,
-    .scene,
-    .playbill,
-    .souffleur,
-    .callboard,
-    .backstage-scrim {
-      transition: none;
+    /* selected cast/set/props */
+    .cb-check {
+      flex: none;
+      width: 13px;
+      height: 13px;
+      border: 1px solid var(--color-rule);
+      border-radius: 3px;
+      position: relative;
     }
-  }
-</style>
+    .cb-item.is-on {
+      border-left-color: var(--color-brick);
+      background: var(--color-paper-warm);
+    }
+    .cb-item.is-on .cb-check {
+      background: var(--color-brick);
+      border-color: var(--color-brick);
+    }
+    .cb-item.is-on .cb-check::after {
+      content: "";
+      position: absolute;
+      left: 3px;
+      top: 0.5px;
+      width: 4px;
+      height: 7px;
+      border: solid var(--color-paper);
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
 
-<style is:global>
-  /* the stage is full-bleed: drop BaseLayout's paper padding and prose width. */
-  body:has(.stage) {
-    padding: 0;
-    background: color-mix(in srgb, var(--color-ink) 88%, black);
-  }
-  body:has(.stage) main {
-    max-width: none;
-    margin: 0;
-  }
+    /* lit scene plot */
+    .cb-plot-mark {
+      margin-left: auto;
+      font-size: 9px;
+      color: var(--color-brick);
+      opacity: 0;
+    }
+    .cb-plot.is-lit {
+      border-left-color: var(--color-brick);
+      background: color-mix(in srgb, var(--color-brick) 10%, var(--color-paper));
+    }
+    .cb-plot.is-lit .cb-plot-mark {
+      opacity: 1;
+    }
 
-  /* Scene-content rules: global (the client builds these nodes, so scoped
+    /* blocking strip */
+    .cb-blocking {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      padding: 0.6rem 1.1rem;
+      border-top: 1px solid var(--color-rule);
+      background: var(--color-paper-warm);
+    }
+    .cb-blocking-label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.16em;
+      color: var(--color-ink-mute);
+    }
+    .cb-ranks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+    .cb-ranks:empty::after {
+      content: "no marks set";
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--color-ink-mute);
+    }
+    .cb-rank {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.02em;
+      color: var(--color-brick);
+      border: 1px solid color-mix(in srgb, var(--color-brick) 40%, transparent);
+      border-radius: 999px;
+      padding: 0.12rem 0.55rem;
+    }
+
+    .raise-cb {
+      margin: 0;
+      width: 100%;
+      border: none;
+      border-radius: 0;
+      padding: 0.8rem 1rem;
+    }
+
+    /* phone: bottom sheet, columns stack */
+    @media (max-width: 720px) {
+      .callboard,
+      .gridiron {
+        top: auto;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-height: 88vh;
+        border-right: none;
+        border-left: none;
+        border-top: 1px solid var(--color-ink);
+        transform: translateY(100%);
+      }
+      .backstage.is-open .callboard,
+      .backstage.is-open .gridiron {
+        transform: translateY(0);
+      }
+      .cb-board {
+        flex-direction: column;
+        overflow-y: auto;
+      }
+      .cb-col {
+        border-right: none;
+        border-bottom: 1px solid var(--color-rule);
+        max-height: 40vh;
+      }
+      .cb-col-head {
+        position: sticky;
+        top: 0;
+        background: var(--color-paper);
+      }
+      .brand-title {
+        max-width: 48vw;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .scene {
+        padding-top: 4rem;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .curtain,
+      .scene,
+      .playbill,
+      .souffleur,
+      .callboard,
+      .gridiron,
+      .backstage-scrim {
+        transition: none;
+      }
+    }
+  </style>
+
+  <style is:global>
+    /* the stage is full-bleed: drop BaseLayout's paper padding and prose width. */
+    body:has(.stage) {
+      padding: 0;
+      background: color-mix(in srgb, var(--color-ink) 88%, black);
+    }
+    body:has(.stage) main {
+      max-width: none;
+      margin: 0;
+    }
+
+    /* Scene-content rules: global (the client builds these nodes, so scoped
      attributes never land on them), qualified by .stage to contain them. */
-  .stage .scene-act {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    color: var(--stage-fg-mute);
-    margin: 0;
-  }
-  .stage .scene-rule {
-    border: none;
-    border-top: 1px solid color-mix(in srgb, var(--color-paper) 10%, transparent);
-    margin: 0.9rem 0 1.6rem;
-  }
-  .stage .beat-dir {
-    font-family: var(--font-prose);
-    font-style: italic;
-    font-size: 15px;
-    line-height: 1.55;
-    color: var(--stage-fg-soft);
-    border-left: 2px solid var(--curtain-a);
-    padding-left: 0.8rem;
-    margin: 1.4rem 0;
-  }
-  .stage .beat-line {
-    margin: 1.2rem 0;
-  }
-  .stage .cue {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    margin: 0 0 0.25rem;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--stage-fg-soft);
-  }
-  .stage .cue-dot {
-    color: var(--curtain-a);
-  }
-  .stage .say {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: 19px;
-    line-height: 1.4;
-    color: var(--stage-fg);
-  }
-</style>
-
-<script is:inline>
-  (function () {
-    var stage = document.getElementById("stage");
-    var backstage = document.getElementById("backstage");
-    var bsBtn = document.getElementById("backstage-btn");
-    var dataEl = document.getElementById("stage-data");
-    if (!stage || !backstage || !dataEl) return;
-
-    var data;
-    try {
-      data = JSON.parse(dataEl.textContent || "{}");
-    } catch (e) {
-      return;
+    .stage .scene-act {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--stage-fg-mute);
+      margin: 0;
     }
+    .stage .scene-rule {
+      border: none;
+      border-top: 1px solid color-mix(in srgb, var(--color-paper) 10%, transparent);
+      margin: 0.9rem 0 1.6rem;
+    }
+    .stage .beat-dir {
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 15px;
+      line-height: 1.55;
+      color: var(--stage-fg-soft);
+      border-left: 2px solid var(--curtain-a);
+      padding-left: 0.8rem;
+      margin: 1.4rem 0;
+    }
+    .stage .beat-line {
+      margin: 1.2rem 0;
+    }
+    .stage .cue {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin: 0 0 0.25rem;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--stage-fg-soft);
+    }
+    .stage .cue-dot {
+      color: var(--curtain-a);
+    }
+    .stage .say {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: 19px;
+      line-height: 1.4;
+      color: var(--stage-fg);
+    }
+  </style>
 
-    var GROUPS = ["cast", "set", "props"];
-    var sel = {
-      cast: new Set((data.sel && data.sel.cast) || []),
-      set: new Set((data.sel && data.sel.set) || []),
-      props: new Set((data.sel && data.sel.props) || []),
-    };
-    var byName = {};
-    GROUPS.forEach(function (g) {
-      byName[g] = {};
-      (data[g] || []).forEach(function (i) {
-        byName[g][i.id] = i.name;
-      });
-    });
-    var plotsById = {};
-    (data.plots || []).forEach(function (p) {
-      plotsById[p.id] = p;
-    });
+  <script is:inline>
+    (function () {
+      var stage = document.getElementById("stage");
+      var backstage = document.getElementById("backstage");
+      var bsBtn = document.getElementById("backstage-btn");
+      var dataEl = document.getElementById("stage-data");
+      if (!stage || !backstage || !dataEl) return;
 
-    var board = document.querySelector(".cb-board");
-    var chipsEl = document.getElementById("souffleur-chips");
-    var noteEl = document.getElementById("souffleur-note");
-    var ranksEl = document.getElementById("cb-ranks");
-    var raiseSub = document.getElementById("raise-sub");
-    var sceneInner = document.getElementById("scene-inner");
-
-    // Cast/set/props/plot buttons are server-rendered and never added/removed,
-    // so query them once.
-    var itemEls = stage.querySelectorAll(".cb-item");
-    var plotEls = stage.querySelectorAll(".cb-plot");
-
-    // --- Souffleur (bring-your-own Gemini key) ---------------------------------
-    // The key lives only in the browser (sessionStorage, or localStorage if the
-    // visitor opts in) and is sent straight to Google with the x-goog-api-key
-    // header, never to kaihacks (there is no server). Swap MODEL for a newer
-    // flash id as they ship.
-    var MODEL = "gemini-2.5-flash";
-    var KEY_NAME = "kai.gemini.key";
-    var souffleurEl = document.getElementById("souffleur");
-    var keyPanel = document.getElementById("key-panel");
-    var keyInput = document.getElementById("key-input");
-    var keySave = document.getElementById("key-save");
-    var keyRemember = document.getElementById("key-remember");
-    var keyForget = document.getElementById("key-forget");
-    var dirField = document.getElementById("direction-field");
-    var dirInput = document.getElementById("souffleur-input");
-    var dirCue = document.getElementById("souffleur-cue");
-
-    function loadKey() {
+      var data;
       try {
-        return sessionStorage.getItem(KEY_NAME) || localStorage.getItem(KEY_NAME) || "";
+        data = JSON.parse(dataEl.textContent || "{}");
       } catch (e) {
-        return "";
+        return;
       }
-    }
-    var apiKey = loadKey();
-    var ctx = null; // lazily fetched stage-context.json
-    var transcript = []; // [{ role: "user"|"model", text }]
-    var busy = false;
-    var eyebrow = "Live scene";
 
-    function reflectKey() {
-      var has = !!apiKey;
-      if (keyPanel) keyPanel.hidden = has;
-      if (dirField) dirField.hidden = !has;
-      if (chipsEl) chipsEl.hidden = !has;
-      if (keyForget) keyForget.hidden = !has;
-    }
-    function setThinking(on, msg) {
-      if (!noteEl) return;
-      noteEl.classList.toggle("is-thinking", !!on);
-      if (msg) noteEl.textContent = msg;
-    }
-
-    function eqSet(arr, set) {
-      if (arr.length !== set.size) return false;
-      for (var i = 0; i < arr.length; i++) if (!set.has(arr[i])) return false;
-      return true;
-    }
-    // Exact rule: a scene is lit only when the selection equals its company
-    // exactly, group by group.
-    function litPlot() {
-      for (var i = 0; i < (data.plots || []).length; i++) {
-        var p = data.plots[i];
-        if (eqSet(p.cast, sel.cast) && eqSet(p.set, sel.set) && eqSet(p.props, sel.props)) return p;
-      }
-      return null;
-    }
-
-    function esc(s) {
-      return String(s).replace(/[&<>"]/g, function (c) {
-        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
-      });
-    }
-
-    function chip(name) {
-      return '<button class="chip" type="button">' + esc(name) + "</button>";
-    }
-    function rank(name) {
-      return '<span class="cb-rank">' + esc(name) + "</span>";
-    }
-
-    // Mirror of scene.ts composeScene: the casting drives the (mocked) lines.
-    function nameOf(group, id) {
-      return byName[group][id];
-    }
-    function composeScene(lit) {
-      if (!sceneInner) return;
-      var castNames = [];
-      sel.cast.forEach(function (id) {
-        var n = nameOf("cast", id);
-        if (n) castNames.push(n);
-      });
-      var placeName = nameOf("set", sel.set.values().next().value);
-      var propName = nameOf("props", sel.props.values().next().value);
-      var a = castNames[0];
-      var b = castNames[1];
-      var speakerA = a || "A Voice";
-      var speakerB = b || "The House";
-
-      var beats = [];
-      beats.push({
-        dir:
-          "[ " +
-          (placeName ? placeName + " holds the dark" : "The dark holds") +
-          ". " +
-          speakerA +
-          " waits at the edge. ]",
-      });
-      if (a) beats.push({ cue: speakerA, say: "Every entrance is a kind of falling." });
-      if (b) beats.push({ cue: speakerB, say: "Then say the fall has already begun." });
-      beats.push({
-        dir: propName
-          ? "[ " + speakerB + " turns. " + propName + " catches the little light there is. ]"
-          : "[ " + speakerB + " turns toward the house. ]",
-      });
-      if (a) beats.push({ cue: speakerA, say: "The play will find its way without us." });
-      if (b) beats.push({ cue: speakerB, say: "Or we are the way it finds." });
-
-      // The eyebrow names the lit scene (or flags a custom casting).
-      var eyebrow = lit ? lit.name : "Custom casting";
-      var html = '<p class="scene-act">' + esc(eyebrow) + '</p><hr class="scene-rule" />';
-      beats.forEach(function (bt) {
-        if (bt.dir) {
-          html += '<p class="beat-dir">' + esc(bt.dir) + "</p>";
-        } else {
-          html +=
-            '<div class="beat-line"><p class="cue"><span class="cue-dot" aria-hidden="true">•</span>' +
-            esc(bt.cue) +
-            '</p><p class="say">' +
-            esc(bt.say) +
-            "</p></div>";
-        }
-      });
-      sceneInner.innerHTML = html;
-    }
-
-    function loadContext() {
-      if (ctx) return Promise.resolve(ctx);
-      return fetch("../stage-context.json")
-        .then(function (r) {
-          return r.ok ? r.json() : null;
-        })
-        .then(function (c) {
-          ctx = c;
-          return c;
-        })
-        .catch(function () {
-          return null;
-        });
-    }
-
-    // System prompt = the staged slice: synopsis + the lit scene's text + the
-    // prose of whatever cast/set/props are selected. Real play data; the model
-    // writes only the dialogue.
-    function stagedSystem(lit) {
-      var L = [];
-      L.push(
-        "You are the souffleur of a theatre, staging a scene from the play «" +
-          ctx.title +
-          "» (" +
-          ctx.declared +
-          "), of the house " +
-          ctx.house +
-          ".",
-      );
-      L.push(
-        "Write it as theatre: bracketed [stage directions] and character cue lines as 'NAME: line'. Keep it taut and in the play's spirit, and use ONLY the company below. You may write in the play's declared language where it reads true.",
-      );
-      if (ctx.synopsis) L.push("Synopsis: " + ctx.synopsis);
-      if (lit && ctx.plots[lit.id])
-        L.push("This scene (" + ctx.plots[lit.id].name + "): " + ctx.plots[lit.id].text);
-      function add(label, id) {
-        var e = ctx.elements[id];
-        if (e) L.push(label + " - " + e.name + " (" + e.declared + "): " + e.text);
-      }
-      sel.cast.forEach(function (id) {
-        add("Cast", id);
-      });
-      sel.set.forEach(function (id) {
-        add("Set", id);
-      });
-      sel.props.forEach(function (id) {
-        add("Prop", id);
-      });
-      return L.join("\n\n");
-    }
-
-    // Render streamed text into the scene, reusing the .beat-dir/.cue/.say
-    // styling: [ ... ] lines are directions, 'NAME: line' are cues.
-    function renderScene(textRaw) {
-      if (!sceneInner) return;
-      var html = '<p class="scene-act">' + esc(eyebrow) + '</p><hr class="scene-rule" />';
-      textRaw.split("\n").forEach(function (ln) {
-        var t = ln.trim();
-        if (!t) return;
-        if (t.charAt(0) === "[") {
-          html += '<p class="beat-dir">' + esc(t) + "</p>";
-          return;
-        }
-        var m = t.match(/^([^:]{1,48}):\s*(.+)$/);
-        if (m) {
-          html +=
-            '<div class="beat-line"><p class="cue"><span class="cue-dot" aria-hidden="true">•</span>' +
-            esc(m[1]) +
-            '</p><p class="say">' +
-            esc(m[2]) +
-            "</p></div>";
-        } else {
-          html += '<p class="say">' + esc(t) + "</p>";
-        }
-      });
-      sceneInner.innerHTML = html;
-    }
-
-    function streamGemini(system, turns) {
-      var url =
-        "https://generativelanguage.googleapis.com/v1beta/models/" +
-        MODEL +
-        ":streamGenerateContent?alt=sse";
-      var body = {
-        systemInstruction: { parts: [{ text: system }] },
-        contents: turns.map(function (t) {
-          return { role: t.role, parts: [{ text: t.text }] };
-        }),
-        generationConfig: { temperature: 0.9, maxOutputTokens: 800 },
+      var GROUPS = ["cast", "set", "props"];
+      var sel = {
+        cast: new Set((data.sel && data.sel.cast) || []),
+        set: new Set((data.sel && data.sel.set) || []),
+        props: new Set((data.sel && data.sel.props) || []),
       };
-      return fetch(url, {
-        method: "POST",
-        headers: { "content-type": "application/json", "x-goog-api-key": apiKey },
-        body: JSON.stringify(body),
-      }).then(function (res) {
-        if (!res.ok || !res.body) {
-          var rejected = res.status === 400 || res.status === 403;
-          throw new Error(rejected ? "key-rejected" : "http-" + res.status);
-        }
-        var reader = res.body.getReader();
-        var dec = new TextDecoder();
-        var buf = "";
-        var full = "";
-        function pump() {
-          return reader.read().then(function (r) {
-            if (r.done) return full;
-            buf += dec.decode(r.value, { stream: true });
-            var lines = buf.split("\n");
-            buf = lines.pop();
-            lines.forEach(function (line) {
-              line = line.trim();
-              if (line.indexOf("data:") !== 0) return;
-              var payload = line.slice(5).trim();
-              if (!payload || payload === "[DONE]") return;
-              try {
-                var obj = JSON.parse(payload);
-                var c = obj.candidates && obj.candidates[0];
-                var part = c && c.content && c.content.parts && c.content.parts[0];
-                if (part && part.text) {
-                  full += part.text;
-                  renderScene(full);
-                }
-              } catch (e) {}
-            });
-            return pump();
-          });
-        }
-        return pump();
-      });
-    }
-
-    function generate(direction) {
-      if (busy || !apiKey) return;
-      busy = true;
-      setThinking(true, "The souffleur is thinking…");
-      loadContext().then(function (c) {
-        if (!c) {
-          setThinking(true, "Scene context unavailable.");
-          busy = false;
-          return;
-        }
-        var lit = litPlot();
-        eyebrow = lit ? lit.name : "Live scene";
-        transcript.push({
-          role: "user",
-          text:
-            transcript.length === 0
-              ? "Raise the curtain on this scene." + (direction ? " " + direction : "")
-              : direction || "Continue the scene.",
+      var byName = {};
+      GROUPS.forEach(function (g) {
+        byName[g] = {};
+        (data[g] || []).forEach(function (i) {
+          byName[g][i.id] = i.name;
         });
-        streamGemini(stagedSystem(lit), transcript)
-          .then(function (full) {
-            transcript.push({ role: "model", text: full });
-            setThinking(false, "Whisper another direction, or re-cast backstage.");
-            busy = false;
-          })
-          .catch(function (err) {
-            transcript.pop(); // a failed turn shouldn't poison the history
-            busy = false;
-            if (String(err && err.message) === "key-rejected") {
-              apiKey = "";
-              try {
-                sessionStorage.removeItem(KEY_NAME);
-                localStorage.removeItem(KEY_NAME);
-              } catch (e) {}
-              reflectKey();
-              setThinking(true, "That key was rejected. Try another.");
-            } else {
-              setThinking(true, "The line failed. Try the cue again.");
-            }
-          });
       });
-    }
-
-    function render() {
-      var lit = litPlot();
-      // items
-      itemEls.forEach(function (el) {
-        var on = sel[el.getAttribute("data-group")].has(el.getAttribute("data-id"));
-        el.classList.toggle("is-on", on);
-        el.setAttribute("aria-pressed", on ? "true" : "false");
-      });
-      // plots
-      plotEls.forEach(function (el) {
-        var on = lit && el.getAttribute("data-plot") === lit.id;
-        el.classList.toggle("is-lit", !!on);
-        el.setAttribute("aria-pressed", on ? "true" : "false");
-      });
-      // blocking
-      if (ranksEl) ranksEl.innerHTML = lit ? lit.ranks.map((r) => rank(r.name)).join("") : "";
-      // souffleur cues
-      if (chipsEl) {
-        var cues = lit ? lit.business.concat(lit.objectives) : [];
-        chipsEl.innerHTML = cues.map((c) => chip(c.name)).join("");
-      }
-      if (noteEl)
-        noteEl.textContent = lit
-          ? "The souffleur sleeps · cues are " + lit.name + "'s business & objectives."
-          : "Custom casting · pick a Scene Plot for its cues.";
-      if (raiseSub) raiseSub.textContent = lit ? lit.name : "custom casting";
-      // Don't clobber a live (AI) scene with the mock; re-casting resets the
-      // transcript (below), so a fresh cast falls back to the mock placeholder.
-      if (!transcript.length) composeScene(lit);
-    }
-
-    // Re-casting starts a new scene.
-    function resetScene() {
-      transcript = [];
-    }
-    function toggleItem(group, id) {
-      var s = sel[group];
-      if (s.has(id)) s.delete(id);
-      else s.add(id);
-      resetScene();
-      render();
-    }
-    function selectPlot(id) {
-      resetScene();
-      var p = plotsById[id];
-      if (!p) return;
-      sel.cast = new Set(p.cast);
-      sel.set = new Set(p.set);
-      sel.props = new Set(p.props);
-      render();
-    }
-
-    if (board)
-      board.addEventListener("click", function (ev) {
-        var item = ev.target.closest(".cb-item");
-        if (item) {
-          toggleItem(item.getAttribute("data-group"), item.getAttribute("data-id"));
-          return;
-        }
-        var plot = ev.target.closest(".cb-plot");
-        if (plot) selectPlot(plot.getAttribute("data-plot"));
+      var plotsById = {};
+      (data.plots || []).forEach(function (p) {
+        plotsById[p.id] = p;
       });
 
-    // curtain + overlay state
-    var raiseCb = document.getElementById("raise-cb");
-    var raiseCbMain = raiseCb ? raiseCb.querySelector(".raise-main") : null;
-    var closeTimer;
-    var headEl = stage.querySelector(".stage-head");
-    var houseEl = stage.querySelector(".house");
-    var cbCloseEl = document.getElementById("cb-close");
-    var opener = null;
+      var board = document.querySelector(".cb-board");
+      var chipsEl = document.getElementById("souffleur-chips");
+      var noteEl = document.getElementById("souffleur-note");
+      var ranksEl = document.getElementById("cb-ranks");
+      var raiseSub = document.getElementById("raise-sub");
+      var sceneInner = document.getElementById("scene-inner");
 
-    function isOpen() {
-      return stage.classList.contains("is-open");
-    }
-    function syncRaise() {
-      if (!raiseCbMain) return;
-      raiseCbMain.textContent = isOpen() ? "Lower the Curtain" : "Raise the Curtain";
-    }
-    // The dialog lives outside .house/.stage-head, so inert-ing those two traps
-    // focus in the call board (nothing else is tabbable) and hides the stage
-    // behind it from assistive tech.
-    function setBackgroundInert(on) {
-      [headEl, houseEl].forEach(function (el) {
-        if (!el) return;
-        if (on) el.setAttribute("inert", "");
-        else el.removeAttribute("inert");
-      });
-    }
-    function openBackstage() {
-      clearTimeout(closeTimer);
-      opener = document.activeElement;
-      backstage.hidden = false;
-      requestAnimationFrame(function () {
-        backstage.classList.add("is-open");
-      });
-      bsBtn.setAttribute("aria-expanded", "true");
-      setBackgroundInert(true);
-      if (cbCloseEl) cbCloseEl.focus();
-      syncRaise();
-    }
-    function closeBackstage() {
-      backstage.classList.remove("is-open");
-      bsBtn.setAttribute("aria-expanded", "false");
-      setBackgroundInert(false);
-      if (opener && opener.focus) opener.focus();
-      opener = null;
-      closeTimer = setTimeout(function () {
-        backstage.hidden = true;
-      }, 320);
-    }
-    function setState(open) {
-      stage.classList.toggle("is-open", open);
-      stage.classList.toggle("is-closed", !open);
-      stage.setAttribute("data-state", open ? "open" : "closed");
-      closeBackstage();
-    }
+      // Cast/set/props/plot buttons are server-rendered and never added/removed,
+      // so query them once.
+      var itemEls = stage.querySelectorAll(".cb-item");
+      var plotEls = stage.querySelectorAll(".cb-plot");
 
-    bsBtn.addEventListener("click", function () {
-      backstage.hidden ? openBackstage() : closeBackstage();
-    });
-    var cbClose = document.getElementById("cb-close");
-    var scrim = document.getElementById("backstage-scrim");
-    var playbillBs = document.getElementById("playbill-backstage");
-    var raiseFront = document.getElementById("raise-front");
-    if (cbClose) cbClose.addEventListener("click", closeBackstage);
-    if (scrim) scrim.addEventListener("click", closeBackstage);
-    if (playbillBs) playbillBs.addEventListener("click", openBackstage);
-    // Raising the curtain begins the scene if a key is already in hand.
-    function openCurtain() {
-      setState(true);
-      if (apiKey && !transcript.length) generate("");
-    }
-    if (raiseFront) raiseFront.addEventListener("click", openCurtain);
-    if (raiseCb)
-      raiseCb.addEventListener("click", function () {
-        isOpen() ? setState(false) : openCurtain();
-      });
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && !backstage.hidden) closeBackstage();
-    });
+      // --- Souffleur (bring-your-own Gemini key) ---------------------------------
+      // The key lives only in the browser (sessionStorage, or localStorage if the
+      // visitor opts in) and is sent straight to Google with the x-goog-api-key
+      // header, never to kaihacks (there is no server). Swap MODEL for a newer
+      // flash id as they ship.
+      var MODEL = "gemini-2.5-flash";
+      var KEY_NAME = "kai.gemini.key";
+      var souffleurEl = document.getElementById("souffleur");
+      var keyPanel = document.getElementById("key-panel");
+      var openGridironLink = document.getElementById("open-gridiron-link");
 
-    // --- Souffleur wiring ------------------------------------------------------
-    function persistKey(k, remember) {
-      try {
-        sessionStorage.setItem(KEY_NAME, k);
-        if (remember) localStorage.setItem(KEY_NAME, k);
-        else localStorage.removeItem(KEY_NAME);
-      } catch (e) {}
-    }
-    if (keySave)
-      keySave.addEventListener("click", function () {
-        var k = ((keyInput && keyInput.value) || "").trim();
-        if (!k) return;
-        apiKey = k;
-        persistKey(k, keyRemember && keyRemember.checked);
-        if (keyInput) keyInput.value = "";
-        reflectKey();
-        if (dirInput) dirInput.focus();
-        if (isOpen()) generate("");
-      });
-    if (keyInput)
-      keyInput.addEventListener("keydown", function (e) {
-        if (e.key === "Enter" && keySave) keySave.click();
-      });
-    if (keyForget)
-      keyForget.addEventListener("click", function () {
-        apiKey = "";
+      // Gridiron Settings elements
+      var gridironOverlay = document.getElementById("gridiron-overlay");
+      var gridironBtn = document.getElementById("gridiron-btn");
+      var gridironClose = document.getElementById("gridiron-close");
+      var gridironScrim = document.getElementById("gridiron-scrim");
+      var gridironKeyInput = document.getElementById("gridiron-key-input");
+      var gridironKeySave = document.getElementById("gridiron-key-save");
+      var gridironKeyRemember = document.getElementById("gridiron-key-remember");
+      var gridironKeyForget = document.getElementById("gridiron-key-forget");
+
+      var dirField = document.getElementById("direction-field");
+      var dirInput = document.getElementById("souffleur-input");
+      var dirCue = document.getElementById("souffleur-cue");
+
+      function loadKey() {
         try {
-          sessionStorage.removeItem(KEY_NAME);
-          localStorage.removeItem(KEY_NAME);
-        } catch (e) {}
+          var sk = sessionStorage.getItem(KEY_NAME);
+          var lk = localStorage.getItem(KEY_NAME);
+          if (lk && gridironKeyRemember) {
+            gridironKeyRemember.checked = true;
+          }
+          return sk || lk || "";
+        } catch (e) {
+          return "";
+        }
+      }
+      var apiKey = loadKey();
+      var ctx = null; // lazily fetched stage-context.json
+      var transcript = []; // [{ role: "user"|"model", text }]
+      var busy = false;
+      var isGerman = false;
+      var eyebrow = "Live scene";
+
+      function reflectKey() {
+        var has = !!apiKey;
+        if (keyPanel) keyPanel.hidden = has;
+        if (dirField) dirField.hidden = !has;
+        if (chipsEl) chipsEl.hidden = !has;
+        if (gridironKeyForget) gridironKeyForget.hidden = !has;
+        if (gridironKeyInput) {
+          gridironKeyInput.placeholder = has ? "••••••••••••••••" : "Paste API key here…";
+        }
+      }
+      function setThinking(on, msg) {
+        if (!noteEl) return;
+        noteEl.classList.toggle("is-thinking", !!on);
+        if (msg) noteEl.textContent = msg;
+      }
+      function setBusy(on) {
+        if (dirInput) dirInput.disabled = !!on;
+        if (dirCue) dirCue.disabled = !!on;
+        if (gridironKeySave) gridironKeySave.disabled = !!on;
+        if (gridironKeyForget) gridironKeyForget.disabled = !!on;
+
+        var rads = document.querySelectorAll('input[name="stage-language"]');
+        rads.forEach(function (r) {
+          r.disabled = !!on;
+        });
+
+        if (chipsEl) {
+          var buttons = chipsEl.querySelectorAll("button");
+          buttons.forEach(function (btn) {
+            btn.disabled = !!on;
+          });
+        }
+        if (souffleurEl) {
+          souffleurEl.classList.toggle("is-busy", !!on);
+        }
+      }
+
+      function eqSet(arr, set) {
+        if (arr.length !== set.size) return false;
+        for (var i = 0; i < arr.length; i++) if (!set.has(arr[i])) return false;
+        return true;
+      }
+      // Exact rule: a scene is lit only when the selection equals its company
+      // exactly, group by group.
+      function litPlot() {
+        for (var i = 0; i < (data.plots || []).length; i++) {
+          var p = data.plots[i];
+          if (eqSet(p.cast, sel.cast) && eqSet(p.set, sel.set) && eqSet(p.props, sel.props))
+            return p;
+        }
+        return null;
+      }
+
+      function esc(s) {
+        return String(s).replace(/[&<>"]/g, function (c) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+        });
+      }
+
+      function chip(name) {
+        return '<button class="chip" type="button">' + esc(name) + "</button>";
+      }
+      function rank(name) {
+        return '<span class="cb-rank">' + esc(name) + "</span>";
+      }
+
+      // Mirror of scene.ts composeScene: the casting drives the (mocked) lines.
+      function nameOf(group, id) {
+        return byName[group][id];
+      }
+      function composeScene(lit) {
+        if (!sceneInner) return;
+        var castNames = [];
+        sel.cast.forEach(function (id) {
+          var n = nameOf("cast", id);
+          if (n) castNames.push(n);
+        });
+        var placeName = nameOf("set", sel.set.values().next().value);
+        var propName = nameOf("props", sel.props.values().next().value);
+        var a = castNames[0];
+        var b = castNames[1];
+        var speakerA = a || "A Voice";
+        var speakerB = b || "The House";
+
+        var beats = [];
+        beats.push({
+          dir:
+            "[ " +
+            (placeName ? placeName + " holds the dark" : "The dark holds") +
+            ". " +
+            speakerA +
+            " waits at the edge. ]",
+        });
+        if (a) beats.push({ cue: speakerA, say: "Every entrance is a kind of falling." });
+        if (b) beats.push({ cue: speakerB, say: "Then say the fall has already begun." });
+        beats.push({
+          dir: propName
+            ? "[ " + speakerB + " turns. " + propName + " catches the little light there is. ]"
+            : "[ " + speakerB + " turns toward the house. ]",
+        });
+        if (a) beats.push({ cue: speakerA, say: "The play will find its way without us." });
+        if (b) beats.push({ cue: speakerB, say: "Or we are the way it finds." });
+
+        // The eyebrow names the lit scene (or flags a custom casting).
+        var eyebrow = lit ? lit.name : "Custom casting";
+        var html = '<p class="scene-act">' + esc(eyebrow) + '</p><hr class="scene-rule" />';
+        beats.forEach(function (bt) {
+          if (bt.dir) {
+            html += '<p class="beat-dir">' + esc(bt.dir) + "</p>";
+          } else {
+            html +=
+              '<div class="beat-line"><p class="cue"><span class="cue-dot" aria-hidden="true">•</span>' +
+              esc(bt.cue) +
+              '</p><p class="say">' +
+              esc(bt.say) +
+              "</p></div>";
+          }
+        });
+        sceneInner.innerHTML = html;
+        var sceneEl = document.getElementById("scene");
+        if (sceneEl) {
+          sceneEl.scrollTop = 0;
+        }
+      }
+
+      function loadContext() {
+        if (ctx) return Promise.resolve(ctx);
+        return fetch("../stage-context.json")
+          .then(function (r) {
+            return r.ok ? r.json() : null;
+          })
+          .then(function (c) {
+            ctx = c;
+            var labelEl = document.getElementById("declared-lang-label");
+            if (labelEl && c && c.language) {
+              var prettyName = c.language === "de" ? "German" : c.language.toUpperCase();
+              labelEl.textContent = "Original (" + prettyName + ")";
+            }
+            return c;
+          })
+          .catch(function () {
+            return null;
+          });
+      }
+
+      // System prompt = the staged slice: synopsis + the lit scene's text + the
+      // prose of whatever cast/set/props are selected. Real play data; the model
+      // writes only the dialogue.
+      function stagedSystem(lit) {
+        var L = [];
+        L.push(
+          "You are the souffleur of a theatre, staging a scene from the play «" +
+            ctx.title +
+            "» (" +
+            ctx.declared +
+            "), of the house " +
+            ctx.house +
+            ".",
+        );
+
+        var activeLang = langOption === "en" ? "en" : ctx.language || "en";
+
+        if (activeLang === "de") {
+          L.push(
+            "Write the entire scene (both stage directions and dialogue) ENTIRELY in German. " +
+              "Write it as theatre: bracketed [stage directions] (written in German, e.g., '[Der Tod nähert sich zögernd...]' instead of '[Death approaches hesitantly...]') " +
+              "and character cue lines as 'NAME: line' (where NAME is the German name from the company below). " +
+              "Do not mix English and German. Even if the user's direction or cue is in English, translate it and write the result entirely in German.",
+          );
+        } else {
+          L.push(
+            "Write the entire scene (both stage directions and dialogue) entirely in the language of the play's synopsis, elements, and plots. " +
+              "Write it as theatre: bracketed [stage directions] and character cue lines as 'NAME: line'. " +
+              "Do not mix languages. If the context is in English, write both directions and dialogue in English. " +
+              "If the context is in another language, write everything in that language.",
+          );
+        }
+        L.push("Keep it taut and in the play's spirit, and use ONLY the company below.");
+        if (ctx.synopsis) L.push("Synopsis: " + ctx.synopsis);
+        if (lit && ctx.plots[lit.id])
+          L.push("This scene (" + ctx.plots[lit.id].name + "): " + ctx.plots[lit.id].text);
+        function add(label, id) {
+          var e = ctx.elements[id];
+          if (e) L.push(label + " - " + e.name + " (" + e.declared + "): " + e.text);
+        }
+        sel.cast.forEach(function (id) {
+          add("Cast", id);
+        });
+        sel.set.forEach(function (id) {
+          add("Set", id);
+        });
+        sel.props.forEach(function (id) {
+          add("Prop", id);
+        });
+        return L.join("\n\n");
+      }
+
+      // Render streamed text into the scene, reusing the .beat-dir/.cue/.say
+      // styling: [ ... ] lines are directions, 'NAME: line' are cues.
+      function renderScene(textRaw) {
+        if (!sceneInner) return;
+        var html = '<p class="scene-act">' + esc(eyebrow) + '</p><hr class="scene-rule" />';
+        textRaw.split("\n").forEach(function (ln) {
+          var t = ln.trim();
+          if (!t) return;
+          if (t.charAt(0) === "[") {
+            html += '<p class="beat-dir">' + esc(t) + "</p>";
+            return;
+          }
+          var m = t.match(/^([^:]{1,48}):\s*(.+)$/);
+          if (m) {
+            html +=
+              '<div class="beat-line"><p class="cue"><span class="cue-dot" aria-hidden="true">•</span>' +
+              esc(m[1]) +
+              '</p><p class="say">' +
+              esc(m[2]) +
+              "</p></div>";
+          } else {
+            html += '<p class="say">' + esc(t) + "</p>";
+          }
+        });
+        sceneInner.innerHTML = html;
+        var sceneEl = document.getElementById("scene");
+        if (sceneEl) {
+          sceneEl.scrollTop = sceneEl.scrollHeight;
+        }
+      }
+
+      function streamGemini(system, turns) {
+        var url =
+          "https://generativelanguage.googleapis.com/v1beta/models/" +
+          MODEL +
+          ":streamGenerateContent?alt=sse";
+        var body = {
+          systemInstruction: { parts: [{ text: system }] },
+          contents: turns.map(function (t) {
+            return { role: t.role, parts: [{ text: t.text }] };
+          }),
+          generationConfig: { temperature: 0.9, maxOutputTokens: 800 },
+        };
+        return fetch(url, {
+          method: "POST",
+          headers: { "content-type": "application/json", "x-goog-api-key": apiKey },
+          body: JSON.stringify(body),
+        }).then(function (res) {
+          if (!res.ok || !res.body) {
+            var rejected = res.status === 400 || res.status === 403;
+            throw new Error(rejected ? "key-rejected" : "http-" + res.status);
+          }
+          var reader = res.body.getReader();
+          var dec = new TextDecoder();
+          var buf = "";
+          var full = "";
+          function pump() {
+            return reader.read().then(function (r) {
+              if (r.done) return full;
+              buf += dec.decode(r.value, { stream: true });
+              var lines = buf.split("\n");
+              buf = lines.pop();
+              lines.forEach(function (line) {
+                line = line.trim();
+                if (line.indexOf("data:") !== 0) return;
+                var payload = line.slice(5).trim();
+                if (!payload || payload === "[DONE]") return;
+                try {
+                  var obj = JSON.parse(payload);
+                  var c = obj.candidates && obj.candidates[0];
+                  var part = c && c.content && c.content.parts && c.content.parts[0];
+                  if (part && part.text) {
+                    full += part.text;
+                    renderScene(full);
+                  }
+                } catch (e) {}
+              });
+              return pump();
+            });
+          }
+          return pump();
+        });
+      }
+
+      function generate(direction) {
+        if (busy || !apiKey) return;
+        busy = true;
+        setBusy(true);
+        setThinking(true, "The souffleur is thinking…");
+        loadContext().then(function (c) {
+          if (!c) {
+            setThinking(true, "Scene context unavailable.");
+            busy = false;
+            setBusy(false);
+            return;
+          }
+
+          var activeLang = langOption === "en" ? "en" : c.language || "en";
+
+          var lit = litPlot();
+          eyebrow = lit ? lit.name : "Live scene";
+
+          var userText;
+          if (activeLang === "de") {
+            userText =
+              transcript.length === 0
+                ? "Hebe den Vorhang für diese Szene." + (direction ? " " + direction : "")
+                : direction || "Setze die Szene fort.";
+          } else {
+            userText =
+              transcript.length === 0
+                ? "Raise the curtain on this scene." + (direction ? " " + direction : "")
+                : direction || "Continue the scene.";
+          }
+
+          transcript.push({
+            role: "user",
+            text: userText,
+          });
+          streamGemini(stagedSystem(lit), transcript)
+            .then(function (full) {
+              transcript.push({ role: "model", text: full });
+              setThinking(false, "Whisper another direction, or re-cast backstage.");
+              busy = false;
+              setBusy(false);
+              if (dirInput) dirInput.focus();
+            })
+            .catch(function (err) {
+              transcript.pop(); // a failed turn shouldn't poison the history
+              busy = false;
+              setBusy(false);
+              if (dirInput) dirInput.focus();
+              if (String(err && err.message) === "key-rejected") {
+                apiKey = "";
+                try {
+                  sessionStorage.removeItem(KEY_NAME);
+                  localStorage.removeItem(KEY_NAME);
+                } catch (e) {}
+                reflectKey();
+                setThinking(true, "That key was rejected. Try another.");
+              } else {
+                setThinking(true, "The line failed. Try the cue again.");
+              }
+            });
+        });
+      }
+
+      function render() {
+        var lit = litPlot();
+        // items
+        itemEls.forEach(function (el) {
+          var on = sel[el.getAttribute("data-group")].has(el.getAttribute("data-id"));
+          el.classList.toggle("is-on", on);
+          el.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+        // plots
+        plotEls.forEach(function (el) {
+          var on = lit && el.getAttribute("data-plot") === lit.id;
+          el.classList.toggle("is-lit", !!on);
+          el.setAttribute("aria-pressed", on ? "true" : "false");
+        });
+        // blocking
+        if (ranksEl) ranksEl.innerHTML = lit ? lit.ranks.map((r) => rank(r.name)).join("") : "";
+        // souffleur cues
+        if (chipsEl) {
+          var cues = lit ? lit.business.concat(lit.objectives) : [];
+          chipsEl.innerHTML = cues.map((c) => chip(c.name)).join("");
+        }
+        if (noteEl)
+          noteEl.textContent = lit
+            ? "The souffleur sleeps · cues are " + lit.name + "'s business & objectives."
+            : "Custom casting · pick a Scene Plot for its cues.";
+        if (raiseSub) raiseSub.textContent = lit ? lit.name : "custom casting";
+        // Don't clobber a live (AI) scene with the mock; re-casting resets the
+        // transcript (below), so a fresh cast falls back to the mock placeholder.
+        if (!transcript.length) composeScene(lit);
+      }
+
+      // Re-casting starts a new scene.
+      function resetScene() {
+        transcript = [];
+      }
+      function toggleItem(group, id) {
+        var s = sel[group];
+        if (s.has(id)) s.delete(id);
+        else s.add(id);
         resetScene();
-        reflectKey();
         render();
+      }
+      function selectPlot(id) {
+        resetScene();
+        var p = plotsById[id];
+        if (!p) return;
+        sel.cast = new Set(p.cast);
+        sel.set = new Set(p.set);
+        sel.props = new Set(p.props);
+        render();
+      }
+
+      if (board)
+        board.addEventListener("click", function (ev) {
+          var item = ev.target.closest(".cb-item");
+          if (item) {
+            toggleItem(item.getAttribute("data-group"), item.getAttribute("data-id"));
+            return;
+          }
+          var plot = ev.target.closest(".cb-plot");
+          if (plot) selectPlot(plot.getAttribute("data-plot"));
+        });
+
+      // curtain + overlay state
+      var raiseCb = document.getElementById("raise-cb");
+      var raiseCbMain = raiseCb ? raiseCb.querySelector(".raise-main") : null;
+      var closeTimer;
+      var gridironCloseTimer;
+      var headEl = stage.querySelector(".stage-head");
+      var houseEl = stage.querySelector(".house");
+      var cbCloseEl = document.getElementById("cb-close");
+      var opener = null;
+      var gridironOpener = null;
+
+      function isOpen() {
+        return stage.classList.contains("is-open");
+      }
+      function syncRaise() {
+        if (!raiseCbMain) return;
+        raiseCbMain.textContent = isOpen() ? "Lower the Curtain" : "Raise the Curtain";
+      }
+      // The dialog lives outside .house/.stage-head, so inert-ing those two traps
+      // focus in the call board (nothing else is tabbable) and hides the stage
+      // behind it from assistive tech.
+      function setBackgroundInert(on) {
+        [headEl, houseEl].forEach(function (el) {
+          if (!el) return;
+          if (on) el.setAttribute("inert", "");
+          else el.removeAttribute("inert");
+        });
+      }
+      function openBackstage() {
+        clearTimeout(closeTimer);
+        opener = document.activeElement;
+        backstage.hidden = false;
+        requestAnimationFrame(function () {
+          backstage.classList.add("is-open");
+        });
+        bsBtn.setAttribute("aria-expanded", "true");
+        setBackgroundInert(true);
+        if (cbCloseEl) cbCloseEl.focus();
+        syncRaise();
+      }
+      function closeBackstage() {
+        backstage.classList.remove("is-open");
+        bsBtn.setAttribute("aria-expanded", "false");
+        setBackgroundInert(false);
+        if (opener && opener.focus) opener.focus();
+        opener = null;
+        closeTimer = setTimeout(function () {
+          backstage.hidden = true;
+        }, 320);
+      }
+      function openGridiron() {
+        if (!gridironOverlay) return;
+        clearTimeout(gridironCloseTimer);
+        gridironOpener = document.activeElement;
+        gridironOverlay.hidden = false;
+        requestAnimationFrame(function () {
+          gridironOverlay.classList.add("is-open");
+        });
+        if (gridironBtn) gridironBtn.setAttribute("aria-expanded", "true");
+        setBackgroundInert(true);
+        var gridironCloseBtn = document.getElementById("gridiron-close");
+        if (gridironCloseBtn) gridironCloseBtn.focus();
+      }
+      function closeGridiron() {
+        if (!gridironOverlay) return;
+        gridironOverlay.classList.remove("is-open");
+        if (gridironBtn) gridironBtn.setAttribute("aria-expanded", "false");
+        setBackgroundInert(false);
+        if (gridironOpener && gridironOpener.focus) gridironOpener.focus();
+        gridironOpener = null;
+        gridironCloseTimer = setTimeout(function () {
+          gridironOverlay.hidden = true;
+        }, 320);
+      }
+      function toggleGridiron() {
+        if (!gridironOverlay) return;
+        gridironOverlay.hidden ? openGridiron() : closeGridiron();
+      }
+      function setState(open) {
+        stage.classList.toggle("is-open", open);
+        stage.classList.toggle("is-closed", !open);
+        stage.setAttribute("data-state", open ? "open" : "closed");
+        closeBackstage();
+        closeGridiron();
+      }
+
+      bsBtn.addEventListener("click", function () {
+        backstage.hidden ? openBackstage() : closeBackstage();
       });
-    function cue() {
-      var d = ((dirInput && dirInput.value) || "").trim();
-      if (dirInput) dirInput.value = "";
-      generate(d);
-    }
-    if (dirCue) dirCue.addEventListener("click", cue);
-    if (dirInput)
-      dirInput.addEventListener("keydown", function (e) {
-        if (e.key === "Enter") cue();
-      });
-    if (chipsEl)
-      chipsEl.addEventListener("click", function (e) {
-        var b = e.target.closest(".chip");
-        if (b) generate(b.textContent.trim());
+      var cbClose = document.getElementById("cb-close");
+      var scrim = document.getElementById("backstage-scrim");
+      var playbillBs = document.getElementById("playbill-backstage");
+      var raiseFront = document.getElementById("raise-front");
+      if (cbClose) cbClose.addEventListener("click", closeBackstage);
+      if (scrim) scrim.addEventListener("click", closeBackstage);
+      if (playbillBs) playbillBs.addEventListener("click", openBackstage);
+      // Raising the curtain begins the scene if a key is already in hand.
+      function openCurtain() {
+        setState(true);
+        if (apiKey && !transcript.length) generate("");
+      }
+      if (raiseFront) raiseFront.addEventListener("click", openCurtain);
+      if (raiseCb)
+        raiseCb.addEventListener("click", function () {
+          isOpen() ? setState(false) : openCurtain();
+        });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
+          if (!backstage.hidden) closeBackstage();
+          else if (!gridironOverlay.hidden) closeGridiron();
+        }
       });
 
-    reflectKey();
-    render();
-  })();
-</script>
+      // --- Gridiron (Settings) & Souffleur wiring ---------------------------------
+      function persistKey(k, remember) {
+        try {
+          sessionStorage.setItem(KEY_NAME, k);
+          if (remember) localStorage.setItem(KEY_NAME, k);
+          else localStorage.removeItem(KEY_NAME);
+        } catch (e) {}
+      }
+      if (gridironKeySave)
+        gridironKeySave.addEventListener("click", function () {
+          var k = ((gridironKeyInput && gridironKeyInput.value) || "").trim();
+          if (!k) return;
+          apiKey = k;
+          persistKey(k, gridironKeyRemember && gridironKeyRemember.checked);
+          if (gridironKeyInput) gridironKeyInput.value = "";
+          reflectKey();
+          closeGridiron();
+          if (dirInput) dirInput.focus();
+          if (isOpen()) generate("");
+        });
+      if (gridironKeyInput)
+        gridironKeyInput.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" && gridironKeySave) gridironKeySave.click();
+        });
+      if (gridironKeyForget)
+        gridironKeyForget.addEventListener("click", function () {
+          apiKey = "";
+          try {
+            sessionStorage.removeItem(KEY_NAME);
+            localStorage.removeItem(KEY_NAME);
+          } catch (e) {}
+          resetScene();
+          reflectKey();
+          render();
+          closeGridiron();
+        });
+
+      // Stage Language Setting
+      var LANG_KEY = "kai.stage.language";
+      function loadLanguage() {
+        try {
+          return localStorage.getItem(LANG_KEY) || "declared";
+        } catch (e) {
+          return "declared";
+        }
+      }
+      var langOption = loadLanguage();
+      var rads = document.querySelectorAll('input[name="stage-language"]');
+      rads.forEach(function (r) {
+        if (r.value === langOption) r.checked = true;
+        r.addEventListener("change", function (e) {
+          langOption = e.target.value;
+          try {
+            localStorage.setItem(LANG_KEY, langOption);
+          } catch (err) {}
+        });
+      });
+
+      if (gridironBtn) gridironBtn.addEventListener("click", toggleGridiron);
+      if (gridironClose) gridironClose.addEventListener("click", closeGridiron);
+      if (gridironScrim) gridironScrim.addEventListener("click", closeGridiron);
+      if (openGridironLink) openGridironLink.addEventListener("click", openGridiron);
+      function cue() {
+        var d = ((dirInput && dirInput.value) || "").trim();
+        if (dirInput) dirInput.value = "";
+        generate(d);
+      }
+      if (dirCue) dirCue.addEventListener("click", cue);
+      if (dirInput)
+        dirInput.addEventListener("keydown", function (e) {
+          if (e.key === "Enter") cue();
+        });
+      if (chipsEl)
+        chipsEl.addEventListener("click", function (e) {
+          var b = e.target.closest(".chip");
+          if (b) generate(b.textContent.trim());
+        });
+
+      reflectKey();
+      render();
+    })();
+  </script>
+</section>
