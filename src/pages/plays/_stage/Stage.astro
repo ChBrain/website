@@ -1253,7 +1253,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
 
     function loadContext() {
       if (ctx) return Promise.resolve(ctx);
-      return fetch("./stage-context.json")
+      return fetch("../stage-context.json")
         .then(function (r) {
           return r.ok ? r.json() : null;
         })
