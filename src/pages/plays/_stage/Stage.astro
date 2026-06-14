@@ -1292,6 +1292,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       var apiKey = loadKey();
       var ctx = null; // lazily fetched stage-context.json
       var transcript = []; // [{ role: "user"|"model", text }]
+      var ledger = {}; // planId -> { status, condition, met }; the scene's progress
       var busy = false;
       var eyebrow = "Live scene";
 
@@ -1489,6 +1490,27 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
         sel.props.forEach(function (id) {
           add("Prop", id);
         });
+
+        // Conditions in play: the lit scene's plans are the progress carriers.
+        // Phase 0 sends each plan's intent with a static status; later phases
+        // author targets (Director mode) and judge them per move (Play mode).
+        if (lit && lit.objectives.length && ctx.plans) {
+          var conds = lit.objectives
+            .map(function (o) {
+              var p = ctx.plans[o.id];
+              if (!p) return "";
+              var st = (ledger[o.id] && ledger[o.id].status) || "open";
+              return "- " + p.name + " [" + st + "]: " + p.text;
+            })
+            .filter(Boolean);
+          if (conds.length) {
+            L.push(
+              "Conditions in play (advance these through the action; honor what is " +
+                "achieved, do not revive what is abandoned):\n" +
+                conds.join("\n"),
+            );
+          }
+        }
         return L.join("\n\n");
       }
 
@@ -1724,6 +1746,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       // Re-casting starts a new scene.
       function resetScene() {
         transcript = [];
+        ledger = {};
       }
       function toggleItem(group, id) {
         var s = sel[group];
