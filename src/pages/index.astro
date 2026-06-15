@@ -1,9 +1,12 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { URLS } from "../lib/urls";
 ---
 
 <BaseLayout title="kaihacks">
   <h1>kaihacks</h1>
   <p>An experimental writing system.</p>
-  <p>The architecture spec renders here once it lands.</p>
+  <p>
+    The architecture spec is live at <a href={URLS.architecture}>architecture.kaihacks.ai</a>.
+  </p>
 </BaseLayout>
