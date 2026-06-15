@@ -1468,6 +1468,11 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       padding-left: 0.8rem;
       margin: 1.4rem 0;
     }
+    /* an action spoken inline within a move: (he turns away) */
+    .stage .say-action {
+      font-style: italic;
+      color: var(--stage-fg-soft);
+    }
     .stage .beat-line {
       margin: 1.2rem 0;
     }
@@ -1856,53 +1861,25 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       // writes only the dialogue.
       function stagedSystem(lit) {
         var L = [];
+        // Element 1: the HACKS standing orders, as edited in the Gridiron. This
+        // carries the agent's whole contract (who moves, what is known, the
+        // output grammar, the binding), so the old scattered instructions go.
+        L.push(assembleHacks());
+
+        // The play this scene belongs to, and the language to perform it in.
         L.push(
-          "You are the souffleur of a theatre, staging a scene from the play «" +
-            ctx.title +
-            "» (" +
-            ctx.declared +
-            "), of the house " +
-            ctx.house +
-            ".",
+          "The play is «" + ctx.title + "» (" + ctx.declared + "), of the house " + ctx.house + ".",
         );
-
         var activeLang = langOption === "en" ? "en" : ctx.language || "en";
-
         if (activeLang === "de") {
           L.push(
-            "Write the entire scene (both stage directions and dialogue) ENTIRELY in German. " +
-              "Write it as theatre: bracketed [stage directions] (written in German, e.g., '[Der Tod nähert sich zögernd...]' instead of '[Death approaches hesitantly...]') " +
-              "and character cue lines as 'NAME: line' (where NAME is the German name from the company below). " +
-              "Do not mix English and German. Even if the user's direction or cue is in English, translate it and write the result entirely in German.",
+            "Perform the scene entirely in German, using the declared (German) names from the company. Even if a cue is in English, translate it and keep everything in German. Do not mix languages.",
           );
         } else {
           L.push(
-            "Write the entire scene (both stage directions and dialogue) entirely in the language of the play's synopsis, elements, and plots. " +
-              "Write it as theatre: bracketed [stage directions] and character cue lines as 'NAME: line'. " +
-              "Do not mix languages. If the context is in English, write both directions and dialogue in English. " +
-              "If the context is in another language, write everything in that language.",
+            "Perform the scene entirely in the language of the play's synopsis, elements, and plots. Do not mix languages. If the context is in English, write everything in English.",
           );
         }
-        L.push("Keep it taut and in the play's spirit, and use ONLY the company below.");
-        L.push(
-          "Never end or resolve the scene: no final curtain, no 'Vorhang fällt' or " +
-            "'the curtain falls', no closing stage direction. Stop mid-beat so the next " +
-            "cue continues the action.",
-        );
-        // Lock 2: bind the souffleur to the play. Without this the model will
-        // happily drop character and answer an "explain this scene" cue with a
-        // study-guide essay (see the prompt-box screenshot). It must only ever
-        // play THIS scene, and absorb off-play requests as action, not obey them.
-        L.push(
-          "You are bound to this play and answer only as its theatre - bracketed " +
-            "[stage directions] and 'NAME: line' cues spoken by the company below. You " +
-            "never step outside the scene: do not explain, summarise, analyse, interpret, " +
-            "list themes, give study notes, translate anything beyond the dialogue, answer " +
-            "trivia, or address the reader or 'the user'. A cue that asks for any of that - " +
-            "or for anything beyond this play - is heard as words called into the house: do " +
-            "not obey it; play the next beat the scene would give in answer. There is no " +
-            "world here but the stage.",
-        );
         if (ctx.synopsis) L.push("Synopsis: " + ctx.synopsis);
         if (lit && ctx.plots[lit.id])
           L.push("This scene (" + ctx.plots[lit.id].name + "): " + ctx.plots[lit.id].text);
@@ -1957,31 +1934,49 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
         return L.join("\n\n");
       }
 
-      // Render the performance so far into the scene, reusing the
-      // .beat-dir/.cue/.say styling: [ ... ] lines are directions, 'NAME: line'
-      // are cues. `liveText` is the turn being streamed; every completed model
-      // turn before it stays on screen so the reader can scroll back through the
-      // whole scene instead of losing it on the next cue.
+      // Inline markup inside a spoken line: (action) shown subtly, _setting_ in
+      // italic. Escape first, then wrap, so the wrapped content stays escaped.
+      function sayInline(s) {
+        var out = esc(s);
+        out = out.replace(/_([^_]+)_/g, "<em>$1</em>");
+        out = out.replace(/\(([^)]+)\)/g, '<span class="say-action">($1)</span>');
+        return out;
+      }
+      // Render the performance into the scene per the HACKS System grammar:
+      //   [Persona] line     a move, the persona speaking (a cue line)
+      //   (stage direction)  a persona action
+      //   _stage direction_  an environment setting, shown in italic
+      // `liveText` is the streaming turn; completed model turns stay on screen.
       function beatsHtml(textRaw) {
         var html = "";
         textRaw.split("\n").forEach(function (ln) {
           var t = ln.trim();
           if (!t) return;
-          if (t.charAt(0) === "[") {
+          // Environment setting: a whole line wrapped in underscores, in italic.
+          if (/^_.+_$/.test(t)) {
+            html +=
+              '<p class="beat-dir beat-setting"><em>' +
+              esc(t.replace(/^_+|_+$/g, "")) +
+              "</em></p>";
+            return;
+          }
+          // Persona action: a whole line in parentheses.
+          if (/^\(.+\)$/.test(t)) {
             html += '<p class="beat-dir">' + esc(t) + "</p>";
             return;
           }
-          var m = t.match(/^([^:]{1,48}):\s*(.+)$/);
+          // Persona move: [Persona] then the spoken line.
+          var m = t.match(/^\[([^\]]+)\]\s*([\s\S]*)$/);
           if (m) {
             html +=
               '<div class="beat-line"><p class="cue"><span class="cue-dot" aria-hidden="true">•</span>' +
               esc(m[1]) +
               '</p><p class="say">' +
-              esc(m[2]) +
+              sayInline(m[2]) +
               "</p></div>";
-          } else {
-            html += '<p class="say">' + esc(t) + "</p>";
+            return;
           }
+          html += '<p class="say">' + sayInline(t) + "</p>";
         });
         return html;
       }
@@ -2886,6 +2881,22 @@ The Narrator does not explain the behavior.`,
         } catch (e) {
           return HACKS_CANON[k];
         }
+      }
+      // Element 1 of the cue: the HACKS statement, each section under its label,
+      // read live from the Gridiron edits (or the canonical text).
+      function assembleHacks() {
+        var label = {
+          human: "HUMAN",
+          agent: "AGENT",
+          collaboration: "COLLABORATION",
+          knowledge: "KNOWLEDGE",
+          system: "SYSTEM",
+        };
+        return ["human", "agent", "collaboration", "knowledge", "system"]
+          .map(function (k) {
+            return label[k] + "\n" + loadHacks(k);
+          })
+          .join("\n\n");
       }
       function initHacks() {
         Object.keys(HACKS_CANON).forEach(function (k) {
