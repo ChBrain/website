@@ -3,9 +3,9 @@
 // (src/pages/plays/_stage/) so Astro keeps it out of routing; rendered by
 // [house]/[play]/stage/index.astro.
 //
-//   closed    — curtains drawn, the playbill; the resting state.
-//   backstage — the Call Board: cast the scene from the play's real elements.
-//   open      — curtains parted, the scene (composed from your casting) + the
+//   closed: curtains drawn, the playbill; the resting state.
+//   backstage: the Call Board: cast the scene from the play's real elements.
+//   open: curtains parted, the scene (composed from your casting) + the
 //               Souffleur (the chosen scene's real Business + Objectives).
 //
 // Backstage is interactive (a casting board), Scene Plots preselect a whole
@@ -35,7 +35,7 @@ const bulbs = Array.from({ length: 18 });
 
 // Lean data blob for the client: enough to recompute lighting, the Blocking
 // strip, the Souffleur cues, and the (mocked) scene as the casting changes.
-// Inline JSON in the page — no fetch, so the per-surface deploy stays safe.
+// Inline JSON in the page; no fetch, so the per-surface deploy stays safe.
 const lite = (i: { id: string; name: string; declared: string }) => ({
   id: i.id,
   name: i.name,
@@ -353,95 +353,157 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       </div>
 
       <div class="cb-scroll">
-        <section class="cb-section">
-          <p class="cb-section-head">
-            <span class="cb-sec-dot" aria-hidden="true"></span>GEMINI API KEY
-          </p>
-          <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
-            Provide a Gemini API key. It stays in your browser and is sent directly to Google, never
-            touching any server.
-          </p>
-          <div class="souffleur-field" style="margin-bottom: 0.5rem;">
-            <input
-              class="souffleur-input"
-              id="gridiron-key-input"
-              type="password"
-              autocomplete="off"
+        <div class="gridiron-cols">
+          <section class="gridiron-col hacks-col">
+            <p class="cb-section-head"><span class="cb-sec-dot" aria-hidden="true"></span>HUMAN</p>
+            <textarea
+              class="hacks-input"
+              id="hacks-human"
+              data-hacks="human"
               spellcheck="false"
-              placeholder="Paste API key here…"
-              aria-label="Gemini API key"
-            />
-            <button class="souffleur-cue" id="gridiron-key-save" type="button">SAVE</button>
-          </div>
-          <div
-            style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.6rem;"
-          >
-            <label
-              class="key-remember"
-              style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; color: var(--stage-fg-mute); display: flex; align-items: center; gap: 0.35rem;"
+              aria-label="HACKS Human"></textarea>
+            <button class="hacks-reset" type="button" data-hacks-reset="human">reset</button>
+          </section>
+          <section class="gridiron-col hacks-col">
+            <p class="cb-section-head"><span class="cb-sec-dot" aria-hidden="true"></span>AGENT</p>
+            <textarea
+              class="hacks-input"
+              id="hacks-agent"
+              data-hacks="agent"
+              spellcheck="false"
+              aria-label="HACKS Agent"></textarea>
+            <button class="hacks-reset" type="button" data-hacks-reset="agent">reset</button>
+          </section>
+          <section class="gridiron-col hacks-col">
+            <p class="cb-section-head">
+              <span class="cb-sec-dot" aria-hidden="true"></span>COLLABORATION
+            </p>
+            <textarea
+              class="hacks-input"
+              id="hacks-collaboration"
+              data-hacks="collaboration"
+              spellcheck="false"
+              aria-label="HACKS Collaboration"></textarea>
+            <button class="hacks-reset" type="button" data-hacks-reset="collaboration">reset</button
             >
-              <input type="checkbox" id="gridiron-key-remember" /> remember key
-            </label>
-            <button
-              class="key-forget"
-              id="gridiron-key-forget"
-              type="button"
-              style="font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.05em; color: var(--color-brick); background: none; border: 1px solid var(--color-rule); padding: 0.2rem 0.4rem;"
-              hidden>forget key</button
-            >
-          </div>
-        </section>
+          </section>
+          <section class="gridiron-col hacks-col">
+            <p class="cb-section-head">
+              <span class="cb-sec-dot" aria-hidden="true"></span>KNOWLEDGE
+            </p>
+            <textarea
+              class="hacks-input"
+              id="hacks-knowledge"
+              data-hacks="knowledge"
+              spellcheck="false"
+              aria-label="HACKS Knowledge"></textarea>
+            <button class="hacks-reset" type="button" data-hacks-reset="knowledge">reset</button>
+          </section>
+          <section class="gridiron-col hacks-col">
+            <p class="cb-section-head"><span class="cb-sec-dot" aria-hidden="true"></span>SYSTEM</p>
+            <textarea
+              class="hacks-input"
+              id="hacks-system"
+              data-hacks="system"
+              spellcheck="false"
+              aria-label="HACKS System"></textarea>
+            <button class="hacks-reset" type="button" data-hacks-reset="system">reset</button>
+          </section>
+          <section class="gridiron-col tech-col">
+            <section class="cb-section">
+              <p class="cb-section-head">
+                <span class="cb-sec-dot" aria-hidden="true"></span>GEMINI API KEY
+              </p>
+              <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
+                Provide a Gemini API key. It stays in your browser and is sent directly to Google,
+                never touching any server.
+              </p>
+              <div class="souffleur-field" style="margin-bottom: 0.5rem;">
+                <input
+                  class="souffleur-input"
+                  id="gridiron-key-input"
+                  type="password"
+                  autocomplete="off"
+                  spellcheck="false"
+                  placeholder="Paste API key here…"
+                  aria-label="Gemini API key"
+                />
+                <button class="souffleur-cue" id="gridiron-key-save" type="button">SAVE</button>
+              </div>
+              <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.6rem;"
+              >
+                <label
+                  class="key-remember"
+                  style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; color: var(--stage-fg-mute); display: flex; align-items: center; gap: 0.35rem;"
+                >
+                  <input type="checkbox" id="gridiron-key-remember" /> remember key
+                </label>
+                <button
+                  class="key-forget"
+                  id="gridiron-key-forget"
+                  type="button"
+                  style="font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.05em; color: var(--color-brick); background: none; border: 1px solid var(--color-rule); padding: 0.2rem 0.4rem;"
+                  hidden>forget key</button
+                >
+              </div>
+            </section>
 
-        <section class="cb-section" style="margin-top: 2rem;">
-          <p class="cb-section-head">
-            <span class="cb-sec-dot" aria-hidden="true"></span>STAGE MODEL
-          </p>
-          <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
-            Which Gemini model plays the scene. Flash Lite has the most free-tier headroom; the
-            others read better but cap near 20 calls a day. A red dot means that model is rate
-            limited; it shows when it frees up.
-          </p>
-          <div
-            id="model-options"
-            class="language-options"
-            style="display: flex; flex-direction: column; gap: 0.6rem;"
-          >
-          </div>
-        </section>
+            <section class="cb-section" style="margin-top: 2rem;">
+              <p class="cb-section-head">
+                <span class="cb-sec-dot" aria-hidden="true"></span>STAGE MODEL
+              </p>
+              <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
+                Which Gemini model plays the scene. Flash Lite has the most free-tier headroom; the
+                others read better but cap near 20 calls a day. A red dot means that model is rate
+                limited; it shows when it frees up.
+              </p>
+              <div
+                id="model-options"
+                class="language-options"
+                style="display: flex; flex-direction: column; gap: 0.6rem;"
+              >
+              </div>
+            </section>
 
-        <section class="cb-section" style="margin-top: 2rem;">
-          <p class="cb-section-head">
-            <span class="cb-sec-dot" aria-hidden="true"></span>STAGE LANGUAGE
-          </p>
-          <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
-            Choose the language for the stage directions and character dialogue.
-          </p>
-          <div class="language-options" style="display: flex; flex-direction: column; gap: 0.6rem;">
-            <label
-              style="display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 11px; cursor: pointer; color: var(--color-ink);"
-            >
-              <input type="radio" name="stage-language" value="declared" checked />
-              <span id="declared-lang-label">Original Language</span>
-            </label>
-            <label
-              style="display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 11px; cursor: pointer; color: var(--color-ink);"
-            >
-              <input type="radio" name="stage-language" value="en" />
-              <span>English Translation</span>
-            </label>
-          </div>
-        </section>
+            <section class="cb-section" style="margin-top: 2rem;">
+              <p class="cb-section-head">
+                <span class="cb-sec-dot" aria-hidden="true"></span>STAGE LANGUAGE
+              </p>
+              <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
+                Choose the language for the stage directions and character dialogue.
+              </p>
+              <div
+                class="language-options"
+                style="display: flex; flex-direction: column; gap: 0.6rem;"
+              >
+                <label
+                  style="display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 11px; cursor: pointer; color: var(--color-ink);"
+                >
+                  <input type="radio" name="stage-language" value="declared" checked />
+                  <span id="declared-lang-label">Original Language</span>
+                </label>
+                <label
+                  style="display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 11px; cursor: pointer; color: var(--color-ink);"
+                >
+                  <input type="radio" name="stage-language" value="en" />
+                  <span>English Translation</span>
+                </label>
+              </div>
+            </section>
 
-        <section class="cb-section" id="director-section" style="margin-top: 2rem;" hidden>
-          <p class="cb-section-head">
-            <span class="cb-sec-dot" aria-hidden="true"></span>DIRECTOR · SCENE TARGETS
-          </p>
-          <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
-            Set what each plan must reach; the souffleur plays toward these. One target per line.
-            Seed draws a first pass from the play's own prose; edit freely.
-          </p>
-          <div id="director-body"></div>
-        </section>
+            <section class="cb-section" id="director-section" style="margin-top: 2rem;" hidden>
+              <p class="cb-section-head">
+                <span class="cb-sec-dot" aria-hidden="true"></span>DIRECTOR · SCENE TARGETS
+              </p>
+              <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
+                Set what each plan must reach; the souffleur plays toward these. One target per
+                line. Seed draws a first pass from the play's own prose; edit freely.
+              </p>
+              <div id="director-body"></div>
+            </section>
+          </section>
+        </div>
       </div>
     </aside>
   </div>
@@ -562,7 +624,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       margin: 0 auto;
     }
     /* The scene's inner nodes (.scene-act, .beat-dir, .cue, .say, …) are built
-     client-side, so their rules can't be scoped — they live in the is:global
+     client-side, so their rules can't be scoped; they live in the is:global
      block below, qualified by .stage so they don't leak. */
 
     /* curtains */
@@ -944,12 +1006,22 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
     .backstage-scrim {
       position: absolute;
       inset: 0;
-      background: color-mix(in srgb, var(--color-ink) 55%, transparent);
-      opacity: 0;
-      transition: opacity 0.25s ease;
+      /* A curtain that falls when you step backstage or open the Gridiron, so
+         "Raise the Curtain" reads as its inverse. Vertical folds over the brick. */
+      background:
+        repeating-linear-gradient(
+          90deg,
+          transparent 0,
+          transparent 38px,
+          color-mix(in srgb, black 16%, transparent) 38px,
+          color-mix(in srgb, black 16%, transparent) 40px
+        ),
+        linear-gradient(to bottom, var(--curtain-a), var(--curtain-b));
+      transform: translateY(-100%);
+      transition: transform 0.5s cubic-bezier(0.7, 0, 0.2, 1);
     }
     .backstage.is-open .backstage-scrim {
-      opacity: 1;
+      transform: translateY(0);
     }
     .callboard {
       position: absolute;
@@ -969,23 +1041,90 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
     .backstage.is-open .callboard {
       transform: translateX(0);
     }
+    /* Gridiron: a full-width sheet at the top of the stage that floats down
+       (after the curtain), the fly loft descending. */
     .gridiron {
       position: absolute;
       top: 0;
+      left: 0;
       right: 0;
-      bottom: 0;
-      width: min(86%, 360px);
+      width: 100%;
+      max-height: 92vh;
       display: flex;
       flex-direction: column;
       background: var(--color-paper);
       color: var(--color-ink);
-      border-left: 1px solid var(--color-ink);
-      box-shadow: -24px 0 60px -30px color-mix(in srgb, var(--color-ink) 80%, transparent);
-      transform: translateX(100%);
-      transition: transform 0.32s cubic-bezier(0.5, 0, 0.2, 1);
+      border-bottom: 1px solid var(--color-ink);
+      box-shadow: 0 30px 60px -28px color-mix(in srgb, var(--color-ink) 80%, transparent);
+      transform: translateY(-100%);
+      transition: transform 0.45s cubic-bezier(0.7, 0, 0.2, 1) 0.08s;
     }
     .backstage.is-open .gridiron {
-      transform: translateX(0);
+      transform: translateY(0);
+    }
+    /* HACKS columns: the five sections side by side, technical setup last. */
+    .gridiron-cols {
+      display: flex;
+      gap: 1.1rem;
+      padding: 1rem 1.1rem 1.4rem;
+      overflow-x: auto;
+      align-items: stretch;
+    }
+    .gridiron-col {
+      flex: 1 1 0;
+      min-width: 210px;
+      display: flex;
+      flex-direction: column;
+    }
+    .gridiron-col.tech-col {
+      flex: 1.2 1 0;
+      min-width: 240px;
+      border-left: 1px solid var(--color-rule);
+      padding-left: 1.1rem;
+    }
+    .hacks-input {
+      flex: 1 1 auto;
+      min-height: 220px;
+      margin-top: 0.6rem;
+      padding: 0.6rem 0.7rem;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--color-ink);
+      background: color-mix(in srgb, var(--color-paper) 92%, var(--color-ink));
+      border: 1px solid var(--color-rule);
+      border-radius: 2px;
+      resize: vertical;
+      white-space: pre-wrap;
+    }
+    .hacks-input:focus {
+      outline: none;
+      border-color: var(--curtain-a);
+    }
+    .hacks-reset {
+      align-self: flex-start;
+      margin-top: 0.4rem;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--stage-fg-mute, var(--color-ink));
+      background: none;
+      border: 1px solid var(--color-rule);
+      padding: 0.2rem 0.45rem;
+      cursor: pointer;
+    }
+    @media (max-width: 900px) {
+      .gridiron-cols {
+        flex-direction: column;
+        overflow-x: visible;
+      }
+      .gridiron-col.tech-col {
+        border-left: none;
+        padding-left: 0;
+        border-top: 1px solid var(--color-rule);
+        padding-top: 1rem;
+      }
     }
     .cb-head {
       display: flex;
@@ -1238,21 +1377,20 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       padding: 0.8rem 1rem;
     }
 
-    /* phone: bottom sheet, columns stack */
+    /* phone: Call Board slides from the left, Gridiron drops from the top; columns stack */
     @media (max-width: 720px) {
-      .callboard,
-      .gridiron {
-        top: auto;
-        left: 0;
-        right: 0;
-        width: 100%;
-        max-height: 88vh;
-        border-right: none;
-        border-left: none;
-        border-top: 1px solid var(--color-ink);
-        transform: translateY(100%);
+      .callboard {
+        width: min(92%, 460px);
+        transform: translateX(-100%);
       }
-      .backstage.is-open .callboard,
+      .backstage.is-open .callboard {
+        transform: translateX(0);
+      }
+      .gridiron {
+        width: 100%;
+        max-height: 92vh;
+        transform: translateY(-100%);
+      }
       .backstage.is-open .gridiron {
         transform: translateY(0);
       }
@@ -1329,6 +1467,11 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       border-left: 2px solid var(--curtain-a);
       padding-left: 0.8rem;
       margin: 1.4rem 0;
+    }
+    /* an action spoken inline within a move: (he turns away) */
+    .stage .say-action {
+      font-style: italic;
+      color: var(--stage-fg-soft);
     }
     .stage .beat-line {
       margin: 1.2rem 0;
@@ -1718,53 +1861,25 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       // writes only the dialogue.
       function stagedSystem(lit) {
         var L = [];
+        // Element 1: the HACKS standing orders, as edited in the Gridiron. This
+        // carries the agent's whole contract (who moves, what is known, the
+        // output grammar, the binding), so the old scattered instructions go.
+        L.push(assembleHacks());
+
+        // The play this scene belongs to, and the language to perform it in.
         L.push(
-          "You are the souffleur of a theatre, staging a scene from the play «" +
-            ctx.title +
-            "» (" +
-            ctx.declared +
-            "), of the house " +
-            ctx.house +
-            ".",
+          "The play is «" + ctx.title + "» (" + ctx.declared + "), of the house " + ctx.house + ".",
         );
-
         var activeLang = langOption === "en" ? "en" : ctx.language || "en";
-
         if (activeLang === "de") {
           L.push(
-            "Write the entire scene (both stage directions and dialogue) ENTIRELY in German. " +
-              "Write it as theatre: bracketed [stage directions] (written in German, e.g., '[Der Tod nähert sich zögernd...]' instead of '[Death approaches hesitantly...]') " +
-              "and character cue lines as 'NAME: line' (where NAME is the German name from the company below). " +
-              "Do not mix English and German. Even if the user's direction or cue is in English, translate it and write the result entirely in German.",
+            "Perform the scene entirely in German, using the declared (German) names from the company. Even if a cue is in English, translate it and keep everything in German. Do not mix languages.",
           );
         } else {
           L.push(
-            "Write the entire scene (both stage directions and dialogue) entirely in the language of the play's synopsis, elements, and plots. " +
-              "Write it as theatre: bracketed [stage directions] and character cue lines as 'NAME: line'. " +
-              "Do not mix languages. If the context is in English, write both directions and dialogue in English. " +
-              "If the context is in another language, write everything in that language.",
+            "Perform the scene entirely in the language of the play's synopsis, elements, and plots. Do not mix languages. If the context is in English, write everything in English.",
           );
         }
-        L.push("Keep it taut and in the play's spirit, and use ONLY the company below.");
-        L.push(
-          "Never end or resolve the scene: no final curtain, no 'Vorhang fällt' or " +
-            "'the curtain falls', no closing stage direction. Stop mid-beat so the next " +
-            "cue continues the action.",
-        );
-        // Lock 2: bind the souffleur to the play. Without this the model will
-        // happily drop character and answer an "explain this scene" cue with a
-        // study-guide essay (see the prompt-box screenshot). It must only ever
-        // play THIS scene, and absorb off-play requests as action, not obey them.
-        L.push(
-          "You are bound to this play and answer only as its theatre - bracketed " +
-            "[stage directions] and 'NAME: line' cues spoken by the company below. You " +
-            "never step outside the scene: do not explain, summarise, analyse, interpret, " +
-            "list themes, give study notes, translate anything beyond the dialogue, answer " +
-            "trivia, or address the reader or 'the user'. A cue that asks for any of that - " +
-            "or for anything beyond this play - is heard as words called into the house: do " +
-            "not obey it; play the next beat the scene would give in answer. There is no " +
-            "world here but the stage.",
-        );
         if (ctx.synopsis) L.push("Synopsis: " + ctx.synopsis);
         if (lit && ctx.plots[lit.id])
           L.push("This scene (" + ctx.plots[lit.id].name + "): " + ctx.plots[lit.id].text);
@@ -1819,31 +1934,49 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
         return L.join("\n\n");
       }
 
-      // Render the performance so far into the scene, reusing the
-      // .beat-dir/.cue/.say styling: [ ... ] lines are directions, 'NAME: line'
-      // are cues. `liveText` is the turn being streamed; every completed model
-      // turn before it stays on screen so the reader can scroll back through the
-      // whole scene instead of losing it on the next cue.
+      // Inline markup inside a spoken line: (action) shown subtly, _setting_ in
+      // italic. Escape first, then wrap, so the wrapped content stays escaped.
+      function sayInline(s) {
+        var out = esc(s);
+        out = out.replace(/_([^_]+)_/g, "<em>$1</em>");
+        out = out.replace(/\(([^)]+)\)/g, '<span class="say-action">($1)</span>');
+        return out;
+      }
+      // Render the performance into the scene per the HACKS System grammar:
+      //   [Persona] line     a move, the persona speaking (a cue line)
+      //   (stage direction)  a persona action
+      //   _stage direction_  an environment setting, shown in italic
+      // `liveText` is the streaming turn; completed model turns stay on screen.
       function beatsHtml(textRaw) {
         var html = "";
         textRaw.split("\n").forEach(function (ln) {
           var t = ln.trim();
           if (!t) return;
-          if (t.charAt(0) === "[") {
+          // Environment setting: a whole line wrapped in underscores, in italic.
+          if (/^_.+_$/.test(t)) {
+            html +=
+              '<p class="beat-dir beat-setting"><em>' +
+              esc(t.replace(/^_+|_+$/g, "")) +
+              "</em></p>";
+            return;
+          }
+          // Persona action: a whole line in parentheses.
+          if (/^\(.+\)$/.test(t)) {
             html += '<p class="beat-dir">' + esc(t) + "</p>";
             return;
           }
-          var m = t.match(/^([^:]{1,48}):\s*(.+)$/);
+          // Persona move: [Persona] then the spoken line.
+          var m = t.match(/^\[([^\]]+)\]\s*([\s\S]*)$/);
           if (m) {
             html +=
               '<div class="beat-line"><p class="cue"><span class="cue-dot" aria-hidden="true">•</span>' +
               esc(m[1]) +
               '</p><p class="say">' +
-              esc(m[2]) +
+              sayInline(m[2]) +
               "</p></div>";
-          } else {
-            html += '<p class="say">' + esc(t) + "</p>";
+            return;
           }
+          html += '<p class="say">' + sayInline(t) + "</p>";
         });
         return html;
       }
@@ -2702,10 +2835,98 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
           if (b) generate(b.textContent.trim());
         });
 
+      // --- HACKS standing orders (editable in the Gridiron) -------------------
+      // The five sections of the HACKS statement, pre-filled with the canonical
+      // text; the visitor may edit, persisted per section in localStorage. Stage
+      // 1 only stores them; wiring them into the prompt is Stage 2.
+      var HACKS_CANON = {
+        human: `Sets the scene.
+Is the Souffleur of the play.
+Does not enter the scene.`,
+        agent: `Speaks through Personas.
+Acts through Personas.
+Observes the Environment through Personas.
+Narrates the Environment to bridge where needed through Scenes.
+Everything is a Scene.`,
+        collaboration: `Personas interact with each other through words and actions.
+One move triggers the next.
+  The Persona most moved by what just happened responds.
+  Not a rotation.
+  A Persona might be skipped.
+  A Persona might move twice.
+  Silence is a move.
+The Collaboration rests when it has nowhere left to go.
+The Scene remains open.`,
+        knowledge: `Behavior is evidence
+The Environment is composed of Places and Pieces
+The Environment is influenced by Processes and Personas
+Personas hold Positions and try to achieve their Plans
+Plots drive the Play`,
+        system: `A Personas move is prefixed with [Persona]
+A Personas action is shown as (stage direction).
+Environment settings are shown as _stage direction_.
+no em-dash / no en-dash / no dash in prose text.
+no Follow-Up Questions
+The Narrator does not invite the Human into the Scene.
+The Narrator does not explain the Scene.
+The Narrator does not explain the behavior.`,
+      };
+      function hacksKey(k) {
+        return "kai.stage.hacks." + k;
+      }
+      function loadHacks(k) {
+        try {
+          var v = localStorage.getItem(hacksKey(k));
+          return v === null ? HACKS_CANON[k] : v;
+        } catch (e) {
+          return HACKS_CANON[k];
+        }
+      }
+      // Element 1 of the cue: the HACKS statement, each section under its label,
+      // read live from the Gridiron edits (or the canonical text).
+      function assembleHacks() {
+        var label = {
+          human: "HUMAN",
+          agent: "AGENT",
+          collaboration: "COLLABORATION",
+          knowledge: "KNOWLEDGE",
+          system: "SYSTEM",
+        };
+        return ["human", "agent", "collaboration", "knowledge", "system"]
+          .map(function (k) {
+            return label[k] + "\n" + loadHacks(k);
+          })
+          .join("\n\n");
+      }
+      function initHacks() {
+        Object.keys(HACKS_CANON).forEach(function (k) {
+          var ta = document.querySelector('[data-hacks="' + k + '"]');
+          if (!ta) return;
+          ta.value = loadHacks(k);
+          ta.addEventListener("input", function () {
+            try {
+              localStorage.setItem(hacksKey(k), ta.value);
+            } catch (e) {}
+          });
+        });
+        document.querySelectorAll("[data-hacks-reset]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var k = btn.getAttribute("data-hacks-reset");
+            var ta = document.querySelector('[data-hacks="' + k + '"]');
+            if (!ta) return;
+            ta.value = HACKS_CANON[k];
+            try {
+              localStorage.setItem(hacksKey(k), ta.value);
+            } catch (e) {}
+          });
+        });
+      }
+
       reflectKey();
       renderModelOptions();
       render();
       applyLang();
+      initHacks();
     })();
   </script>
 </section>
