@@ -356,119 +356,152 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
         <div class="gridiron-cols">
           <section class="gridiron-col hacks-col">
             <p class="cb-section-head"><span class="cb-sec-dot" aria-hidden="true"></span>HUMAN</p>
-            <textarea class="hacks-input" id="hacks-human" data-hacks="human" spellcheck="false" aria-label="HACKS Human"></textarea>
+            <textarea
+              class="hacks-input"
+              id="hacks-human"
+              data-hacks="human"
+              spellcheck="false"
+              aria-label="HACKS Human"></textarea>
             <button class="hacks-reset" type="button" data-hacks-reset="human">reset</button>
           </section>
           <section class="gridiron-col hacks-col">
             <p class="cb-section-head"><span class="cb-sec-dot" aria-hidden="true"></span>AGENT</p>
-            <textarea class="hacks-input" id="hacks-agent" data-hacks="agent" spellcheck="false" aria-label="HACKS Agent"></textarea>
+            <textarea
+              class="hacks-input"
+              id="hacks-agent"
+              data-hacks="agent"
+              spellcheck="false"
+              aria-label="HACKS Agent"></textarea>
             <button class="hacks-reset" type="button" data-hacks-reset="agent">reset</button>
           </section>
           <section class="gridiron-col hacks-col">
-            <p class="cb-section-head"><span class="cb-sec-dot" aria-hidden="true"></span>COLLABORATION</p>
-            <textarea class="hacks-input" id="hacks-collaboration" data-hacks="collaboration" spellcheck="false" aria-label="HACKS Collaboration"></textarea>
-            <button class="hacks-reset" type="button" data-hacks-reset="collaboration">reset</button>
+            <p class="cb-section-head">
+              <span class="cb-sec-dot" aria-hidden="true"></span>COLLABORATION
+            </p>
+            <textarea
+              class="hacks-input"
+              id="hacks-collaboration"
+              data-hacks="collaboration"
+              spellcheck="false"
+              aria-label="HACKS Collaboration"></textarea>
+            <button class="hacks-reset" type="button" data-hacks-reset="collaboration">reset</button
+            >
           </section>
           <section class="gridiron-col hacks-col">
-            <p class="cb-section-head"><span class="cb-sec-dot" aria-hidden="true"></span>KNOWLEDGE</p>
-            <textarea class="hacks-input" id="hacks-knowledge" data-hacks="knowledge" spellcheck="false" aria-label="HACKS Knowledge"></textarea>
+            <p class="cb-section-head">
+              <span class="cb-sec-dot" aria-hidden="true"></span>KNOWLEDGE
+            </p>
+            <textarea
+              class="hacks-input"
+              id="hacks-knowledge"
+              data-hacks="knowledge"
+              spellcheck="false"
+              aria-label="HACKS Knowledge"></textarea>
             <button class="hacks-reset" type="button" data-hacks-reset="knowledge">reset</button>
           </section>
           <section class="gridiron-col hacks-col">
             <p class="cb-section-head"><span class="cb-sec-dot" aria-hidden="true"></span>SYSTEM</p>
-            <textarea class="hacks-input" id="hacks-system" data-hacks="system" spellcheck="false" aria-label="HACKS System"></textarea>
+            <textarea
+              class="hacks-input"
+              id="hacks-system"
+              data-hacks="system"
+              spellcheck="false"
+              aria-label="HACKS System"></textarea>
             <button class="hacks-reset" type="button" data-hacks-reset="system">reset</button>
           </section>
           <section class="gridiron-col tech-col">
-        <section class="cb-section">
-          <p class="cb-section-head">
-            <span class="cb-sec-dot" aria-hidden="true"></span>GEMINI API KEY
-          </p>
-          <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
-            Provide a Gemini API key. It stays in your browser and is sent directly to Google, never
-            touching any server.
-          </p>
-          <div class="souffleur-field" style="margin-bottom: 0.5rem;">
-            <input
-              class="souffleur-input"
-              id="gridiron-key-input"
-              type="password"
-              autocomplete="off"
-              spellcheck="false"
-              placeholder="Paste API key here…"
-              aria-label="Gemini API key"
-            />
-            <button class="souffleur-cue" id="gridiron-key-save" type="button">SAVE</button>
-          </div>
-          <div
-            style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.6rem;"
-          >
-            <label
-              class="key-remember"
-              style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; color: var(--stage-fg-mute); display: flex; align-items: center; gap: 0.35rem;"
-            >
-              <input type="checkbox" id="gridiron-key-remember" /> remember key
-            </label>
-            <button
-              class="key-forget"
-              id="gridiron-key-forget"
-              type="button"
-              style="font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.05em; color: var(--color-brick); background: none; border: 1px solid var(--color-rule); padding: 0.2rem 0.4rem;"
-              hidden>forget key</button
-            >
-          </div>
-        </section>
+            <section class="cb-section">
+              <p class="cb-section-head">
+                <span class="cb-sec-dot" aria-hidden="true"></span>GEMINI API KEY
+              </p>
+              <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
+                Provide a Gemini API key. It stays in your browser and is sent directly to Google,
+                never touching any server.
+              </p>
+              <div class="souffleur-field" style="margin-bottom: 0.5rem;">
+                <input
+                  class="souffleur-input"
+                  id="gridiron-key-input"
+                  type="password"
+                  autocomplete="off"
+                  spellcheck="false"
+                  placeholder="Paste API key here…"
+                  aria-label="Gemini API key"
+                />
+                <button class="souffleur-cue" id="gridiron-key-save" type="button">SAVE</button>
+              </div>
+              <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.6rem;"
+              >
+                <label
+                  class="key-remember"
+                  style="font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em; color: var(--stage-fg-mute); display: flex; align-items: center; gap: 0.35rem;"
+                >
+                  <input type="checkbox" id="gridiron-key-remember" /> remember key
+                </label>
+                <button
+                  class="key-forget"
+                  id="gridiron-key-forget"
+                  type="button"
+                  style="font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.05em; color: var(--color-brick); background: none; border: 1px solid var(--color-rule); padding: 0.2rem 0.4rem;"
+                  hidden>forget key</button
+                >
+              </div>
+            </section>
 
-        <section class="cb-section" style="margin-top: 2rem;">
-          <p class="cb-section-head">
-            <span class="cb-sec-dot" aria-hidden="true"></span>STAGE MODEL
-          </p>
-          <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
-            Which Gemini model plays the scene. Flash Lite has the most free-tier headroom; the
-            others read better but cap near 20 calls a day. A red dot means that model is rate
-            limited; it shows when it frees up.
-          </p>
-          <div
-            id="model-options"
-            class="language-options"
-            style="display: flex; flex-direction: column; gap: 0.6rem;"
-          >
-          </div>
-        </section>
+            <section class="cb-section" style="margin-top: 2rem;">
+              <p class="cb-section-head">
+                <span class="cb-sec-dot" aria-hidden="true"></span>STAGE MODEL
+              </p>
+              <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
+                Which Gemini model plays the scene. Flash Lite has the most free-tier headroom; the
+                others read better but cap near 20 calls a day. A red dot means that model is rate
+                limited; it shows when it frees up.
+              </p>
+              <div
+                id="model-options"
+                class="language-options"
+                style="display: flex; flex-direction: column; gap: 0.6rem;"
+              >
+              </div>
+            </section>
 
-        <section class="cb-section" style="margin-top: 2rem;">
-          <p class="cb-section-head">
-            <span class="cb-sec-dot" aria-hidden="true"></span>STAGE LANGUAGE
-          </p>
-          <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
-            Choose the language for the stage directions and character dialogue.
-          </p>
-          <div class="language-options" style="display: flex; flex-direction: column; gap: 0.6rem;">
-            <label
-              style="display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 11px; cursor: pointer; color: var(--color-ink);"
-            >
-              <input type="radio" name="stage-language" value="declared" checked />
-              <span id="declared-lang-label">Original Language</span>
-            </label>
-            <label
-              style="display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 11px; cursor: pointer; color: var(--color-ink);"
-            >
-              <input type="radio" name="stage-language" value="en" />
-              <span>English Translation</span>
-            </label>
-          </div>
-        </section>
+            <section class="cb-section" style="margin-top: 2rem;">
+              <p class="cb-section-head">
+                <span class="cb-sec-dot" aria-hidden="true"></span>STAGE LANGUAGE
+              </p>
+              <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
+                Choose the language for the stage directions and character dialogue.
+              </p>
+              <div
+                class="language-options"
+                style="display: flex; flex-direction: column; gap: 0.6rem;"
+              >
+                <label
+                  style="display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 11px; cursor: pointer; color: var(--color-ink);"
+                >
+                  <input type="radio" name="stage-language" value="declared" checked />
+                  <span id="declared-lang-label">Original Language</span>
+                </label>
+                <label
+                  style="display: flex; align-items: center; gap: 0.5rem; font-family: var(--font-mono); font-size: 11px; cursor: pointer; color: var(--color-ink);"
+                >
+                  <input type="radio" name="stage-language" value="en" />
+                  <span>English Translation</span>
+                </label>
+              </div>
+            </section>
 
-        <section class="cb-section" id="director-section" style="margin-top: 2rem;" hidden>
-          <p class="cb-section-head">
-            <span class="cb-sec-dot" aria-hidden="true"></span>DIRECTOR · SCENE TARGETS
-          </p>
-          <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
-            Set what each plan must reach; the souffleur plays toward these. One target per line.
-            Seed draws a first pass from the play's own prose; edit freely.
-          </p>
-          <div id="director-body"></div>
-        </section>
+            <section class="cb-section" id="director-section" style="margin-top: 2rem;" hidden>
+              <p class="cb-section-head">
+                <span class="cb-sec-dot" aria-hidden="true"></span>DIRECTOR · SCENE TARGETS
+              </p>
+              <p class="cb-item-blurb" style="margin-bottom: 0.8rem;">
+                Set what each plan must reach; the souffleur plays toward these. One target per
+                line. Seed draws a first pass from the play's own prose; edit freely.
+              </p>
+              <div id="director-body"></div>
+            </section>
           </section>
         </div>
       </div>
@@ -1344,21 +1377,20 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       padding: 0.8rem 1rem;
     }
 
-    /* phone: bottom sheet, columns stack */
+    /* phone: Call Board slides from the left, Gridiron drops from the top; columns stack */
     @media (max-width: 720px) {
-      .callboard,
-      .gridiron {
-        top: auto;
-        left: 0;
-        right: 0;
-        width: 100%;
-        max-height: 88vh;
-        border-right: none;
-        border-left: none;
-        border-top: 1px solid var(--color-ink);
-        transform: translateY(100%);
+      .callboard {
+        width: min(92%, 460px);
+        transform: translateX(-100%);
       }
-      .backstage.is-open .callboard,
+      .backstage.is-open .callboard {
+        transform: translateX(0);
+      }
+      .gridiron {
+        width: 100%;
+        max-height: 92vh;
+        transform: translateY(-100%);
+      }
       .backstage.is-open .gridiron {
         transform: translateY(0);
       }
