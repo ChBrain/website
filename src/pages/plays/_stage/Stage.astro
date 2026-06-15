@@ -430,9 +430,13 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
                 <input
                   class="souffleur-input"
                   id="gridiron-key-input"
-                  type="password"
+                  type="text"
+                  name="gemini-api-key"
                   autocomplete="off"
+                  autocapitalize="off"
                   spellcheck="false"
+                  data-1p-ignore
+                  data-lpignore="true"
                   placeholder="Paste API key here…"
                   aria-label="Gemini API key"
                 />
@@ -2001,17 +2005,18 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
         // paragraph led by the bold speaker.
         var body = parts.join(" ").trim();
         var lm = body.match(/^\(([^)]*)\)\s*([\s\S]*)$/);
-        // A move that is only a stage direction (no speech) reads as a
-        // standalone direction, not "Name (action).".
-        if (lm && !lm[2].trim()) {
-          return '<p class="beat-dir">(' + esc(lm[1]) + ")</p>";
-        }
         var dir = "";
         if (lm) {
           dir = ' <span class="say-action">(' + esc(lm[1]) + ")</span>";
           body = lm[2];
         }
-        if (!body && !dir) return "";
+        // An action-only move (no speech) keeps its speaker but takes no
+        // period: **Name** (action). Never drop the name -- a persona acting
+        // in silence must stay named, or the reader loses who is on stage.
+        if (!body) {
+          if (!dir) return "";
+          return '<p class="move"><span class="move-cue">' + esc(name) + "</span>" + dir + "</p>";
+        }
         return (
           '<p class="move"><span class="move-cue">' +
           esc(name) +
