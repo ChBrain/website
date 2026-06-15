@@ -116,6 +116,13 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       <button class="playbill-backstage" id="playbill-backstage" type="button">
         or step backstage →
       </button>
+      <noscript>
+        <p class="playbill-noscript">
+          The stage needs JavaScript to raise the curtain. <a href={backHref}
+            >Return to the playbook →</a
+          >
+        </p>
+      </noscript>
     </div>
 
     <!-- footlights -->
@@ -727,6 +734,16 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
     }
     .playbill-backstage:hover {
       color: var(--stage-fg);
+    }
+    .playbill-noscript {
+      margin: 1rem 0 0;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      color: var(--stage-fg-mute);
+    }
+    .playbill-noscript a {
+      color: var(--foot);
     }
 
     /* raise buttons */
@@ -1740,7 +1757,9 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
         if (gridironKeySave) gridironKeySave.disabled = !!on;
         if (gridironKeyForget) gridironKeyForget.disabled = !!on;
 
-        var rads = document.querySelectorAll('input[name="stage-language"]');
+        var rads = document.querySelectorAll(
+          'input[name="stage-language"], input[name="stage-model"]',
+        );
         rads.forEach(function (r) {
           r.disabled = !!on;
         });
@@ -1832,9 +1851,10 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
         if (a) beats.push({ cue: speakerA, say: "The play will find its way without us." });
         if (b) beats.push({ cue: speakerB, say: "Or we are the way it finds." });
 
-        // The eyebrow names the lit scene (or flags a custom casting).
-        var eyebrow = lit ? nm(lit) : "Custom casting";
-        var html = '<p class="scene-act">' + esc(eyebrow) + '</p><hr class="scene-rule" />';
+        // The eyebrow names the lit scene (or flags a custom casting). Local
+        // (not the module-scoped `eyebrow`, which names the live AI scene).
+        var label = lit ? nm(lit) : "Custom casting";
+        var html = '<p class="scene-act">' + esc(label) + '</p><hr class="scene-rule" />';
         beats.forEach(function (bt) {
           if (bt.dir) {
             html += '<p class="beat-dir">' + esc(bt.dir) + "</p>";
@@ -2898,8 +2918,9 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
 
       // --- HACKS standing orders (editable in the Gridiron) -------------------
       // The five sections of the HACKS statement, pre-filled with the canonical
-      // text; the visitor may edit, persisted per section in localStorage. Stage
-      // 1 only stores them; wiring them into the prompt is Stage 2.
+      // text; the visitor may edit, persisted per section in localStorage. They
+      // are assembled by assembleHacks() into the souffleur's system instruction
+      // (see generate()), so a Gridiron edit changes the next cue's prompt.
       var HACKS_CANON = {
         human: `Sets the scene.
 Is the Souffleur of the play.
