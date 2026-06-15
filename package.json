@@ -18,7 +18,7 @@
     "build": "astro build",
     "postbuild": "node scripts/copy-public-to-surfaces.mjs",
     "preview": "astro preview",
-    "test": "npm run build && vitest run",
+    "test": "npm run build && node scripts/khai-tests.mjs",
     "test:watch": "vitest",
     "smoke": "vitest run --config vitest.smoke.config.ts",
     "format": "prettier --write .",

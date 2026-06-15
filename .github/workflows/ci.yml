@@ -11,7 +11,7 @@ permissions:
   packages: read
 
 jobs:
-  test:
+  khai-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -25,7 +25,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: prettier check
         run: npm run format:check
-      - name: build + baseline gates
+      - name: build + conformance (unit + per-group a11y)
         run: npm test
 
   khai-guard:
