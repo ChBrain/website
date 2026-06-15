@@ -1955,51 +1955,83 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
         return out;
       }
       // Render the performance into the scene per the HACKS System grammar:
-      //   [Persona] line     a move, the persona speaking (a cue line)
+      //   [Persona]          starts a move (the persona speaking)
       //   (stage direction)  a persona action
       //   _stage direction_  an environment setting, shown in italic
+      // The model writes [Persona] on its own line, then the action and speech
+      // on following lines, so a move is coalesced: NAME (leading action):
+      // speech, one flowing line with a hanging indent on wrap.
       // `liveText` is the streaming turn; completed model turns stay on screen.
+      function isMoveLine(s) {
+        return /^\[[^\]]+\]/.test(s);
+      }
+      function isSettingLine(s) {
+        return /^_.+_$/.test(s);
+      }
+      function moveHtml(name, parts) {
+        var lead = "";
+        if (parts.length && /^\(.+\)$/.test(parts[0])) {
+          lead = " " + parts[0];
+          parts = parts.slice(1);
+        }
+        return (
+          '<p class="move"><span class="move-cue">' +
+          esc(name) +
+          esc(lead) +
+          ":</span> " +
+          sayInline(parts.join(" ")) +
+          "</p>"
+        );
+      }
       function beatsHtml(textRaw) {
+        var lines = textRaw.split("\n");
         var html = "";
-        textRaw.split("\n").forEach(function (ln) {
-          var t = ln.trim();
-          if (!t) return;
-          // Environment setting: a whole line wrapped in underscores, in italic.
-          if (/^_.+_$/.test(t)) {
+        var i = 0;
+        while (i < lines.length) {
+          var t = lines[i].trim();
+          if (!t) {
+            i++;
+            continue;
+          }
+          // Environment setting: a whole line in underscores, italic, standalone.
+          if (isSettingLine(t)) {
             html +=
               '<p class="beat-dir beat-setting"><em>' +
               esc(t.replace(/^_+|_+$/g, "")) +
               "</em></p>";
-            return;
+            i++;
+            continue;
           }
-          // Persona action: a whole line in parentheses.
-          if (/^\(.+\)$/.test(t)) {
-            html += '<p class="beat-dir">' + esc(t) + "</p>";
-            return;
-          }
-          // Persona move: NAME (leading direction): the spoken line. One flowing
-          // line with a hanging indent on wrap; a leading (action) sits before
-          // the colon, later (action)/_setting_ stay inline.
+          // Persona move: gather the action and speech lines that follow the
+          // [Persona] header, until the next move or a setting.
           var m = t.match(/^\[([^\]]+)\]\s*([\s\S]*)$/);
           if (m) {
-            var rest = m[2];
-            var lead = "";
-            var lm = rest.match(/^\(([^)]*)\)\s*([\s\S]*)$/);
-            if (lm) {
-              lead = " (" + lm[1] + ")";
-              rest = lm[2];
+            var name = m[1];
+            var parts = [];
+            if (m[2]) parts.push(m[2]);
+            i++;
+            while (i < lines.length) {
+              var nt = lines[i].trim();
+              if (!nt) {
+                i++;
+                continue;
+              }
+              if (isMoveLine(nt) || isSettingLine(nt)) break;
+              parts.push(nt);
+              i++;
             }
-            html +=
-              '<p class="move"><span class="move-cue">' +
-              esc(m[1]) +
-              esc(lead) +
-              ":</span> " +
-              sayInline(rest) +
-              "</p>";
-            return;
+            html += moveHtml(name, parts);
+            continue;
+          }
+          // A standalone action, or any stray line.
+          if (/^\(.+\)$/.test(t)) {
+            html += '<p class="beat-dir">' + esc(t) + "</p>";
+            i++;
+            continue;
           }
           html += '<p class="say">' + sayInline(t) + "</p>";
-        });
+          i++;
+        }
         return html;
       }
       function renderScene(liveText) {
