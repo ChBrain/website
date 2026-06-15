@@ -1994,21 +1994,24 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       function isMoveLine(s) {
         return moveHeader(s) !== null;
       }
-      function isSettingLine(s) {
-        return /^_.+_$/.test(s);
-      }
       function moveHtml(name, parts) {
         // Book grammar: **Name** (stage direction). Dialogue. A leading stage
         // direction sits in italic between the speaker and the period; later
         // directions stay inline (sayInline). Each move is its own clean
         // paragraph led by the bold speaker.
         var body = parts.join(" ").trim();
-        var dir = "";
         var lm = body.match(/^\(([^)]*)\)\s*([\s\S]*)$/);
+        // A move that is only a stage direction (no speech) reads as a
+        // standalone direction, not "Name (action).".
+        if (lm && !lm[2].trim()) {
+          return '<p class="beat-dir">(' + esc(lm[1]) + ")</p>";
+        }
+        var dir = "";
         if (lm) {
           dir = ' <span class="say-action">(' + esc(lm[1]) + ")</span>";
           body = lm[2];
         }
+        if (!body && !dir) return "";
         return (
           '<p class="move"><span class="move-cue">' +
           esc(name) +
@@ -2029,14 +2032,30 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
             i++;
             continue;
           }
-          // Environment setting: a whole line in underscores, italic, standalone.
-          if (isSettingLine(t)) {
-            html +=
-              '<p class="beat-dir beat-setting"><em>' +
-              esc(t.replace(/^_+|_+$/g, "")) +
-              "</em></p>";
-            i++;
-            continue;
+          // Environment setting: text wrapped in underscores, italic, standalone.
+          // May span several physical lines (an opening "_..." through a line
+          // that closes "..._"), so gather the run and strip the underscores.
+          if (t.charAt(0) === "_") {
+            var j = i;
+            while (!/_$/.test(lines[j].trim()) && j + 1 < lines.length && lines[j + 1].trim()) {
+              j++;
+            }
+            if (/_$/.test(lines[j].trim())) {
+              var seg = [];
+              for (var s = i; s <= j; s++) seg.push(lines[s].trim());
+              html +=
+                '<p class="beat-dir beat-setting"><em>' +
+                esc(
+                  seg
+                    .join(" ")
+                    .replace(/^_+|_+$/g, "")
+                    .trim(),
+                ) +
+                "</em></p>";
+              i = j + 1;
+              continue;
+            }
+            // opened with "_" but never closed: fall through to normal handling.
           }
           // Persona move: gather the action and speech lines that follow the
           // [Persona] (or **Persona**) header, until the next move or a setting.
@@ -2052,7 +2071,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
                 i++;
                 continue;
               }
-              if (isMoveLine(nt) || isSettingLine(nt)) break;
+              if (isMoveLine(nt) || nt.charAt(0) === "_") break;
               parts.push(nt);
               i++;
             }
