@@ -3,9 +3,9 @@
 // (src/pages/plays/_stage/) so Astro keeps it out of routing; rendered by
 // [house]/[play]/stage/index.astro.
 //
-//   closed    — curtains drawn, the playbill; the resting state.
-//   backstage — the Call Board: cast the scene from the play's real elements.
-//   open      — curtains parted, the scene (composed from your casting) + the
+//   closed: curtains drawn, the playbill; the resting state.
+//   backstage: the Call Board: cast the scene from the play's real elements.
+//   open: curtains parted, the scene (composed from your casting) + the
 //               Souffleur (the chosen scene's real Business + Objectives).
 //
 // Backstage is interactive (a casting board), Scene Plots preselect a whole
@@ -35,7 +35,7 @@ const bulbs = Array.from({ length: 18 });
 
 // Lean data blob for the client: enough to recompute lighting, the Blocking
 // strip, the Souffleur cues, and the (mocked) scene as the casting changes.
-// Inline JSON in the page — no fetch, so the per-surface deploy stays safe.
+// Inline JSON in the page; no fetch, so the per-surface deploy stays safe.
 const lite = (i: { id: string; name: string; declared: string }) => ({
   id: i.id,
   name: i.name,
@@ -624,7 +624,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       margin: 0 auto;
     }
     /* The scene's inner nodes (.scene-act, .beat-dir, .cue, .say, …) are built
-     client-side, so their rules can't be scoped — they live in the is:global
+     client-side, so their rules can't be scoped; they live in the is:global
      block below, qualified by .stage so they don't leak. */
 
     /* curtains */
@@ -2843,7 +2843,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       // --- HACKS standing orders (editable in the Gridiron) -------------------
       // The five sections of the HACKS statement, pre-filled with the canonical
       // text; the visitor may edit, persisted per section in localStorage. Stage
-      // 1 only stores them — wiring them into the prompt is Stage 2.
+      // 1 only stores them; wiring them into the prompt is Stage 2.
       var HACKS_CANON = {
         human: `Sets the scene.
 Is the Souffleur of the play.
