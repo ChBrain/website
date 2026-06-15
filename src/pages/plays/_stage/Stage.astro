@@ -1526,11 +1526,8 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       text-indent: -1.8em;
     }
     .stage .move-cue {
-      font-family: var(--font-mono);
-      font-size: 12px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--stage-fg-soft);
+      font-weight: 600;
+      color: var(--stage-fg);
     }
   </style>
 
@@ -1978,28 +1975,47 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       //   [Persona]          starts a move (the persona speaking)
       //   (stage direction)  a persona action
       //   _stage direction_  an environment setting, shown in italic
-      // The model writes [Persona] on its own line, then the action and speech
-      // on following lines, so a move is coalesced: NAME (leading action):
-      // speech, one flowing line with a hanging indent on wrap.
+      // The model writes [Persona] (or **Persona**) then the action and speech
+      // on following lines; a move is coalesced into the book grammar:
+      // **Name** (direction). dialogue. Speaker bold, a leading stage direction
+      // in italic before the period, each speaker its own clean paragraph,
+      // hanging-indented on wrap. (Styling follows the stage's own CVI.)
       // `liveText` is the streaming turn; completed model turns stay on screen.
+      // A move opens with [Persona] (the SYSTEM grammar). Models often emit
+      // markdown bold instead (**Persona** / **Persona:**) despite the grammar,
+      // so accept both and return the bare name plus the rest of the line.
+      function moveHeader(s) {
+        var m = s.match(/^\[([^\]]+)\]\s*([\s\S]*)$/);
+        if (m) return { name: m[1].trim(), rest: m[2] };
+        m = s.match(/^\*\*\s*([^*\n]+?)\s*\*\*\s*([\s\S]*)$/);
+        if (m) return { name: m[1].replace(/\s*:\s*$/, "").trim(), rest: m[2] };
+        return null;
+      }
       function isMoveLine(s) {
-        return /^\[[^\]]+\]/.test(s);
+        return moveHeader(s) !== null;
       }
       function isSettingLine(s) {
         return /^_.+_$/.test(s);
       }
       function moveHtml(name, parts) {
-        var lead = "";
-        if (parts.length && /^\(.+\)$/.test(parts[0])) {
-          lead = " " + parts[0];
-          parts = parts.slice(1);
+        // Book grammar: **Name** (stage direction). Dialogue. A leading stage
+        // direction sits in italic between the speaker and the period; later
+        // directions stay inline (sayInline). Each move is its own clean
+        // paragraph led by the bold speaker.
+        var body = parts.join(" ").trim();
+        var dir = "";
+        var lm = body.match(/^\(([^)]*)\)\s*([\s\S]*)$/);
+        if (lm) {
+          dir = ' <span class="say-action">(' + esc(lm[1]) + ")</span>";
+          body = lm[2];
         }
         return (
           '<p class="move"><span class="move-cue">' +
           esc(name) +
-          esc(lead) +
-          ":</span> " +
-          sayInline(parts.join(" ")) +
+          "</span>" +
+          dir +
+          ". " +
+          sayInline(body) +
           "</p>"
         );
       }
@@ -2023,12 +2039,12 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
             continue;
           }
           // Persona move: gather the action and speech lines that follow the
-          // [Persona] header, until the next move or a setting.
-          var m = t.match(/^\[([^\]]+)\]\s*([\s\S]*)$/);
-          if (m) {
-            var name = m[1];
+          // [Persona] (or **Persona**) header, until the next move or a setting.
+          var hd = moveHeader(t);
+          if (hd) {
+            var name = hd.name;
             var parts = [];
-            if (m[2]) parts.push(m[2]);
+            if (hd.rest) parts.push(hd.rest);
             i++;
             while (i < lines.length) {
               var nt = lines[i].trim();
