@@ -11,6 +11,15 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    ignore:
+      # js-yaml is transitive via gray-matter@4, which pins js-yaml ^3 and uses
+      # its v3-only safeLoad/safeDump API, so it cannot be bumped to a patched
+      # 4.x without breaking frontmatter parsing (and the build). It runs only
+      # at build time over our own trusted markdown, so GHSA-h67p-54hq-rp68 (a
+      # merge-key DoS on malicious YAML) is not reachable. Stop Dependabot
+      # retrying an un-actionable update; the real fix is an upstream
+      # gray-matter (or @chbrain/*) bump to js-yaml 4.
+      - dependency-name: "js-yaml"
     groups:
       astro:
         patterns:
