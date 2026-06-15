@@ -1856,17 +1856,11 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
           });
       }
 
-      // System prompt = the staged slice: synopsis + the lit scene's text + the
-      // prose of whatever cast/set/props are selected. Real play data; the model
-      // writes only the dialogue.
-      function stagedSystem(lit) {
+      // Element 2 of the cue: the play frame, the language, and the khai files
+      // (synopsis, the lit scene, and the selected cast/set/props). Real play
+      // data, fixed for a given casting, so it caches behind the HACKS prefix.
+      function playContext(lit) {
         var L = [];
-        // Element 1: the HACKS standing orders, as edited in the Gridiron. This
-        // carries the agent's whole contract (who moves, what is known, the
-        // output grammar, the binding), so the old scattered instructions go.
-        L.push(assembleHacks());
-
-        // The play this scene belongs to, and the language to perform it in.
         L.push(
           "The play is «" + ctx.title + "» (" + ctx.declared + "), of the house " + ctx.house + ".",
         );
@@ -1896,42 +1890,42 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
         sel.props.forEach(function (id) {
           add("Prop", id);
         });
-
-        // Conditions in play: the lit scene's plans are the progress carriers.
-        // Phase 0 sends each plan's intent with a static status; later phases
-        // author targets (Director mode) and judge them per move (Play mode).
-        if (lit && lit.objectives.length && ctx.plans) {
-          var plotRubric = rubric[lit.id] || {};
-          var conds = lit.objectives
-            .map(function (o) {
-              var p = ctx.plans[o.id];
-              if (!p) return "";
-              var e = ledger[o.id] || {};
-              var line = "- " + p.name + " [" + (e.status || "open") + "]: " + p.text;
-              var r = plotRubric[o.id];
-              if (r && r.targets && r.targets.length) {
-                var met = e.met || {};
-                line +=
-                  "\n  Targets: " +
-                  r.targets
-                    .map(function (t, i) {
-                      return (met[i] ? "[x] " : "[ ] ") + t;
-                    })
-                    .join("; ");
-              }
-              if (e.condition) line += "\n  Condition: " + e.condition;
-              return line;
-            })
-            .filter(Boolean);
-          if (conds.length) {
-            L.push(
-              "Conditions in play (advance these through the action; honor what is " +
-                "achieved, do not revive what is abandoned):\n" +
-                conds.join("\n"),
-            );
-          }
-        }
         return L.join("\n\n");
+      }
+
+      // Element 3 of the cue: the conditions in play (the lit scene's plans with
+      // their live status and targets). Dynamic, so it follows the fixed context
+      // as its own turn. Returns "" when the scene carries no plans.
+      function plansContext(lit) {
+        if (!(lit && lit.objectives.length && ctx.plans)) return "";
+        var plotRubric = rubric[lit.id] || {};
+        var conds = lit.objectives
+          .map(function (o) {
+            var p = ctx.plans[o.id];
+            if (!p) return "";
+            var e = ledger[o.id] || {};
+            var line = "- " + p.name + " [" + (e.status || "open") + "]: " + p.text;
+            var r = plotRubric[o.id];
+            if (r && r.targets && r.targets.length) {
+              var met = e.met || {};
+              line +=
+                "\n  Targets: " +
+                r.targets
+                  .map(function (t, i) {
+                    return (met[i] ? "[x] " : "[ ] ") + t;
+                  })
+                  .join("; ");
+            }
+            if (e.condition) line += "\n  Condition: " + e.condition;
+            return line;
+          })
+          .filter(Boolean);
+        if (!conds.length) return "";
+        return (
+          "Conditions in play (advance these through the action; honor what is " +
+          "achieved, do not revive what is abandoned):\n" +
+          conds.join("\n")
+        );
       }
 
       // Inline markup inside a spoken line: (action) shown subtly, _setting_ in
@@ -2132,7 +2126,14 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
             text: userText,
           });
           anchorNew = true; // bring this fresh beat to the top as it streams
-          streamGemini(stagedSystem(lit), transcript)
+          // Element 2 (play context) and element 3 (plans) lead the contents as
+          // their own turns; history and the framed cue follow. Element 1 (HACKS)
+          // is the systemInstruction. HACKS + play context are the cache prefix;
+          // plans, history, and the cue are the moving tail.
+          var contextTurns = [{ role: "user", text: playContext(lit) }];
+          var plansText = plansContext(lit);
+          if (plansText) contextTurns.push({ role: "user", text: plansText });
+          streamGemini(assembleHacks(), contextTurns.concat(transcript))
             .then(function (res) {
               var full = res && res.text;
               busy = false;
