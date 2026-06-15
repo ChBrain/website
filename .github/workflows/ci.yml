@@ -11,8 +11,12 @@ permissions:
   packages: read
 
 jobs:
-  khai-tests:
+  # Build once, enumerate the test groups (unit + per-domain/house a11y), and
+  # hand both to the fan-out below. dist/ is the a11y suite's input.
+  build:
     runs-on: ubuntu-latest
+    outputs:
+      groups: ${{ steps.list.outputs.groups }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -25,8 +29,61 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: prettier check
         run: npm run format:check
-      - name: build + conformance (unit + per-group a11y)
-        run: npm test
+      - name: build
+        run: npm run build
+      - name: enumerate test groups
+        id: list
+        run: echo "groups=$(node scripts/khai-tests.mjs --list)" >> "$GITHUB_OUTPUT"
+      - name: upload built site
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 1
+
+  # One check per group ("khai-tests (unit)", "khai-tests (plays-grimm-1)", ...),
+  # run in parallel. Each downloads the prebuilt site and runs only its group, so
+  # the per-page jsdom heap stays bounded however large a house grows.
+  khai-tests:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        group: ${{ fromJSON(needs.build.outputs.groups) }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: "npm"
+      - name: install
+        run: npm ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: download built site
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - name: ${{ matrix.group }}
+        run: node scripts/khai-tests.mjs --group "${{ matrix.group }}"
+
+  # Single required status check: green only when build and EVERY group passed.
+  # `if: always()` is essential -- a `needs` job is skipped when a dependency
+  # fails, and branch protection treats a skipped required check as passing, so
+  # the gate must run regardless and fail explicitly. Point branch protection at
+  # THIS job (khai-tests-gate), not the matrix, whose check names vary by group.
+  khai-tests-gate:
+    needs: [build, khai-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: require build + all groups to pass
+        run: |
+          echo "build=${{ needs.build.result }} khai-tests=${{ needs.khai-tests.result }}"
+          [ "${{ needs.build.result }}" = "success" ] || { echo "build failed"; exit 1; }
+          [ "${{ needs.khai-tests.result }}" = "success" ] || { echo "a test group failed"; exit 1; }
 
   khai-guard:
     runs-on: ubuntu-latest

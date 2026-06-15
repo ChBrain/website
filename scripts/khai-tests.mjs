@@ -3,15 +3,16 @@
 //
 // The a11y suite runs axe over every built page in a jsdom per page. As houses
 // add plays the page count climbs, and a single combined run accumulates heap
-// until a worker fork is OOM-killed ("Worker exited unexpectedly"). So we run it
-// one group at a time, each in its OWN vitest process, so the per-page heap is
-// reclaimed between groups. Groups are split by domain (architecture, the site
-// shell, plays) and, within plays, by house -- discovered from the built pages,
-// so a new house is picked up with no edit here ("khai-tests plays <house>").
+// until a worker fork is OOM-killed ("Worker exited unexpectedly"). So each group
+// runs in its OWN vitest process and the per-page heap is reclaimed between them.
+// Groups are split by domain (architecture, the site shell, plays) and, within
+// plays, by house, with a large house batched (see tests/helpers/a11y-groups.mjs).
+// The unit tests (top-level tests/*.test.ts) are one more group, "unit".
 //
-// Layout: unit tests are the top-level tests/*.test.ts; the a11y suite is the
-// single parameterized tests/a11y/group.test.ts, filtered by the A11Y_GROUP env.
-// Run AFTER `npm run build` (the a11y suite reads dist/).
+// Three modes (the a11y suite reads dist/, so build first):
+//   (default)        run every group sequentially -- used by `npm test` locally.
+//   --list           print the group list as JSON -- feeds the CI matrix.
+//   --group <name>   run one group -- one CI matrix job per group.
 
 import { execFileSync } from "node:child_process";
 import { readdirSync, statSync, existsSync } from "node:fs";
@@ -19,9 +20,16 @@ import { join, relative } from "node:path";
 import { assignGroups, groupLabel } from "../tests/helpers/a11y-groups.mjs";
 
 const A11Y_FILE = "tests/a11y/group.test.ts";
-// Headroom for a single group's jsdom run, plus an exposed GC the suite calls
-// after each page so memory stays flat within the group.
+// A11y heap headroom per group, plus an exposed GC the suite calls after each
+// page so memory stays flat within the group (each a11y group is one file).
 const A11Y_NODE_OPTIONS = "--max-old-space-size=4096 --expose-gc";
+// The unit group's dist-reading tests retain large built-HTML structures; a
+// worker handling several of them peaks past Node's RAM-derived default heap and
+// is OOM-killed on a 16 GB CI runner. Give a high explicit ceiling and pin the
+// worker count to the runner's cores. Validated on a 16 GB / 4-core box: 4
+// workers OOM at a 4 GB ceiling, pass at 8 GB.
+const UNIT_NODE_OPTIONS = "--max-old-space-size=8192";
+const UNIT_MAX_WORKERS = "4";
 
 function vitest(files, env = {}) {
   execFileSync("npx", ["vitest", "run", ...files], {
@@ -39,39 +47,78 @@ function walkHtml(dir, base, out = []) {
   return out;
 }
 
-if (!existsSync("dist")) {
-  console.error("khai-tests: dist/ not found -- run `npm run build` first (npm test does both).");
-  process.exit(1);
-}
-
-// Unit tests: every top-level tests/*.test.ts. The a11y suite lives in
-// tests/a11y/, so it is not in this list and is run per-group below.
-const unit = readdirSync("tests")
-  .filter((f) => f.endsWith(".test.ts"))
-  .map((f) => `tests/${f}`);
-
-const { groups } = assignGroups(walkHtml("dist", "dist"));
-
-const failed = [];
-
-console.log("\n=== khai-tests: unit ===");
-try {
-  if (unit.length) vitest(unit);
-} catch {
-  failed.push("unit");
-}
-
-for (const group of groups) {
-  console.log(`\n=== ${groupLabel(group)} ===`);
-  try {
-    vitest([A11Y_FILE], { A11Y_GROUP: group, NODE_OPTIONS: A11Y_NODE_OPTIONS });
-  } catch {
-    failed.push(groupLabel(group));
+function requireDist() {
+  if (!existsSync("dist")) {
+    console.error("khai-tests: dist/ not found -- run `npm run build` first (npm test does both).");
+    process.exit(1);
   }
 }
 
+// The unit group: every top-level tests/*.test.ts. The a11y suite lives in
+// tests/a11y/, so it is excluded here and run per a11y group.
+const unitFiles = () =>
+  readdirSync("tests")
+    .filter((f) => f.endsWith(".test.ts"))
+    .map((f) => `tests/${f}`);
+
+// Every group, "unit" first, then the a11y groups discovered from the build.
+function allGroups() {
+  return ["unit", ...assignGroups(walkHtml("dist", "dist")).groups];
+}
+
+// Run a single group; throws (non-zero vitest exit) on failure.
+function runGroup(group) {
+  if (group === "unit") {
+    vitest([...unitFiles(), `--maxWorkers=${UNIT_MAX_WORKERS}`], {
+      NODE_OPTIONS: UNIT_NODE_OPTIONS,
+    });
+  } else {
+    vitest([A11Y_FILE], { A11Y_GROUP: group, NODE_OPTIONS: A11Y_NODE_OPTIONS });
+  }
+}
+
+const label = (group) => (group === "unit" ? "khai-tests unit" : groupLabel(group));
+
+const mode = process.argv[2];
+
+if (mode === "--list") {
+  requireDist();
+  // One line of JSON for the CI matrix (GITHUB_OUTPUT).
+  process.stdout.write(JSON.stringify(allGroups()) + "\n");
+  process.exit(0);
+}
+
+if (mode === "--group") {
+  const group = process.argv[3];
+  if (!group) {
+    console.error("khai-tests: --group requires a group name");
+    process.exit(2);
+  }
+  requireDist();
+  console.log(`=== ${label(group)} ===`);
+  try {
+    runGroup(group);
+  } catch {
+    process.exit(1);
+  }
+  process.exit(0);
+}
+
+// Default: run every group sequentially (local `npm test`), aggregating failures
+// so one bad group does not hide the rest.
+requireDist();
+const groups = allGroups();
+const failed = [];
+for (const group of groups) {
+  console.log(`\n=== ${label(group)} ===`);
+  try {
+    runGroup(group);
+  } catch {
+    failed.push(label(group));
+  }
+}
 if (failed.length) {
   console.error(`\nkhai-tests: FAILED -- ${failed.join(", ")}`);
   process.exit(1);
 }
-console.log(`\nkhai-tests: passed (unit + ${groups.length} group(s): ${groups.join(", ")})`);
+console.log(`\nkhai-tests: passed (${groups.length} group(s): ${groups.join(", ")})`);
