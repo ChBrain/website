@@ -2167,7 +2167,15 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
               return pump();
             });
           }
-          return pump();
+          return pump().catch(function (e) {
+            // A mid-stream drop (the reader threw) after text has already
+            // streamed: keep the partial so the scene holds the beat and a
+            // "continue" cue resumes it. Only a no-text failure propagates to
+            // the hard error handler (rate-limit / key / http stay above, at
+            // the res.ok check, so they never carry a partial).
+            if (full && full.trim()) return { text: full, finish: "dropped" };
+            throw e;
+          });
         });
       }
 
@@ -2244,10 +2252,12 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
               }
               transcript.push({ role: "model", text: full });
               setThinking(
-                false,
+                res.finish === "dropped",
                 res.finish === "MAX_TOKENS"
                   ? "The scene ran long. Cue again to continue."
-                  : "Whisper another direction, or re-cast backstage.",
+                  : res.finish === "dropped"
+                    ? "The line dropped mid-beat. Cue to continue."
+                    : "Whisper another direction, or re-cast backstage.",
               );
               maybeJudge(lit); // Play mode: judge the plans against the scene so far
             })
