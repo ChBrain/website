@@ -32,9 +32,9 @@
     "@chbrain/khai-engine-language": "^0.1.4",
     "@chbrain/khai-methods": "^0.0.4",
     "@chbrain/khai-plays": "^0.0.7",
-    "@chbrain/khai-plays-buechner": "^0.20.0",
-    "@chbrain/khai-plays-grimm": "^0.136.0",
-    "@chbrain/khai-plays-kleist": "^0.11.0",
+    "@chbrain/khai-plays-buechner": "^0.20.1",
+    "@chbrain/khai-plays-grimm": "^0.233.0",
+    "@chbrain/khai-plays-kleist": "^0.22.1",
     "@fontsource-variable/newsreader": "^5.2.10",
     "@fontsource-variable/source-serif-4": "^5.2.9",
     "@fontsource/ibm-plex-mono": "^5.2.7"
