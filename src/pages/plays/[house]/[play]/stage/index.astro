@@ -1,6 +1,6 @@
 ---
 // The Stage for one play: /plays/<house>/<play>/stage/. A full-bleed theatrical
-// view that can stage ANY installed play — its cast/set/props and Scene Plots
+// view that can stage ANY installed play, its cast/set/props and Scene Plots
 // are the play's real elements; the scene's dialogue is a mocked placeholder
 // (see ../../../_stage/scene.ts). Generated only for real plays; mock houses
 // have no elements to stage.
@@ -24,6 +24,7 @@ const selection = defaultSelection(craft);
 <BaseLayout title={`${play.title} · The Stage · kaihacks`} description={`${play.title}, staged.`}>
   <Stage
     title={play.title}
+    declared={play.declared}
     houseTitle={play.houseTitle}
     voiceRegister={play.voiceRegister}
     backHref="../"

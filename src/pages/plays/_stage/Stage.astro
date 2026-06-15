@@ -15,6 +15,7 @@ import type { Stagecraft, Selection } from "./scene";
 
 interface Props {
   title: string;
+  declared: string;
   houseTitle: string;
   voiceRegister: string;
   backHref: string;
@@ -22,7 +23,7 @@ interface Props {
   selection: Selection;
 }
 
-const { title, houseTitle, voiceRegister, backHref, craft, selection } = Astro.props;
+const { title, declared, houseTitle, voiceRegister, backHref, craft, selection } = Astro.props;
 const { cast, set, props, plots, defaultPlotId } = craft;
 
 const selCast = new Set(selection.cast);
@@ -66,7 +67,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
   <header class="stage-head">
     <a class="brand" href={backHref} aria-label="Back to the playbook">
       <span class="brand-k" aria-hidden="true">k</span>
-      <span class="brand-title">{title}</span>
+      <span class="brand-title" data-name-en={title} data-name-de={declared}>{declared}</span>
     </a>
     <div style="display: flex; gap: 0.5rem;">
       <button
@@ -106,7 +107,7 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
     <!-- closed-state playbill -->
     <div class="playbill" id="playbill">
       <p class="playbill-eyebrow">khai · the stage</p>
-      <h1 class="playbill-title">{title}</h1>
+      <h1 class="playbill-title" data-name-en={title} data-name-de={declared}>{declared}</h1>
       <p class="playbill-sub">{houseTitle}</p>
       <button class="raise raise-front" id="raise-front" type="button">
         <span class="raise-main">Raise the Curtain</span>
@@ -1497,6 +1498,23 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       line-height: 1.45;
       color: var(--stage-fg);
     }
+    /* a move on one flowing line: NAME (dir): speech, hanging-indented on wrap */
+    .stage .move {
+      margin: 1rem 0;
+      font-family: var(--font-display);
+      font-size: 21px;
+      line-height: 1.45;
+      color: var(--stage-fg);
+      padding-left: 1.8em;
+      text-indent: -1.8em;
+    }
+    .stage .move-cue {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--stage-fg-soft);
+    }
   </style>
 
   <script is:inline>
@@ -1959,15 +1977,25 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
             html += '<p class="beat-dir">' + esc(t) + "</p>";
             return;
           }
-          // Persona move: [Persona] then the spoken line.
+          // Persona move: NAME (leading direction): the spoken line. One flowing
+          // line with a hanging indent on wrap; a leading (action) sits before
+          // the colon, later (action)/_setting_ stay inline.
           var m = t.match(/^\[([^\]]+)\]\s*([\s\S]*)$/);
           if (m) {
+            var rest = m[2];
+            var lead = "";
+            var lm = rest.match(/^\(([^)]*)\)\s*([\s\S]*)$/);
+            if (lm) {
+              lead = " (" + lm[1] + ")";
+              rest = lm[2];
+            }
             html +=
-              '<div class="beat-line"><p class="cue"><span class="cue-dot" aria-hidden="true">•</span>' +
+              '<p class="move"><span class="move-cue">' +
               esc(m[1]) +
-              '</p><p class="say">' +
-              sayInline(m[2]) +
-              "</p></div>";
+              esc(lead) +
+              ":</span> " +
+              sayInline(rest) +
+              "</p>";
             return;
           }
           html += '<p class="say">' + sayInline(t) + "</p>";
