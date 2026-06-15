@@ -27,11 +27,11 @@
     "prepare": "husky && chmod +x .husky/pre-commit .husky/pre-push"
   },
   "dependencies": {
-    "@chbrain/khai-arch": "^0.1.15",
+    "@chbrain/khai-arch": "^0.1.16",
     "@chbrain/khai-engine-gender": "^0.1.7",
     "@chbrain/khai-engine-language": "^0.1.4",
     "@chbrain/khai-methods": "^0.0.4",
-    "@chbrain/khai-plays": "^0.0.7",
+    "@chbrain/khai-plays": "^0.0.8",
     "@chbrain/khai-plays-buechner": "^0.20.3",
     "@chbrain/khai-plays-grimm": "^0.255.1",
     "@chbrain/khai-plays-kleist": "^0.22.4",
