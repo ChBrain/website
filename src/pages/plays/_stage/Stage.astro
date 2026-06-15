@@ -353,6 +353,33 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
       </div>
 
       <div class="cb-scroll">
+        <div class="gridiron-cols">
+          <section class="gridiron-col hacks-col">
+            <p class="cb-section-head"><span class="cb-sec-dot" aria-hidden="true"></span>HUMAN</p>
+            <textarea class="hacks-input" id="hacks-human" data-hacks="human" spellcheck="false" aria-label="HACKS Human"></textarea>
+            <button class="hacks-reset" type="button" data-hacks-reset="human">reset</button>
+          </section>
+          <section class="gridiron-col hacks-col">
+            <p class="cb-section-head"><span class="cb-sec-dot" aria-hidden="true"></span>AGENT</p>
+            <textarea class="hacks-input" id="hacks-agent" data-hacks="agent" spellcheck="false" aria-label="HACKS Agent"></textarea>
+            <button class="hacks-reset" type="button" data-hacks-reset="agent">reset</button>
+          </section>
+          <section class="gridiron-col hacks-col">
+            <p class="cb-section-head"><span class="cb-sec-dot" aria-hidden="true"></span>COLLABORATION</p>
+            <textarea class="hacks-input" id="hacks-collaboration" data-hacks="collaboration" spellcheck="false" aria-label="HACKS Collaboration"></textarea>
+            <button class="hacks-reset" type="button" data-hacks-reset="collaboration">reset</button>
+          </section>
+          <section class="gridiron-col hacks-col">
+            <p class="cb-section-head"><span class="cb-sec-dot" aria-hidden="true"></span>KNOWLEDGE</p>
+            <textarea class="hacks-input" id="hacks-knowledge" data-hacks="knowledge" spellcheck="false" aria-label="HACKS Knowledge"></textarea>
+            <button class="hacks-reset" type="button" data-hacks-reset="knowledge">reset</button>
+          </section>
+          <section class="gridiron-col hacks-col">
+            <p class="cb-section-head"><span class="cb-sec-dot" aria-hidden="true"></span>SYSTEM</p>
+            <textarea class="hacks-input" id="hacks-system" data-hacks="system" spellcheck="false" aria-label="HACKS System"></textarea>
+            <button class="hacks-reset" type="button" data-hacks-reset="system">reset</button>
+          </section>
+          <section class="gridiron-col tech-col">
         <section class="cb-section">
           <p class="cb-section-head">
             <span class="cb-sec-dot" aria-hidden="true"></span>GEMINI API KEY
@@ -442,6 +469,8 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
           </p>
           <div id="director-body"></div>
         </section>
+          </section>
+        </div>
       </div>
     </aside>
   </div>
@@ -944,12 +973,22 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
     .backstage-scrim {
       position: absolute;
       inset: 0;
-      background: color-mix(in srgb, var(--color-ink) 55%, transparent);
-      opacity: 0;
-      transition: opacity 0.25s ease;
+      /* A curtain that falls when you step backstage or open the Gridiron, so
+         "Raise the Curtain" reads as its inverse. Vertical folds over the brick. */
+      background:
+        repeating-linear-gradient(
+          90deg,
+          transparent 0,
+          transparent 38px,
+          color-mix(in srgb, black 16%, transparent) 38px,
+          color-mix(in srgb, black 16%, transparent) 40px
+        ),
+        linear-gradient(to bottom, var(--curtain-a), var(--curtain-b));
+      transform: translateY(-100%);
+      transition: transform 0.5s cubic-bezier(0.7, 0, 0.2, 1);
     }
     .backstage.is-open .backstage-scrim {
-      opacity: 1;
+      transform: translateY(0);
     }
     .callboard {
       position: absolute;
@@ -969,23 +1008,90 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
     .backstage.is-open .callboard {
       transform: translateX(0);
     }
+    /* Gridiron: a full-width sheet at the top of the stage that floats down
+       (after the curtain), the fly loft descending. */
     .gridiron {
       position: absolute;
       top: 0;
+      left: 0;
       right: 0;
-      bottom: 0;
-      width: min(86%, 360px);
+      width: 100%;
+      max-height: 92vh;
       display: flex;
       flex-direction: column;
       background: var(--color-paper);
       color: var(--color-ink);
-      border-left: 1px solid var(--color-ink);
-      box-shadow: -24px 0 60px -30px color-mix(in srgb, var(--color-ink) 80%, transparent);
-      transform: translateX(100%);
-      transition: transform 0.32s cubic-bezier(0.5, 0, 0.2, 1);
+      border-bottom: 1px solid var(--color-ink);
+      box-shadow: 0 30px 60px -28px color-mix(in srgb, var(--color-ink) 80%, transparent);
+      transform: translateY(-100%);
+      transition: transform 0.45s cubic-bezier(0.7, 0, 0.2, 1) 0.08s;
     }
     .backstage.is-open .gridiron {
-      transform: translateX(0);
+      transform: translateY(0);
+    }
+    /* HACKS columns: the five sections side by side, technical setup last. */
+    .gridiron-cols {
+      display: flex;
+      gap: 1.1rem;
+      padding: 1rem 1.1rem 1.4rem;
+      overflow-x: auto;
+      align-items: stretch;
+    }
+    .gridiron-col {
+      flex: 1 1 0;
+      min-width: 210px;
+      display: flex;
+      flex-direction: column;
+    }
+    .gridiron-col.tech-col {
+      flex: 1.2 1 0;
+      min-width: 240px;
+      border-left: 1px solid var(--color-rule);
+      padding-left: 1.1rem;
+    }
+    .hacks-input {
+      flex: 1 1 auto;
+      min-height: 220px;
+      margin-top: 0.6rem;
+      padding: 0.6rem 0.7rem;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.5;
+      color: var(--color-ink);
+      background: color-mix(in srgb, var(--color-paper) 92%, var(--color-ink));
+      border: 1px solid var(--color-rule);
+      border-radius: 2px;
+      resize: vertical;
+      white-space: pre-wrap;
+    }
+    .hacks-input:focus {
+      outline: none;
+      border-color: var(--curtain-a);
+    }
+    .hacks-reset {
+      align-self: flex-start;
+      margin-top: 0.4rem;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--stage-fg-mute, var(--color-ink));
+      background: none;
+      border: 1px solid var(--color-rule);
+      padding: 0.2rem 0.45rem;
+      cursor: pointer;
+    }
+    @media (max-width: 900px) {
+      .gridiron-cols {
+        flex-direction: column;
+        overflow-x: visible;
+      }
+      .gridiron-col.tech-col {
+        border-left: none;
+        padding-left: 0;
+        border-top: 1px solid var(--color-rule);
+        padding-top: 1rem;
+      }
     }
     .cb-head {
       display: flex;
@@ -2702,10 +2808,82 @@ const dataJson = JSON.stringify(data).replace(/</g, "\\u003c");
           if (b) generate(b.textContent.trim());
         });
 
+      // --- HACKS standing orders (editable in the Gridiron) -------------------
+      // The five sections of the HACKS statement, pre-filled with the canonical
+      // text; the visitor may edit, persisted per section in localStorage. Stage
+      // 1 only stores them — wiring them into the prompt is Stage 2.
+      var HACKS_CANON = {
+        human: `Sets the scene.
+Is the Souffleur of the play.
+Does not enter the scene.`,
+        agent: `Speaks through Personas.
+Acts through Personas.
+Observes the Environment through Personas.
+Narrates the Environment to bridge where needed through Scenes.
+Everything is a Scene.`,
+        collaboration: `Personas interact with each other through words and actions.
+One move triggers the next.
+  The Persona most moved by what just happened responds.
+  Not a rotation.
+  A Persona might be skipped.
+  A Persona might move twice.
+  Silence is a move.
+The Collaboration rests when it has nowhere left to go.
+The Scene remains open.`,
+        knowledge: `Behavior is evidence
+The Environment is composed of Places and Pieces
+The Environment is influenced by Processes and Personas
+Personas hold Positions and try to achieve their Plans
+Plots drive the Play`,
+        system: `A Personas move is prefixed with [Persona]
+A Personas action is shown as (stage direction).
+Environment settings are shown as _stage direction_.
+no em-dash / no en-dash / no dash in prose text.
+no Follow-Up Questions
+The Narrator does not invite the Human into the Scene.
+The Narrator does not explain the Scene.
+The Narrator does not explain the behavior.`,
+      };
+      function hacksKey(k) {
+        return "kai.stage.hacks." + k;
+      }
+      function loadHacks(k) {
+        try {
+          var v = localStorage.getItem(hacksKey(k));
+          return v === null ? HACKS_CANON[k] : v;
+        } catch (e) {
+          return HACKS_CANON[k];
+        }
+      }
+      function initHacks() {
+        Object.keys(HACKS_CANON).forEach(function (k) {
+          var ta = document.querySelector('[data-hacks="' + k + '"]');
+          if (!ta) return;
+          ta.value = loadHacks(k);
+          ta.addEventListener("input", function () {
+            try {
+              localStorage.setItem(hacksKey(k), ta.value);
+            } catch (e) {}
+          });
+        });
+        document.querySelectorAll("[data-hacks-reset]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var k = btn.getAttribute("data-hacks-reset");
+            var ta = document.querySelector('[data-hacks="' + k + '"]');
+            if (!ta) return;
+            ta.value = HACKS_CANON[k];
+            try {
+              localStorage.setItem(hacksKey(k), ta.value);
+            } catch (e) {}
+          });
+        });
+      }
+
       reflectKey();
       renderModelOptions();
       render();
       applyLang();
+      initHacks();
     })();
   </script>
 </section>
