@@ -20,9 +20,16 @@ import { join, relative } from "node:path";
 import { assignGroups, groupLabel } from "../tests/helpers/a11y-groups.mjs";
 
 const A11Y_FILE = "tests/a11y/group.test.ts";
-// Headroom for a single group's jsdom run, plus an exposed GC the suite calls
-// after each page so memory stays flat within the group.
+// A11y heap headroom per group, plus an exposed GC the suite calls after each
+// page so memory stays flat within the group (each a11y group is one file).
 const A11Y_NODE_OPTIONS = "--max-old-space-size=4096 --expose-gc";
+// The unit group's dist-reading tests retain large built-HTML structures; a
+// worker handling several of them peaks past Node's RAM-derived default heap and
+// is OOM-killed on a 16 GB CI runner. Give a high explicit ceiling and pin the
+// worker count to the runner's cores. Validated on a 16 GB / 4-core box: 4
+// workers OOM at a 4 GB ceiling, pass at 8 GB.
+const UNIT_NODE_OPTIONS = "--max-old-space-size=8192";
+const UNIT_MAX_WORKERS = "4";
 
 function vitest(files, env = {}) {
   execFileSync("npx", ["vitest", "run", ...files], {
@@ -62,7 +69,9 @@ function allGroups() {
 // Run a single group; throws (non-zero vitest exit) on failure.
 function runGroup(group) {
   if (group === "unit") {
-    vitest(unitFiles());
+    vitest([...unitFiles(), `--maxWorkers=${UNIT_MAX_WORKERS}`], {
+      NODE_OPTIONS: UNIT_NODE_OPTIONS,
+    });
   } else {
     vitest([A11Y_FILE], { A11Y_GROUP: group, NODE_OPTIONS: A11Y_NODE_OPTIONS });
   }
