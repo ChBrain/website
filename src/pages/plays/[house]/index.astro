@@ -56,7 +56,9 @@ const cards: ShelfCard[] = playsToRender.map((p) => {
   }
 
   return {
-    href: `/plays/${house.id}/${p.id}/`,
+    // Relative to this house page, so it resolves whether the surface sits at
+    // the subdomain root (production) or under /plays/<house>/ (dev/staging).
+    href: `${p.id}/`,
     eyebrow: house.package,
     state: "play",
     title: p.title,

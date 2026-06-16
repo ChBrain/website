@@ -18,7 +18,11 @@ const cards: ShelfCard[] = bill.map((h: (typeof bill)[number]) => {
   const isInstalled = plays.some((p) => p.houseId === h.id);
 
   return {
-    href: isInstalled ? `/plays/${h.id}/` : h.repo,
+    // Relative, not `/plays/<house>/`: production serves this surface at the
+    // subdomain root (plays.kaihacks.ai/, the /plays/ prefix stripped by the
+    // deploy), while dev and staging keep it under /plays/. A relative href
+    // resolves correctly in all three.
+    href: isInstalled ? `${h.id}/` : h.repo,
     external: !isInstalled,
     eyebrow: h.package,
     state: isInstalled ? "active · a khai-plays collection" : "work in progress",
