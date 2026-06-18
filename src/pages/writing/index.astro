@@ -1,0 +1,57 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Shelf, { type ShelfCard } from "../../components/Shelf.astro";
+import { URLS } from "../../lib/urls";
+import registry from "@chbrain/khai-writing/registry.json";
+
+// The Writing Archive's discovery index (built, shipped, and exported by
+// @chbrain/khai-writing): the captured runs the houses have deposited. We
+// enumerate the archive from the index, never parsing the tree. The list is
+// empty until a house produces and deposits a run, at which point each entry
+// appears here with no edit to this page.
+interface WritingEntry {
+  house: string;
+  play: string;
+  result: string;
+  path: string;
+  title: string | null;
+  blurb: string | null;
+  director: string | null;
+  cast: string | null;
+  language: string | null;
+}
+
+const writing = (registry.writing ?? []) as WritingEntry[];
+
+const cards: ShelfCard[] = writing.map((w) => ({
+  href: `${URLS.plays}${w.house}/${w.play}/`,
+  eyebrow: `${w.house}/${w.play}`,
+  state: `writing${w.language ? ` · ${w.language}` : ""}`,
+  title: w.title ?? w.result,
+  note: w.blurb ?? "",
+  cta: "Read the source play →",
+}));
+---
+
+<BaseLayout
+  title="Writing · the archive · kaihacks"
+  description="The Writing Archive: the captured runs the houses have produced, each performed by the cast and run by the Director, deposited venue-neutral."
+>
+  <Shelf
+    domain="writing"
+    location="archive"
+    sectionLabel="§ · the captured runs"
+    title="Writing"
+    sectionNo="§1"
+    sectionTitle="The runs"
+    sectionNote="captured"
+    cards={cards}
+    empty="No captured runs deposited yet. A run appears here once a house produces one and deposits it to the archive."
+  >
+    <Fragment slot="subline">
+      The writing the plays produced: each entry is a captured run, performed by the cast and run,
+      selected, and captured by the house Director, deposited venue-neutral. The archive catalogues
+      them; a run links back to the play it staged.
+    </Fragment>
+  </Shelf>
+</BaseLayout>
