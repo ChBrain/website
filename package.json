@@ -36,6 +36,7 @@
     "@chbrain/khai-plays-grimm": "^0.255.2",
     "@chbrain/khai-plays-hcandersen": "^0.13.0",
     "@chbrain/khai-plays-kleist": "^0.22.4",
+    "@chbrain/khai-writing": "^0.1.1",
     "@fontsource-variable/newsreader": "^5.2.10",
     "@fontsource-variable/source-serif-4": "^5.2.9",
     "@fontsource/ibm-plex-mono": "^5.2.7"
