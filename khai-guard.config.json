@@ -86,6 +86,11 @@
         "allow": ["src/pages/architecture/methodbook/**"]
       },
       {
+        "pattern": "surface/writing/*",
+        "layer": "solution",
+        "allow": ["src/pages/writing/**"]
+      },
+      {
         "pattern": "surface/cvi/*",
         "layer": "solution",
         "allow": ["src/pages/main/cvi/**"]
