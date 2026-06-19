@@ -92,6 +92,11 @@
         "allow": ["src/pages/writing/**"]
       },
       {
+        "pattern": "surface/cultures/*",
+        "layer": "solution",
+        "allow": ["src/pages/cultures/**"]
+      },
+      {
         "pattern": "surface/cvi/*",
         "layer": "solution",
         "allow": ["src/pages/main/cvi/**"]
