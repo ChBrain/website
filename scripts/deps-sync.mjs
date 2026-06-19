@@ -9,8 +9,8 @@
 //   npm run deps:sync
 //
 // It does NOT commit. Review `git diff package.json package-lock.json`, then
-// commit + push on a chore/* branch (deps are unowned, so the branch-scope
-// gate allows it).
+// commit + push on a deps/* branch (the lane that owns package.json + the
+// lockfile; chore/* owns no package paths).
 
 import { readFileSync } from "node:fs";
 import { execSync } from "node:child_process";
@@ -45,5 +45,5 @@ try {
 
 console.log(
   "\ndeps:sync -- done. Review `git diff package.json package-lock.json`,\n" +
-    "then commit + push on a chore/* branch.",
+    "then commit + push on a deps/* branch.",
 );
