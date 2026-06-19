@@ -74,6 +74,8 @@ const ALLOWED_RENDERER_WORDS = new Set([
   "persona",
   "play",
   "plan",
+  // khai-arch >= 0.1.17: pitch added to cast group; appears in prev/next nav.
+  "pitch",
 ]);
 
 describe("character-introduction - built page words exist in source", () => {
