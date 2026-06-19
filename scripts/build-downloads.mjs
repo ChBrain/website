@@ -408,8 +408,8 @@ async function buildPlayDownloads() {
 
 // ── cultures ─────────────────────────────────────────────────────────────────
 // A culture is a play: @chbrain/khai-cultures is one content house whose
-// `cultures/<id>/` dirs each hold a culture production (a `culture_<id>.md`
-// master plus its elements). Pack the house and each culture exactly the way
+// `cultures/<id>/` dirs each hold a culture production (a `play_<id>.md`
+// anchor plus its elements). Pack the house and each culture exactly the way
 // buildPlayDownloads packs a play house — single house, no registry of houses.
 async function buildCultureDownloads() {
   let culturesPkgDir;
@@ -431,8 +431,8 @@ async function buildCultureDownloads() {
 
   const houseLicenseCodePath = join(culturesPkgDir, "LICENSE-CODE");
 
-  // Per-culture bundles. A dir is a culture only if it holds a culture_*.md
-  // master (structure is the registry's concern, not the packer's).
+  // Per-culture bundles. A dir is a culture only if it holds a play_*.md
+  // anchor (a culture is a play; structure is the registry's concern, not the packer's).
   const houseContentFiles = [];
   let count = 0;
   for (const cultureName of readdirSync(culturesDir).sort()) {
@@ -440,7 +440,7 @@ async function buildCultureDownloads() {
     if (!statSync(cultureDir).isDirectory() || cultureName.startsWith(".")) continue;
 
     const files = readdirSync(cultureDir);
-    if (!files.some((f) => f.startsWith("culture_") && f.endsWith(".md"))) continue;
+    if (!files.some((f) => f.startsWith("play_") && f.endsWith(".md"))) continue;
 
     const contentFiles = [];
     for (const f of files) {
