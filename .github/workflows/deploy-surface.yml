@@ -21,6 +21,7 @@ on:
         options:
           - architecture
           - main
+          - plays
           - cultures
           - writing
       env:
