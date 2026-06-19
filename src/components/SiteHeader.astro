@@ -51,7 +51,9 @@ const wordmarkHref =
       ? URLS.cultures
       : domain === "plays"
         ? URLS.plays
-        : URLS.main;
+        : domain === "writing"
+          ? URLS.writing
+          : URLS.main;
 const useLocationLayout = Boolean(location);
 ---
 
