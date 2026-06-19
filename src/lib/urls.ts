@@ -2,10 +2,10 @@
 //
 // Production (default): main is the apex (kaihacks.ai/), with its cvi,
 // privacy, and contact pages under it (/cvi/, /privacy/, /contact/);
-// architecture and cultures are subdomains.
+// architecture, cultures, plays, and writing are subdomains.
 // Staging: collapsed onto staging.kaihacks.ai with main under /main/ and
 // its pages nested there (/main/cvi/, /main/privacy/, /main/contact/);
-// the subdomains stage at /architecture/, /cultures/.
+// the subdomains stage at /architecture/, /cultures/, /plays/, /writing/.
 //
 // The set of canonical cross-surface URLs that any chrome or page can
 // link to. Read this constant in components/pages instead of hardcoding
@@ -24,6 +24,7 @@ export interface SurfaceUrls {
   privacy: string;
   cultures: string;
   plays: string;
+  writing: string;
   contact: string;
 }
 
@@ -34,6 +35,7 @@ const PRODUCTION: SurfaceUrls = {
   privacy: "https://kaihacks.ai/privacy/",
   cultures: "https://cultures.kaihacks.ai/",
   plays: "https://plays.kaihacks.ai/",
+  writing: "https://writing.kaihacks.ai/",
   contact: "https://kaihacks.ai/contact/",
 };
 
@@ -46,6 +48,7 @@ const STAGING: SurfaceUrls = {
   privacy: `${STAGING_BASE}/main/privacy/`,
   cultures: `${STAGING_BASE}/cultures/`,
   plays: `${STAGING_BASE}/plays/`,
+  writing: `${STAGING_BASE}/writing/`,
   contact: `${STAGING_BASE}/main/contact/`,
 };
 
