@@ -16,12 +16,13 @@ const SURFACE_OF: Record<keyof SurfaceUrls, string> = {
   contact: "main",
   cultures: "cultures",
   plays: "plays",
+  writing: "writing",
 };
 
 /** Surfaces not yet live in production: monitored on staging, skipped in the
  *  production check until their first production deploy ships. Remove a surface
  *  here when it goes live in prod (e.g. when the `plays-v*` tag cuts plays). */
-const NOT_YET_IN_PRODUCTION = new Set<keyof SurfaceUrls>(["plays"]);
+const NOT_YET_IN_PRODUCTION = new Set<keyof SurfaceUrls>(["plays", "writing"]);
 
 /** Build the live-check targets for an environment from the canonical URLS. */
 export function targetsFor(env?: string): Target[] {
