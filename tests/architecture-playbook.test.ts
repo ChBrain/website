@@ -98,7 +98,7 @@ const FULL: Spread[] = [
 const TOTAL = String(FULL.length).padStart(2, "0");
 // The "enriched by" group (last) grows by one per installed engine.
 const FULL_GROUP_COUNTS =
-  CANON && ENGINE_SLUGS.length ? [2, 6, 2, 1 + ENGINE_SLUGS.length] : GROUP_COUNTS;
+  CANON && ENGINE_SLUGS.length ? [2, HAS_PITCH ? 7 : 6, 2, 1 + ENGINE_SLUGS.length] : GROUP_COUNTS;
 const WIRES = ["Wire", "Issue", "Require", "Enforce", "Setup"];
 
 describe("architecture playbook - design contract", () => {
