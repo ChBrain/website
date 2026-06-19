@@ -406,11 +406,132 @@ async function buildPlayDownloads() {
   }
 }
 
+// ── cultures ─────────────────────────────────────────────────────────────────
+// A culture is a play: @chbrain/khai-cultures is one content house whose
+// `cultures/<id>/` dirs each hold a culture production (a `culture_<id>.md`
+// master plus its elements). Pack the house and each culture exactly the way
+// buildPlayDownloads packs a play house — single house, no registry of houses.
+async function buildCultureDownloads() {
+  let culturesPkgDir;
+  try {
+    culturesPkgDir = dirname(_require.resolve("@chbrain/khai-cultures/package.json"));
+  } catch {
+    console.log("  cultures: @chbrain/khai-cultures not installed; skipping");
+    return;
+  }
+
+  const culturesDir = join(culturesPkgDir, "cultures");
+  if (!existsSync(culturesDir)) {
+    console.log("  cultures: package has no cultures/ dir; skipping");
+    return;
+  }
+
+  const outDir = join(process.cwd(), "public", "downloads", "cultures");
+  mkdirSync(outDir, { recursive: true });
+
+  const houseLicenseCodePath = join(culturesPkgDir, "LICENSE-CODE");
+
+  // Per-culture bundles. A dir is a culture only if it holds a culture_*.md
+  // master (structure is the registry's concern, not the packer's).
+  const houseContentFiles = [];
+  let count = 0;
+  for (const cultureName of readdirSync(culturesDir).sort()) {
+    const cultureDir = join(culturesDir, cultureName);
+    if (!statSync(cultureDir).isDirectory() || cultureName.startsWith(".")) continue;
+
+    const files = readdirSync(cultureDir);
+    if (!files.some((f) => f.startsWith("culture_") && f.endsWith(".md"))) continue;
+
+    const contentFiles = [];
+    for (const f of files) {
+      if (f === "package.json" || f === "REFERENCES.md") continue;
+      const filePath = join(cultureDir, f);
+      if (f.endsWith(".md")) {
+        contentFiles.push({ path: f, data: readMarkdownStripped(filePath) });
+        houseContentFiles.push({
+          path: `${cultureName}/${f}`,
+          data: readMarkdownStripped(filePath),
+        });
+      } else {
+        contentFiles.push({ path: f, data: readFileSync(filePath) });
+        houseContentFiles.push({ path: `${cultureName}/${f}`, data: readFileSync(filePath) });
+      }
+    }
+
+    const overhead = [
+      { path: "README.md", data: readMarkdownStripped(join(culturesPkgDir, "README.md")) },
+      { path: "LICENSE", data: readFileSync(join(culturesPkgDir, "LICENSE")) },
+    ];
+    if (existsSync(houseLicenseCodePath)) {
+      overhead.push({ path: "LICENSE-CODE", data: readFileSync(houseLicenseCodePath) });
+    }
+    const refPath = join(cultureDir, "REFERENCES.md");
+    if (existsSync(refPath)) {
+      overhead.push({ path: "REFERENCES.md", data: readMarkdownStripped(refPath) });
+    }
+
+    const packed = packBundle({
+      name: cultureName,
+      overhead,
+      content: { dir: "content", files: contentFiles },
+      stamp: { kind: "culture", culture: cultureName },
+    });
+
+    writeFileSync(join(outDir, `${cultureName}.zip`), packed.zip);
+    writeFileSync(
+      join(outDir, `${cultureName}.json`),
+      JSON.stringify({
+        filename: `${cultureName}.zip`,
+        size: fmtBytes(packed.zip.length),
+        sha256: packed.zipSha256,
+      }) + "\n",
+    );
+    console.log(
+      `  culture ${cultureName}: ${fmtBytes(packed.zip.length)} sha256=${packed.zipSha256.slice(0, 12)}…`,
+    );
+    count++;
+  }
+
+  if (count === 0) {
+    console.log("  cultures: none authored yet");
+    return;
+  }
+
+  // The whole house in one bundle (every culture), mirroring the play house zip.
+  const houseOverhead = [
+    { path: "package.json", data: readFileSync(join(culturesPkgDir, "package.json")) },
+    { path: "README.md", data: readMarkdownStripped(join(culturesPkgDir, "README.md")) },
+    { path: "LICENSE", data: readFileSync(join(culturesPkgDir, "LICENSE")) },
+  ];
+  if (existsSync(houseLicenseCodePath)) {
+    houseOverhead.push({ path: "LICENSE-CODE", data: readFileSync(houseLicenseCodePath) });
+  }
+  const housePacked = packBundle({
+    name: "khai-cultures",
+    overhead: houseOverhead,
+    content: { dir: "cultures", files: houseContentFiles },
+    stamp: { kind: "house", house: "khai-cultures" },
+  });
+  writeFileSync(join(outDir, "khai-cultures.zip"), housePacked.zip);
+  writeFileSync(
+    join(outDir, "khai-cultures.json"),
+    JSON.stringify({
+      filename: "khai-cultures.zip",
+      size: fmtBytes(housePacked.zip.length),
+      sha256: housePacked.zipSha256,
+    }) + "\n",
+  );
+  console.log(
+    `  house khai-cultures: ${fmtBytes(housePacked.zip.length)} (${count} culture${count === 1 ? "" : "s"})`,
+  );
+}
+
 // ── run ────────────────────────────────────────────────────────────────────
 
-console.log("build-downloads: building engine, skill, and play artifacts…");
+console.log("build-downloads: building engine, skill, play, and culture artifacts…");
 writeDownloadsHtaccess();
 buildEngineDownloads();
 buildSkillDownloads();
 await buildPlayDownloads();
+await buildCultureDownloads();
 console.log("build-downloads: done");
