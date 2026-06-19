@@ -22,6 +22,7 @@ on:
           - architecture
           - main
           - cultures
+          - writing
       env:
         description: Target environment
         type: choice
@@ -88,6 +89,7 @@ jobs:
               main)         target="$base/main/" ;;
               cultures)     target="$base/cultures.kaihacks.ai/" ;;
               plays)        target="$base/plays.kaihacks.ai/" ;;
+              writing)      target="$base/writing.kaihacks.ai/" ;;
               *) echo "::error::unknown surface '$surface'"; exit 1 ;;
             esac
             # Each production surface is its own document root, so the
@@ -96,7 +98,7 @@ jobs:
           elif [ "$env" = "staging" ]; then
             # Every surface stages under the single staging vhost.
             case "$surface" in
-              architecture|main|cultures|plays)
+              architecture|main|cultures|plays|writing)
                 target="$base/staging.kaihacks.ai/$surface/" ;;
               *) echo "::error::unknown surface '$surface'"; exit 1 ;;
             esac

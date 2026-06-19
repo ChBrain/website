@@ -18,6 +18,8 @@ rewrite (a Cloudflare edge rule, with an origin `.htaccess` fallback; see
 | `kaihacks.ai` (apex)       | `/public_html/` (rewrites to `/main/`)   |
 | `architecture.kaihacks.ai` | `/public_html/architecture.kaihacks.ai/` |
 | `cultures.kaihacks.ai`     | `/public_html/cultures.kaihacks.ai/`     |
+| `plays.kaihacks.ai`        | `/public_html/plays.kaihacks.ai/`        |
+| `writing.kaihacks.ai`      | `/public_html/writing.kaihacks.ai/`      |
 | `staging.kaihacks.ai`      | `/public_html/staging.kaihacks.ai/`      |
 
 `main` deploys to its own dedicated root `/public_html/main/`, so `rsync
@@ -27,14 +29,16 @@ that root and serve as the clean `kaihacks.ai/cvi/`, `/privacy/`, `/contact/`
 
 ## Build outputs -> deploy targets
 
-There are three surfaces: `main` (the apex, with its sub-pages inside it),
-and the two subdomains `architecture` and `cultures`.
+There are five surfaces: `main` (the apex, with its sub-pages inside it),
+and the subdomains `architecture`, `cultures`, `plays`, and `writing`.
 
 | `dist/` subfolder    | Production rsync target                  | Staging rsync target                             |
 | -------------------- | ---------------------------------------- | ------------------------------------------------ |
 | `dist/main/`         | `/public_html/main/`                     | `/public_html/staging.kaihacks.ai/main/`         |
 | `dist/architecture/` | `/public_html/architecture.kaihacks.ai/` | `/public_html/staging.kaihacks.ai/architecture/` |
 | `dist/cultures/`     | `/public_html/cultures.kaihacks.ai/`     | `/public_html/staging.kaihacks.ai/cultures/`     |
+| `dist/plays/`        | `/public_html/plays.kaihacks.ai/`        | `/public_html/staging.kaihacks.ai/plays/`        |
+| `dist/writing/`      | `/public_html/writing.kaihacks.ai/`      | `/public_html/staging.kaihacks.ai/writing/`      |
 
 `main`'s build includes its `cvi/`, `privacy/`, and `contact/` pages, so the
 whole apex ships as one surface and every rsync uses `--delete` against a
@@ -48,12 +52,16 @@ Production URLs:
 - `https://kaihacks.ai/contact/`
 - `https://architecture.kaihacks.ai/` (subdomain root, clean URL)
 - `https://cultures.kaihacks.ai/` (subdomain root, clean URL)
+- `https://plays.kaihacks.ai/` (subdomain root, clean URL)
+- `https://writing.kaihacks.ai/` (subdomain root, clean URL)
 
 Staging URLs (every surface under the single staging vhost):
 
 - `https://staging.kaihacks.ai/main/` (and `/main/cvi/`, `/main/privacy/`, `/main/contact/`)
 - `https://staging.kaihacks.ai/architecture/`
 - `https://staging.kaihacks.ai/cultures/`
+- `https://staging.kaihacks.ai/plays/`
+- `https://staging.kaihacks.ai/writing/`
 
 ## How deploys are triggered
 

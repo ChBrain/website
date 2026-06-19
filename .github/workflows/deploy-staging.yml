@@ -29,6 +29,7 @@ jobs:
           - main
           - cultures
           - plays
+          - writing
     uses: ./.github/workflows/deploy-surface.yml
     with:
       surface: ${{ matrix.surface }}
@@ -53,7 +54,7 @@ jobs:
       - name: Deploy staging index via rsync (NO --delete)
         run: |
           # Rsync the staging/ directory to the staging vhost document root.
-          # NO --delete: must not touch sibling directories (main, architecture, cultures, plays).
+          # NO --delete: must not touch sibling directories (main, architecture, cultures, plays, writing).
           rsync -avz \
             -e "ssh -i ~/.ssh/kaihacksai" \
             ./staging/ \
