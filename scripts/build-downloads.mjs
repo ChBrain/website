@@ -407,122 +407,158 @@ async function buildPlayDownloads() {
 }
 
 // ── cultures ─────────────────────────────────────────────────────────────────
-// A culture is a play: @chbrain/khai-cultures is one content house whose
-// `cultures/<id>/` dirs each hold a culture production (a `play_<id>.md`
-// anchor plus its elements). Pack the house and each culture exactly the way
-// buildPlayDownloads packs a play house — single house, no registry of houses.
-async function buildCultureDownloads() {
-  let culturesPkgDir;
+//
+// Each installed culture (@chbrain/khai-cultures · cultures/<id>/) is packed
+// into a download zip + sidecar, exactly like a play house. Alongside the zips
+// this also writes the *map manifest* — public/downloads/cultures/available.json
+// — the single contract the /cultures/map page consumes (legacy schema:
+// assets/data/available.schema.json). The map colours each culture's country by
+// region and downloads downloadBase + asset on click.
+//
+// The manifest is built from two sources per culture:
+//   • @chbrain/khai-cultures/registry.json → id, title (name), description
+//   • cultures/<id>/geo.json               → region, iso, optional parent/state
+// A culture with no geo.json is skipped from the manifest (warning) — it has no
+// place to sit on the map — but its zip is still produced.
+//
+// downloadBase is site-relative ("/downloads/cultures/") because these zips are
+// served from the cultures surface itself, NOT GitHub releases. The legacy
+// schema wants an absolute https URL ending in "/"; a site-relative base keeps
+// the consumer's `downloadBase + asset` join correct while pointing at the zips
+// this producer writes.
+
+function buildCultureDownloads() {
+  let culturesPkgDir, registry;
   try {
     culturesPkgDir = dirname(_require.resolve("@chbrain/khai-cultures/package.json"));
-  } catch {
-    console.log("  cultures: @chbrain/khai-cultures not installed; skipping");
+    registry = JSON.parse(readFileSync(join(culturesPkgDir, "registry.json"), "utf8"));
+  } catch (e) {
+    console.log(`  cultures: @chbrain/khai-cultures not found; skipping — ${e.message}`);
     return;
   }
 
   const culturesDir = join(culturesPkgDir, "cultures");
   if (!existsSync(culturesDir)) {
-    console.log("  cultures: package has no cultures/ dir; skipping");
+    console.log("  cultures: no cultures/ directory; skipping");
     return;
   }
 
   const outDir = join(process.cwd(), "public", "downloads", "cultures");
   mkdirSync(outDir, { recursive: true });
 
-  const houseLicenseCodePath = join(culturesPkgDir, "LICENSE-CODE");
+  const pkgVersion = (() => {
+    try {
+      return JSON.parse(readFileSync(join(culturesPkgDir, "package.json"), "utf8")).version;
+    } catch {
+      return registry.version || "unknown";
+    }
+  })();
 
-  // Per-culture bundles. A dir is a culture only if it holds a play_*.md
-  // anchor (a culture is a play; structure is the registry's concern, not the packer's).
-  const houseContentFiles = [];
-  let count = 0;
-  for (const cultureName of readdirSync(culturesDir).sort()) {
-    const cultureDir = join(culturesDir, cultureName);
-    if (!statSync(cultureDir).isDirectory() || cultureName.startsWith(".")) continue;
+  // House-level overhead reused for every culture bundle: the package README and
+  // licences (content CC-BY-NC-SA + code MIT). Mirrors the play bundle shape.
+  const cultureOverhead = [];
+  const houseReadme = join(culturesPkgDir, "README.md");
+  if (existsSync(houseReadme)) {
+    cultureOverhead.push({ path: "README.md", data: readMarkdownStripped(houseReadme) });
+  }
+  const houseLicense = join(culturesPkgDir, "LICENSE");
+  if (existsSync(houseLicense)) {
+    cultureOverhead.push({ path: "LICENSE", data: readFileSync(houseLicense) });
+  }
+  const houseLicenseCode = join(culturesPkgDir, "LICENSE-CODE");
+  if (existsSync(houseLicenseCode)) {
+    cultureOverhead.push({ path: "LICENSE-CODE", data: readFileSync(houseLicenseCode) });
+  }
 
-    const files = readdirSync(cultureDir);
-    if (!files.some((f) => f.startsWith("play_") && f.endsWith(".md"))) continue;
+  const manifestCultures = [];
+  const cultures = Array.isArray(registry.cultures) ? registry.cultures : [];
 
+  for (const entry of cultures) {
+    const id = entry.id;
+    const cultureDir = join(culturesDir, id);
+    if (!existsSync(cultureDir) || !statSync(cultureDir).isDirectory()) {
+      console.log(`  culture ${id}: no cultures/${id}/ directory; skipping`);
+      continue;
+    }
+
+    // Pack the culture's instance files into a zip. Markdown is stripped of
+    // frontmatter (matter), other files copied as-is. REFERENCES.md rides as
+    // overhead at the bundle root alongside the house README/licences.
     const contentFiles = [];
-    for (const f of files) {
-      if (f === "package.json" || f === "REFERENCES.md") continue;
+    const overhead = [...cultureOverhead];
+    for (const f of readdirSync(cultureDir)) {
       const filePath = join(cultureDir, f);
+      if (!statSync(filePath).isFile()) continue;
+      if (f === "REFERENCES.md") {
+        overhead.push({ path: "REFERENCES.md", data: readMarkdownStripped(filePath) });
+        continue;
+      }
       if (f.endsWith(".md")) {
         contentFiles.push({ path: f, data: readMarkdownStripped(filePath) });
-        houseContentFiles.push({
-          path: `${cultureName}/${f}`,
-          data: readMarkdownStripped(filePath),
-        });
       } else {
         contentFiles.push({ path: f, data: readFileSync(filePath) });
-        houseContentFiles.push({ path: `${cultureName}/${f}`, data: readFileSync(filePath) });
       }
     }
 
-    const overhead = [
-      { path: "README.md", data: readMarkdownStripped(join(culturesPkgDir, "README.md")) },
-      { path: "LICENSE", data: readFileSync(join(culturesPkgDir, "LICENSE")) },
-    ];
-    if (existsSync(houseLicenseCodePath)) {
-      overhead.push({ path: "LICENSE-CODE", data: readFileSync(houseLicenseCodePath) });
-    }
-    const refPath = join(cultureDir, "REFERENCES.md");
-    if (existsSync(refPath)) {
-      overhead.push({ path: "REFERENCES.md", data: readMarkdownStripped(refPath) });
-    }
-
     const packed = packBundle({
-      name: cultureName,
+      name: id,
       overhead,
       content: { dir: "content", files: contentFiles },
-      stamp: { kind: "culture", culture: cultureName },
+      stamp: { kind: "culture", culture: id },
     });
 
-    writeFileSync(join(outDir, `${cultureName}.zip`), packed.zip);
+    writeFileSync(join(outDir, `${id}.zip`), packed.zip);
     writeFileSync(
-      join(outDir, `${cultureName}.json`),
+      join(outDir, `${id}.json`),
       JSON.stringify({
-        filename: `${cultureName}.zip`,
+        filename: `${id}.zip`,
         size: fmtBytes(packed.zip.length),
         sha256: packed.zipSha256,
       }) + "\n",
     );
     console.log(
-      `  culture ${cultureName}: ${fmtBytes(packed.zip.length)} sha256=${packed.zipSha256.slice(0, 12)}…`,
+      `  culture ${id}: ${fmtBytes(packed.zip.length)} sha256=${packed.zipSha256.slice(0, 12)}…`,
     );
-    count++;
+
+    // Manifest entry — only for cultures that carry a geo.json (a map anchor).
+    const geoPath = join(cultureDir, "geo.json");
+    if (!existsSync(geoPath)) {
+      console.log(`  culture ${id}: no geo.json; not placed on the map`);
+      continue;
+    }
+    let geo;
+    try {
+      geo = JSON.parse(readFileSync(geoPath, "utf8"));
+    } catch (e) {
+      console.log(`  culture ${id}: geo.json unreadable (${e.message}); not placed on the map`);
+      continue;
+    }
+    if (!geo.region || !geo.iso) {
+      console.log(`  culture ${id}: geo.json missing region/iso; not placed on the map`);
+      continue;
+    }
+
+    manifestCultures.push({
+      id,
+      name: entry.title || id,
+      region: geo.region,
+      asset: `${id}.zip`,
+      anchor: { type: "region", iso: geo.iso },
+      parent: geo.parent ?? null,
+      state: geo.state ?? null,
+    });
   }
 
-  if (count === 0) {
-    console.log("  cultures: none authored yet");
-    return;
-  }
-
-  // The whole house in one bundle (every culture), mirroring the play house zip.
-  const houseOverhead = [
-    { path: "package.json", data: readFileSync(join(culturesPkgDir, "package.json")) },
-    { path: "README.md", data: readMarkdownStripped(join(culturesPkgDir, "README.md")) },
-    { path: "LICENSE", data: readFileSync(join(culturesPkgDir, "LICENSE")) },
-  ];
-  if (existsSync(houseLicenseCodePath)) {
-    houseOverhead.push({ path: "LICENSE-CODE", data: readFileSync(houseLicenseCodePath) });
-  }
-  const housePacked = packBundle({
-    name: "khai-cultures",
-    overhead: houseOverhead,
-    content: { dir: "cultures", files: houseContentFiles },
-    stamp: { kind: "house", house: "khai-cultures" },
-  });
-  writeFileSync(join(outDir, "khai-cultures.zip"), housePacked.zip);
-  writeFileSync(
-    join(outDir, "khai-cultures.json"),
-    JSON.stringify({
-      filename: "khai-cultures.zip",
-      size: fmtBytes(housePacked.zip.length),
-      sha256: housePacked.zipSha256,
-    }) + "\n",
-  );
+  const manifest = {
+    schemaVersion: 1,
+    release: pkgVersion,
+    downloadBase: "/downloads/cultures/",
+    cultures: manifestCultures,
+    groupings: [],
+  };
+  writeFileSync(join(outDir, "available.json"), JSON.stringify(manifest, null, 2) + "\n");
   console.log(
-    `  house khai-cultures: ${fmtBytes(housePacked.zip.length)} (${count} culture${count === 1 ? "" : "s"})`,
+    `  cultures: wrote available.json (${manifestCultures.length} placed of ${cultures.length})`,
   );
 }
 
@@ -533,5 +569,5 @@ writeDownloadsHtaccess();
 buildEngineDownloads();
 buildSkillDownloads();
 await buildPlayDownloads();
-await buildCultureDownloads();
+buildCultureDownloads();
 console.log("build-downloads: done");
