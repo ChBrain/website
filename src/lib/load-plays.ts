@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { createRequire } from "node:module";
-import matter from "gray-matter";
+import { frontmatter as parseFrontmatter } from "./frontmatter";
 import MarkdownIt from "markdown-it";
 import { loadRegistry } from "@chbrain/khai-plays";
 
@@ -146,7 +146,7 @@ export function loadAllPlays(): Play[] {
     const readmePath = join(pkgDir, "README.md");
     if (existsSync(readmePath)) {
       const readmeSrc = readFileSync(readmePath, "utf8");
-      const { data: readmeFm } = matter(readmeSrc);
+      const { data: readmeFm } = parseFrontmatter(readmeSrc);
       houseLanguage = readmeFm.language || "en";
       houseVoice = readmeFm.voice || "";
     }
@@ -166,7 +166,7 @@ export function loadAllPlays(): Play[] {
 
       // Read main play markdown
       const mainPlaySrc = readFileSync(mainPlayFile, "utf8");
-      const { data: mainFm, content: mainContent } = matter(mainPlaySrc);
+      const { data: mainFm, content: mainContent } = parseFrontmatter(mainPlaySrc);
 
       let title = cleanText(mainFm.title || dirName);
       // The declared (original-language) name lives in the play file, never the
@@ -227,7 +227,7 @@ export function loadAllPlays(): Play[] {
 
         if (fileName === "REFERENCES.md") {
           const refSrc = readFileSync(filePath, "utf8");
-          const { data: refFm, content: refContent } = matter(refSrc);
+          const { data: refFm, content: refContent } = parseFrontmatter(refSrc);
           const h1Match = refContent.match(/^#\s+(.+)$/m);
           const refTitle = cleanText(h1Match ? h1Match[1].trim() : `${title} Reference`);
           const contentWithoutH1 = refContent.replace(/^#\s+.+$/m, "").trim();
@@ -244,7 +244,7 @@ export function loadAllPlays(): Play[] {
         }
 
         const elSrc = readFileSync(filePath, "utf8");
-        const { data: elFm, content: elContent } = matter(elSrc);
+        const { data: elFm, content: elContent } = parseFrontmatter(elSrc);
 
         if (!elFm.khai) continue;
 
