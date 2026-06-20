@@ -1,4 +1,4 @@
-import matter from "gray-matter";
+import { frontmatter as parseFrontmatter } from "./frontmatter";
 
 /**
  * Parser for the engine-file format (position / instance markdown).
@@ -82,7 +82,7 @@ export interface ParsedEngineSpec {
  * frontmatter. We never surface YAML to the reader.
  */
 export function parseEngineSpec(text: string): ParsedEngineSpec {
-  const parsed = matter(text);
+  const parsed = parseFrontmatter(text);
   const frontmatter = parsed.data as Record<string, unknown>;
   const body = parsed.content.trim();
 

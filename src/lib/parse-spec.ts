@@ -1,4 +1,4 @@
-import matter from "gray-matter";
+import { frontmatter as parseFrontmatter } from "./frontmatter";
 
 export interface SpecFrontmatter {
   id: string;
@@ -31,7 +31,7 @@ export interface ParsedSpec {
 }
 
 export function parseSpec(text: string): ParsedSpec {
-  const parsed = matter(text);
+  const parsed = parseFrontmatter(text);
   const frontmatter = parsed.data as SpecFrontmatter;
   const body = parsed.content.trim();
 
