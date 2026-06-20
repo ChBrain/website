@@ -1,0 +1,327 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import SiteHeader from "../../../components/SiteHeader.astro";
+import SiteFooter from "../../../components/SiteFooter.astro";
+import CultureMap, { type CultureMarker } from "../../../components/CultureMap.astro";
+import { URLS } from "../../../lib/urls";
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
+
+// The map reads the build-time manifest the downloads producer writes
+// (scripts/build-downloads.mjs -> public/downloads/cultures/available.json)
+// from @chbrain/khai-cultures plus each culture's geo.json. Same pattern as
+// plays/downloads: read the sidecars built before this page renders.
+interface ManifestCulture {
+  id: string;
+  name: string;
+  region: string;
+  asset: string;
+  anchor: { type: string; iso: string };
+}
+interface Manifest {
+  schemaVersion: number;
+  release: string;
+  downloadBase: string;
+  cultures: ManifestCulture[];
+  groupings: unknown[];
+}
+
+const downloadsDir = join(process.cwd(), "public", "downloads", "cultures");
+const manifestPath = join(downloadsDir, "available.json");
+const manifest: Manifest | null = existsSync(manifestPath)
+  ? (JSON.parse(readFileSync(manifestPath, "utf8")) as Manifest)
+  : null;
+
+function sizeFor(asset: string): string | null {
+  const sidecar = join(downloadsDir, asset.replace(/\.zip$/, ".json"));
+  if (!existsSync(sidecar)) return null;
+  try {
+    return (JSON.parse(readFileSync(sidecar, "utf8")).size as string) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// Download URLs go through URLS.* (a full per-environment URL), never an
+// absolute /downloads path: a same-surface absolute link 404s once the
+// surface is served at its own subdomain root.
+const cultures = (manifest?.cultures ?? []).map((c) => ({
+  ...c,
+  href: `${URLS.cultures}downloads/cultures/${c.asset}`,
+  size: sizeFor(c.asset),
+}));
+
+const markers: CultureMarker[] = cultures.map((c) => ({
+  iso: c.anchor.iso,
+  name: c.name,
+  href: c.href,
+  size: c.size ?? undefined,
+}));
+
+const release = manifest?.release;
+const count = cultures.length;
+const countLabel =
+  count === 0
+    ? "no culture packages built yet"
+    : `${count} ${count === 1 ? "culture" : "cultures"} on the map`;
+---
+
+<BaseLayout
+  title="World Map · cultures · kaihacks"
+  description="A world map of the culture library. Pick a country to download its culture package."
+>
+  <div class="arch-page cultures">
+    <SiteHeader domain="kaihacks" tld=".ai" location="cultures · map" version={release} />
+
+    <header class="cu-mast">
+      <div class="cu-overline">the culture library · by country</div>
+      <h1 class="cu-h1">World Map<em>.</em></h1>
+      <p class="cu-lede">Pick a country. Take its culture.</p>
+      <p class="cu-sub">
+        Each highlighted country has a culture package ready to download. More countries arrive with
+        each release.
+      </p>
+    </header>
+
+    <section id="map" class="cu-section">
+      <div class="cu-seclabel">
+        <span class="cu-n">§01</span>
+        <div class="cu-seclabel-body">
+          <h2 class="cu-h2">The world</h2>
+          <p class="cu-secnote">{countLabel}</p>
+        </div>
+      </div>
+
+      {
+        count === 0 ? (
+          <p class="cu-empty">
+            No culture packages built yet. Run the prebuild on a machine with the registry token.
+          </p>
+        ) : (
+          <CultureMap markers={markers} />
+        )
+      }
+    </section>
+
+    {
+      count > 0 && (
+        <section id="downloads" class="cu-section">
+          <div class="cu-seclabel">
+            <span class="cu-n">§02</span>
+            <div class="cu-seclabel-body">
+              <h2 class="cu-h2">Downloads</h2>
+              <p class="cu-secnote">every package, ready to take with you</p>
+            </div>
+          </div>
+
+          <ul class="cu-dl">
+            {cultures.map((c) => (
+              <li>
+                <a href={c.href} class="cu-dl-link">
+                  <span class="cu-dl-name">{c.name}</span>
+                  <span class="cu-dl-meta">
+                    {c.region}
+                    {c.size ? ` · ${c.size}` : ""}
+                  </span>
+                  <span class="cu-dl-cta">Download →</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    <SiteFooter />
+  </div>
+
+  <style>
+    /* Mirrors the cultures landing grammar (cu-* atoms over design tokens):
+     * paper ground, ink voice, brick accents, mono labels in caps. */
+    .cu-mast {
+      padding: 56px 0 38px;
+      border-bottom: 1px solid var(--color-rule);
+    }
+    @media (min-width: 641px) {
+      .cu-mast {
+        padding: 80px 0 48px;
+      }
+    }
+    .cu-overline {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.26em;
+      color: var(--color-ink-soft);
+      text-transform: uppercase;
+    }
+    @media (min-width: 641px) {
+      .cu-overline {
+        font-size: 11px;
+      }
+    }
+    .cu-h1 {
+      margin: 16px 0 0;
+      font-family: var(--font-display);
+      font-weight: 380;
+      font-size: 64px;
+      line-height: 0.96;
+      letter-spacing: -0.025em;
+      color: var(--color-ink);
+    }
+    @media (min-width: 641px) {
+      .cu-h1 {
+        font-size: 104px;
+      }
+    }
+    .cu-h1 em {
+      color: var(--color-brick);
+      font-style: normal;
+    }
+    .cu-lede {
+      margin: 26px 0 0;
+      max-width: 760px;
+      font-family: var(--font-display);
+      font-weight: 350;
+      font-size: 26px;
+      line-height: 1.18;
+      letter-spacing: -0.01em;
+      color: var(--color-ink);
+      text-wrap: pretty;
+    }
+    @media (min-width: 641px) {
+      .cu-lede {
+        font-size: 34px;
+      }
+    }
+    .cu-sub {
+      margin: 14px 0 0;
+      max-width: 720px;
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 17px;
+      line-height: 1.45;
+      color: var(--color-ink-soft);
+      text-wrap: pretty;
+    }
+    @media (min-width: 641px) {
+      .cu-sub {
+        font-size: 19px;
+      }
+    }
+
+    .cu-section {
+      padding: 56px 0;
+      border-bottom: 1px solid var(--color-rule-soft);
+    }
+    .cu-section:last-of-type {
+      border-bottom: none;
+    }
+    .cu-seclabel {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+    .cu-n {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--color-brick);
+      text-transform: uppercase;
+      flex: 0 0 auto;
+    }
+    .cu-seclabel-body {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      min-width: 280px;
+    }
+    .cu-h2 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-weight: 420;
+      font-size: 27px;
+      letter-spacing: -0.01em;
+      color: var(--color-ink);
+    }
+    @media (min-width: 641px) {
+      .cu-h2 {
+        font-size: 31px;
+      }
+    }
+    .cu-secnote {
+      margin: 0;
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 15px;
+      color: var(--color-ink-soft);
+    }
+    .cu-empty {
+      margin: 0;
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 16px;
+      color: var(--color-ink-soft);
+    }
+
+    /* §02 downloads list */
+    .cu-dl {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 641px) {
+      .cu-dl {
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+    }
+    .cu-dl-link {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+      text-decoration: none;
+      background: var(--color-paper-warm);
+      border: 1px solid var(--color-rule);
+      border-left: 4px solid var(--color-brick);
+      padding: 16px 18px;
+      transition:
+        transform 0.16s,
+        box-shadow 0.16s;
+    }
+    .cu-dl-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px -16px var(--color-ink);
+    }
+    .cu-dl-name {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      color: var(--color-ink);
+    }
+    .cu-dl-meta {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      color: var(--color-ink-mute);
+      text-transform: uppercase;
+    }
+    .cu-dl-cta {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--color-ink);
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--color-brick);
+      padding-bottom: 2px;
+    }
+  </style>
+</BaseLayout>
