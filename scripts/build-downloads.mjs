@@ -11,11 +11,23 @@
 import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync, statSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { createRequire } from "node:module";
-import matter from "gray-matter";
 import MarkdownIt from "markdown-it";
 
 const _require = createRequire(import.meta.url);
 const md = new MarkdownIt({ html: false, breaks: false, linkify: false });
+
+// Minimal frontmatter parse (data + body) over a leading --- block, on js-yaml 4
+// (the patched 4.2.0 already in the tree) rather than gray-matter, whose pinned
+// js-yaml 3.x carries GHSA-h67p-54hq-rp68. Mirrors src/lib/frontmatter.ts for
+// this script's plain-node runtime.
+const { load: loadYaml } = _require("js-yaml");
+function frontmatter(input) {
+  const text = input.charCodeAt(0) === 0xfeff ? input.slice(1) : input;
+  const match = /^---[ \t]*\r?\n([\s\S]*?)\r?\n---[ \t]*(?:\r?\n|$)/.exec(text);
+  if (!match) return { data: {}, content: text };
+  const yaml = match[1].trim();
+  return { data: yaml === "" ? {} : (loadYaml(yaml) ?? {}), content: text.slice(match[0].length) };
+}
 
 function fmtBytes(n) {
   if (n < 1024) return `${n} B`;
@@ -25,7 +37,7 @@ function fmtBytes(n) {
 
 function readMarkdownStripped(path) {
   const raw = readFileSync(path, "utf8");
-  return matter(raw).content.trim() + "\n";
+  return frontmatter(raw).content.trim() + "\n";
 }
 
 // The subdomain docroots (architecture/cultures) are nested inside
@@ -209,7 +221,7 @@ function buildSkillDownloads() {
     // The sidecar carries the title, rendered body (for the content spread),
     // and download metadata (for the download spread).
     const skillMdPath = join(skillsPkg, "src", r.name, "SKILL.md");
-    const { data, content } = matter(readFileSync(skillMdPath, "utf8"));
+    const { data, content } = frontmatter(readFileSync(skillMdPath, "utf8"));
     const h1 = content.match(/^# (.+)$/m);
     const title = h1 ? h1[1] : data.name;
     // Strip the H1: the spread chassis already renders the title; a second
