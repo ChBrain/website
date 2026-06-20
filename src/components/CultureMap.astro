@@ -1,0 +1,117 @@
+---
+// CultureMap: an in-brand world map. Draws every country outline (projected
+// at build time by src/lib/world-map.ts), highlights the countries that have
+// a culture package, and drops a clickable marker on each one linking to its
+// download. Pure SVG, styled only with design tokens (no third-party CSS, no
+// hex literals) so it satisfies the brand contract on every surface.
+//
+// The page supplies the markers (id, country, label, download URL); the
+// component owns the geography and the chrome.
+
+import { COUNTRIES, centroidByIso, VIEWBOX } from "../lib/world-map";
+
+export interface CultureMarker {
+  /** ISO 3166-1 alpha-2 of the country to place (e.g. "DE"). */
+  iso: string;
+  /** Front-of-house name shown by the marker. */
+  name: string;
+  /** Download URL (a full URLS.* URL, not an absolute path). */
+  href: string;
+  /** Optional packed size, shown in the marker tooltip. */
+  size?: string;
+}
+
+interface Props {
+  markers: CultureMarker[];
+}
+
+const { markers } = Astro.props;
+const active = new Set(markers.map((m) => m.iso.toUpperCase()));
+
+const placed = markers
+  .map((m) => {
+    const c = centroidByIso(m.iso);
+    return c ? { ...m, x: c[0], y: c[1] } : null;
+  })
+  .filter((m): m is CultureMarker & { x: number; y: number } => m !== null);
+
+const count = markers.length;
+const aria = `World map. ${count} ${count === 1 ? "country has" : "countries have"} a culture package to download.`;
+---
+
+<figure class="cmap-figure">
+  <svg class="cmap" viewBox={VIEWBOX} role="img" aria-label={aria}>
+    <g class="cmap-land">
+      {
+        COUNTRIES.map((c) => (
+          <path
+            d={c.d}
+            class={active.has(c.iso2) ? "cmap-country cmap-country-active" : "cmap-country"}
+          >
+            <title>{c.name}</title>
+          </path>
+        ))
+      }
+    </g>
+    <g class="cmap-markers">
+      {
+        placed.map((m) => (
+          <a
+            href={m.href}
+            class="cmap-marker"
+            aria-label={`Download the ${m.name} culture package`}
+          >
+            <title>{m.size ? `${m.name} · ${m.size}` : m.name}</title>
+            <circle cx={m.x} cy={m.y} r="6" class="cmap-dot" />
+            <text x={m.x} y={m.y - 12} text-anchor="middle" class="cmap-label">
+              {m.name}
+            </text>
+          </a>
+        ))
+      }
+    </g>
+  </svg>
+</figure>
+
+<style>
+  .cmap-figure {
+    margin: 0;
+  }
+  .cmap {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: var(--color-ice);
+    border: 1px solid var(--color-rule);
+  }
+  .cmap-country {
+    fill: var(--color-rule-soft);
+    stroke: var(--color-paper);
+    stroke-width: 0.5;
+  }
+  .cmap-country-active {
+    fill: var(--color-amber);
+  }
+  .cmap-dot {
+    fill: var(--color-brick);
+    stroke: var(--color-paper-warm);
+    stroke-width: 2;
+    transition: r 0.15s ease;
+  }
+  .cmap-marker {
+    cursor: pointer;
+  }
+  .cmap-marker:hover .cmap-dot,
+  .cmap-marker:focus-visible .cmap-dot {
+    r: 8;
+  }
+  .cmap-label {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    fill: var(--color-ink);
+    paint-order: stroke;
+    stroke: var(--color-paper);
+    stroke-width: 3;
+  }
+</style>
