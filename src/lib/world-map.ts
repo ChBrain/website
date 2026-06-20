@@ -117,3 +117,46 @@ export function centroidByIso(iso2: string): [number, number] | null {
   if (!centroidCache.has(key)) centroidCache.set(key, computeCentroid(key));
   return centroidCache.get(key) ?? null;
 }
+
+// Atlas: country name + UN M49 region, both derived from the same Natural Earth
+// properties (NAME, REGION_UN) so the geometry stays the single source. These
+// are the nameFor/regionFor the culture-tree injects: the website owns names and
+// the region key (CVI maps the key -> a brand token in the component's CSS), so
+// the data package emits ISO codes only, never names or colours.
+
+interface CountryFacts {
+  name: string;
+  region: string | null;
+}
+
+const factsByIso = new Map<string, CountryFacts>();
+for (const f of raw.features) {
+  const iso = iso2Of(f.properties);
+  if (!iso || factsByIso.has(iso)) continue;
+  const regionUn = f.properties.REGION_UN;
+  factsByIso.set(iso, {
+    name: String(f.properties.NAME ?? f.properties.ADMIN ?? ""),
+    region: typeof regionUn === "string" && regionUn !== "" ? regionUn.toLowerCase() : null,
+  });
+}
+
+/**
+ * English country name for an ISO 3166-1 alpha-2 code (Natural Earth NAME), or
+ * null. Subdivision codes (3166-2) return null — those are named by the
+ * culture's own title, not the country atlas.
+ */
+export function countryName(iso2: string): string | null {
+  return factsByIso.get(iso2.toUpperCase())?.name ?? null;
+}
+
+/**
+ * UN M49 macro-region key ("europe", "asia", "africa", "americas", "oceania")
+ * for an ISO code, or null. A subdivision (3166-2) inherits its country's region
+ * ("DE-BY" -> "DE" -> "europe").
+ */
+export function regionKeyOf(iso: string): string | null {
+  const code = iso.toUpperCase();
+  const hyphen = code.indexOf("-");
+  const country = hyphen > 0 ? code.slice(0, hyphen) : code;
+  return factsByIso.get(country)?.region ?? null;
+}
