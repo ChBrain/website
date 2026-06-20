@@ -1,9 +1,14 @@
 ---
 // CultureMap: an in-brand world map. Draws every country outline (projected
 // at build time by src/lib/world-map.ts), highlights the countries that have
-// a culture package, and drops a clickable marker on each one linking to its
-// download. Pure SVG, styled only with design tokens (no third-party CSS, no
-// hex literals) so it satisfies the brand contract on every surface.
+// a culture package, and labels each with a marker. Pure SVG, styled only
+// with design tokens (no third-party CSS, no hex literals) so it satisfies
+// the brand contract on every surface.
+//
+// The map is presentational (role="img"): a single illustration with no
+// interactive controls inside it (an interactive control nested in an
+// role="img" trips axe's nested-interactive). The download links live in the
+// page's accessible list beside the map, the keyboard/screen-reader path.
 //
 // The page supplies the markers (id, country, label, download URL); the
 // component owns the geography and the chrome.
@@ -56,17 +61,13 @@ const aria = `World map. ${count} ${count === 1 ? "country has" : "countries hav
     <g class="cmap-markers">
       {
         placed.map((m) => (
-          <a
-            href={m.href}
-            class="cmap-marker"
-            aria-label={`Download the ${m.name} culture package`}
-          >
+          <g class="cmap-marker">
             <title>{m.size ? `${m.name} · ${m.size}` : m.name}</title>
             <circle cx={m.x} cy={m.y} r="6" class="cmap-dot" />
             <text x={m.x} y={m.y - 12} text-anchor="middle" class="cmap-label">
               {m.name}
             </text>
-          </a>
+          </g>
         ))
       }
     </g>
@@ -97,13 +98,6 @@ const aria = `World map. ${count} ${count === 1 ? "country has" : "countries hav
     stroke: var(--color-paper-warm);
     stroke-width: 2;
     transition: r 0.15s ease;
-  }
-  .cmap-marker {
-    cursor: pointer;
-  }
-  .cmap-marker:hover .cmap-dot,
-  .cmap-marker:focus-visible .cmap-dot {
-    r: 8;
   }
   .cmap-label {
     font-family: var(--font-mono);
