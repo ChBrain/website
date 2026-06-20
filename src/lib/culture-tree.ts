@@ -80,10 +80,7 @@ function countryOf(iso: string): string | null {
  * Build the drill-down forest (top-level countries) from the manifest entries.
  * Children are sorted by display name for stable, deterministic output.
  */
-export function buildCultureTree(
-  entries: CultureEntry[],
-  opts: BuildOptions,
-): CultureNode[] {
+export function buildCultureTree(entries: CultureEntry[], opts: BuildOptions): CultureNode[] {
   const nodes = new Map<string, CultureNode>();
 
   const ensure = (iso: string): CultureNode => {
