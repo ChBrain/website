@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { JSDOM } from "jsdom";
 import { loadBuiltPages } from "./helpers/load-built-html";
 import { loadAllSpecsForTests } from "./helpers/load-specs-for-tests";
-import matter from "gray-matter";
+import { frontmatter as parseFrontmatter } from "../src/lib/frontmatter";
 
 const pages = loadBuiltPages(process.cwd());
 const specs = loadAllSpecsForTests();
@@ -13,7 +13,7 @@ function specPagePath(id: string): string {
 
 describe("renderer - per-spec assertions", () => {
   for (const spec of specs) {
-    const frontmatter = matter(spec.text).data;
+    const frontmatter = parseFrontmatter(spec.text).data;
     const expectedPath = specPagePath(spec.id);
     const page = pages.find((p) => p.path === expectedPath);
 

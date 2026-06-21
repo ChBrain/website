@@ -2,14 +2,14 @@ import { describe, it, expect } from "vitest";
 import { JSDOM } from "jsdom";
 import { loadBuiltPages } from "./helpers/load-built-html";
 import { loadAllSpecsForTests } from "./helpers/load-specs-for-tests";
-import matter from "gray-matter";
+import { frontmatter as parseFrontmatter } from "../src/lib/frontmatter";
 
 const pages = loadBuiltPages(process.cwd());
 const specs = loadAllSpecsForTests();
 
 describe("chrome - mnemonic strip + class pill on every spec page", () => {
   for (const spec of specs) {
-    const frontmatter = matter(spec.text).data;
+    const frontmatter = parseFrontmatter(spec.text).data;
     const page = pages.find((p) => p.path === `architecture/${spec.id}/index.html`);
 
     describe(spec.id, () => {

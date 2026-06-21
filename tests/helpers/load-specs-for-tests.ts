@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import matter from "gray-matter";
+import { frontmatter as parseFrontmatter } from "../../src/lib/frontmatter";
 
 const KHAI_ARCH_DIR = join(process.cwd(), "node_modules", "@chbrain", "khai-arch", "architecture");
 
@@ -26,6 +26,6 @@ export function loadAllSpecsForTests(): RawSpecForTest[] {
       id: name.replace(/\.md$/, ""),
       text: readFileSync(join(KHAI_ARCH_DIR, name), "utf-8"),
     }))
-    .filter((spec) => Object.keys(matter(spec.text).data).length > 0)
+    .filter((spec) => Object.keys(parseFrontmatter(spec.text).data).length > 0)
     .filter((spec) => !NOT_A_SPEC_PAGE.has(spec.id));
 }
