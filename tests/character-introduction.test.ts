@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { JSDOM } from "jsdom";
 import { loadBuiltPages } from "./helpers/load-built-html";
 import { loadAllSpecsForTests } from "./helpers/load-specs-for-tests";
-import matter from "gray-matter";
+import { frontmatter as parseFrontmatter } from "../src/lib/frontmatter";
 
 const pages = loadBuiltPages(process.cwd());
 const specs = loadAllSpecsForTests();
@@ -89,7 +89,7 @@ describe("character-introduction - built page words exist in source", () => {
 
       const renderedWords = contentWords(visibleText);
 
-      const sourceText = spec.text + " " + (matter(spec.text).data.subtitle ?? "");
+      const sourceText = spec.text + " " + (parseFrontmatter(spec.text).data.subtitle ?? "");
       const sourceWords = contentWords(sourceText);
 
       const introduced = [...renderedWords].filter(
