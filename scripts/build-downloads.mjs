@@ -40,6 +40,63 @@ function readMarkdownStripped(path) {
   return frontmatter(raw).content.trim() + "\n";
 }
 
+// The engines a culture ships with are whatever khai-cultures declares in its
+// npm dependency closure -- not a hand-kept list. Walk khai-cultures' @chbrain/*
+// dependencies (recursively, so an engine that needs another rides along) and
+// collect every @chbrain/khai-engine-* package. Today that is khai-engine-spine;
+// when khai-cultures adds khai-engine-language (etc.) the build picks it up with
+// no change here. Returns Map<engineId, packageDir>.
+function culturesEngineClosure(rootPkgDir) {
+  const engines = new Map();
+  const seen = new Set();
+  const visit = (pkgDir) => {
+    let pkg;
+    try {
+      pkg = JSON.parse(readFileSync(join(pkgDir, "package.json"), "utf8"));
+    } catch {
+      return;
+    }
+    for (const dep of Object.keys(pkg.dependencies || {})) {
+      if (seen.has(dep) || !dep.startsWith("@chbrain/")) continue;
+      seen.add(dep);
+      let depDir;
+      try {
+        depDir = dirname(_require.resolve(`${dep}/package.json`));
+      } catch {
+        continue;
+      }
+      if (dep.startsWith("@chbrain/khai-engine-")) {
+        engines.set(dep.slice("@chbrain/khai-engine-".length), depDir);
+      }
+      visit(depDir);
+    }
+  };
+  visit(rootPkgDir);
+  return engines;
+}
+
+// An engine ships as prose + per-host folders, not as the JS the website reads:
+// gather its files recursively, strip frontmatter from markdown, and drop the
+// npm/build scaffolding (package.json, changelog) and any engine code.
+const ENGINE_SKIP_ROOT = new Set(["package.json", "CHANGELOG.md"]);
+function collectEngineFiles(dir, base = "") {
+  const files = [];
+  for (const f of readdirSync(dir)) {
+    if (base === "" && ENGINE_SKIP_ROOT.has(f)) continue;
+    if (/\.(mjs|cjs|js|ts|map)$/.test(f)) continue; // engine code, not world content
+    const filePath = join(dir, f);
+    const rel = base ? `${base}/${f}` : f;
+    if (statSync(filePath).isDirectory()) {
+      files.push(...collectEngineFiles(filePath, rel));
+    } else if (f.endsWith(".md")) {
+      files.push({ path: rel, data: readMarkdownStripped(filePath) });
+    } else {
+      files.push({ path: rel, data: readFileSync(filePath) });
+    }
+  }
+  return files;
+}
+
 // The subdomain docroots (architecture/cultures) are nested inside
 // /public_html/ and inherit the host's Apache config, which denies this
 // build-generated subtree by default: a direct request for an existing
@@ -118,6 +175,12 @@ function buildEngineDownloads() {
     if (!name.startsWith("khai-engine-")) continue;
     const id = name.slice("khai-engine-".length);
     const dir = join(scope, name);
+
+    // Meta engines (e.g. the spine) are structural, not standalone bundles --
+    // they ship inside the culture zips that depend on them, not on the engine
+    // shelf. Skip them here so there is no orphan zip the shelf never links.
+    const engineClass = JSON.parse(readFileSync(join(dir, "package.json"), "utf8")).khai?.class;
+    if (engineClass === "meta") continue;
 
     // Identify overhead files.
     // Overhead: package.json, README.md, REFERENCES.md, LICENSE, LICENSE-CODE.
@@ -489,6 +552,23 @@ function buildCultureDownloads() {
   // a single set zip its members live under (see the groups loop below).
   const memberFilesById = new Map();
 
+  // The engines cultures depend on, bundled once and carried in every culture +
+  // set zip under engines/<id>/, so a downloaded world is runnable on its own.
+  // npm-derived (culturesEngineClosure) -- not hand-listed -- so the set tracks
+  // whatever khai-cultures declares.
+  const engineClosure = culturesEngineClosure(culturesPkgDir);
+  const engineOverhead = [];
+  for (const [engineId, engineDir] of engineClosure) {
+    for (const file of collectEngineFiles(engineDir)) {
+      engineOverhead.push({ path: `engines/${engineId}/${file.path}`, data: file.data });
+    }
+  }
+  if (engineClosure.size > 0) {
+    console.log(`  cultures: engines bundled -> [${[...engineClosure.keys()].sort().join(", ")}]`);
+  } else {
+    console.log("  cultures: no engine dependencies declared; zips carry world/ only");
+  }
+
   for (const entry of cultures) {
     const id = entry.id;
     const cultureDir = join(culturesDir, id);
@@ -497,11 +577,12 @@ function buildCultureDownloads() {
       continue;
     }
 
-    // Pack the culture's instance files into a zip. Markdown is stripped of
-    // frontmatter, other files copied as-is. REFERENCES.md rides as overhead at
-    // the bundle root alongside the house README/licences.
+    // Pack the culture (the "world" that plugs into the engines' seam) under
+    // world/, the engines under engines/<id>/, the house README/licences +
+    // REFERENCES at the root. Markdown is stripped of frontmatter, other files
+    // copied as-is.
     const contentFiles = [];
-    const overhead = [...cultureOverhead];
+    const overhead = [...cultureOverhead, ...engineOverhead];
     for (const f of readdirSync(cultureDir)) {
       const filePath = join(cultureDir, f);
       if (!statSync(filePath).isFile()) continue;
@@ -521,7 +602,7 @@ function buildCultureDownloads() {
     const packed = packBundle({
       name: id,
       overhead,
-      content: { dir: "content", files: contentFiles },
+      content: { dir: "world", files: contentFiles },
       stamp: { kind: "culture", culture: id },
     });
 
@@ -573,9 +654,9 @@ function buildCultureDownloads() {
       references,
     };
 
-    // Gather every member culture that was actually packed, each under a folder
-    // named for the member, then pack the lot into one set zip with the shared
-    // house README/licences as overhead.
+    // Gather every member culture that was actually packed, each under
+    // world/<member>/, then pack the lot into one set zip. The engines ride once
+    // at engines/<id>/ (shared by every member), with the house README/licences.
     const setFiles = [];
     const present = [];
     for (const memberId of references) {
@@ -588,8 +669,8 @@ function buildCultureDownloads() {
     if (setFiles.length > 0) {
       const packed = packBundle({
         name: g.id,
-        overhead: [...cultureOverhead],
-        content: { dir: "content", files: setFiles },
+        overhead: [...cultureOverhead, ...engineOverhead],
+        content: { dir: "world", files: setFiles },
         stamp: { kind: "group", group: g.id, members: present },
       });
       const size = fmtBytes(packed.zip.length);
