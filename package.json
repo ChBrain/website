@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@chbrain/khai-arch": "^0.1.19",
-    "@chbrain/khai-cultures": "^0.5.3",
+    "@chbrain/khai-cultures": "^0.14.1",
     "@chbrain/khai-engine-gender": "^0.1.7",
     "@chbrain/khai-engine-language": "^0.1.4",
     "@chbrain/khai-methods": "^0.0.5",
