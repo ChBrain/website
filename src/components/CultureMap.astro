@@ -39,9 +39,13 @@ interface Props {
   markers: CultureMarker[];
   ariaLabel: string;
   lenses?: CultureLens[];
+  /** the outlines + viewBox to draw; defaults to the world country map. */
+  geometry?: { outlines: { iso2: string; d: string }[]; viewbox: string };
 }
 
-const { markers, ariaLabel, lenses = [] } = Astro.props;
+const { markers, ariaLabel, lenses = [], geometry } = Astro.props;
+const outlines = geometry?.outlines ?? COUNTRIES;
+const viewBox = geometry?.viewbox ?? VIEWBOX;
 const byIso = new Map(markers.map((m) => [m.iso.toUpperCase(), m]));
 
 function ariaFor(m: CultureMarker): string {
@@ -89,9 +93,9 @@ const lensCss = lenses
         </fieldset>
       )
     }
-    <svg class="cmap-svg" viewBox={VIEWBOX} role="group" aria-label={ariaLabel}>
+    <svg class="cmap-svg" viewBox={viewBox} role="group" aria-label={ariaLabel}>
       {
-        COUNTRIES.map((c) => {
+        outlines.map((c) => {
           const m = byIso.get(c.iso2);
           const isoClass = `cmap-iso-${c.iso2}`;
           if (!m) return <path d={c.d} class={`cmap-country ${isoClass}`} />;
