@@ -423,15 +423,14 @@ async function buildPlayDownloads() {
 // Each installed culture (@chbrain/khai-cultures · cultures/<id>/) is packed
 // into a download zip + sidecar, exactly like a play house. Alongside the zips
 // this also writes the *map manifest* — public/downloads/cultures/available.json
-// — the single contract the /cultures/map page consumes (legacy schema:
-// assets/data/available.schema.json). The map colours each culture's country by
-// region and downloads downloadBase + asset on click.
+// (schemaVersion 2): a kind-discriminated `entries[]` union the /cultures/map
+// page consumes. Culture entries carry their ISO anchor + asset; group entries
+// carry references to member cultures (a lens + collection, no geo, no zip).
 //
-// The manifest is built from two sources per culture:
-//   • @chbrain/khai-cultures/registry.json → id, title (name), description
-//   • cultures/<id>/geo.json               → region, iso, optional parent/state
-// A culture with no geo.json is skipped from the manifest (warning) — it has no
-// place to sit on the map — but its zip is still produced.
+// The producer emits facts only: id, title, description, and the ISO code from
+// the registry (geo.json is an optional override carrying an explicit `parent`).
+// The page derives the drill-down tree (DE-SH -> DE), country names, and region
+// colours from the ISO code. A culture with no ISO is listed but not placed.
 //
 // downloadBase is site-relative ("/downloads/cultures/") because these zips are
 // served from the cultures surface itself, NOT GitHub releases. The legacy
@@ -482,8 +481,9 @@ function buildCultureDownloads() {
     cultureOverhead.push({ path: "LICENSE-CODE", data: readFileSync(houseLicenseCode) });
   }
 
-  const manifestCultures = [];
+  const entries = [];
   const cultures = Array.isArray(registry.cultures) ? registry.cultures : [];
+  const groups = Array.isArray(registry.groups) ? registry.groups : [];
 
   for (const entry of cultures) {
     const id = entry.id;
@@ -494,8 +494,8 @@ function buildCultureDownloads() {
     }
 
     // Pack the culture's instance files into a zip. Markdown is stripped of
-    // frontmatter (matter), other files copied as-is. REFERENCES.md rides as
-    // overhead at the bundle root alongside the house README/licences.
+    // frontmatter, other files copied as-is. REFERENCES.md rides as overhead at
+    // the bundle root alongside the house README/licences.
     const contentFiles = [];
     const overhead = [...cultureOverhead];
     for (const f of readdirSync(cultureDir)) {
@@ -519,59 +519,60 @@ function buildCultureDownloads() {
       stamp: { kind: "culture", culture: id },
     });
 
+    const size = fmtBytes(packed.zip.length);
     writeFileSync(join(outDir, `${id}.zip`), packed.zip);
     writeFileSync(
       join(outDir, `${id}.json`),
-      JSON.stringify({
-        filename: `${id}.zip`,
-        size: fmtBytes(packed.zip.length),
-        sha256: packed.zipSha256,
-      }) + "\n",
+      JSON.stringify({ filename: `${id}.zip`, size, sha256: packed.zipSha256 }) + "\n",
     );
-    console.log(
-      `  culture ${id}: ${fmtBytes(packed.zip.length)} sha256=${packed.zipSha256.slice(0, 12)}…`,
-    );
+    console.log(`  culture ${id}: ${size} sha256=${packed.zipSha256.slice(0, 12)}...`);
 
-    // Manifest entry — only for cultures that carry a geo.json (a map anchor).
+    // ISO anchor: the registry carries it. geo.json is an optional override and
+    // the only place an explicit deep-nesting `parent` is declared; the page
+    // otherwise derives the country (DE-SH -> DE), the name, and the region
+    // colour from the ISO code alone.
+    let iso = typeof entry.iso === "string" ? entry.iso : null;
+    let parent = null;
     const geoPath = join(cultureDir, "geo.json");
-    if (!existsSync(geoPath)) {
-      console.log(`  culture ${id}: no geo.json; not placed on the map`);
-      continue;
-    }
-    let geo;
-    try {
-      geo = JSON.parse(readFileSync(geoPath, "utf8"));
-    } catch (e) {
-      console.log(`  culture ${id}: geo.json unreadable (${e.message}); not placed on the map`);
-      continue;
-    }
-    if (!geo.region || !geo.iso) {
-      console.log(`  culture ${id}: geo.json missing region/iso; not placed on the map`);
-      continue;
+    if (existsSync(geoPath)) {
+      try {
+        const geo = JSON.parse(readFileSync(geoPath, "utf8"));
+        if (typeof geo.iso === "string") iso = geo.iso;
+        if (typeof geo.parent === "string") parent = geo.parent;
+      } catch (e) {
+        console.log(`  culture ${id}: geo.json unreadable (${e.message})`);
+      }
     }
 
-    manifestCultures.push({
-      id,
-      name: entry.title || id,
-      region: geo.region,
-      asset: `${id}.zip`,
-      anchor: { type: "region", iso: geo.iso },
-      parent: geo.parent ?? null,
-      state: geo.state ?? null,
+    const item = { kind: "culture", id, title: entry.title || id, asset: `${id}.zip`, size };
+    if (entry.description) item.description = entry.description;
+    if (iso) item.iso = iso;
+    else console.log(`  culture ${id}: no iso; listed but not placed on the map`);
+    if (parent) item.parent = parent;
+    entries.push(item);
+  }
+
+  // Groups: referencing entries (e.g. DACH). No geo and no zip; the page renders
+  // them as a lens over their member countries plus a download collection.
+  for (const g of groups) {
+    entries.push({
+      kind: "group",
+      id: g.id,
+      title: g.title || g.id,
+      ...(g.description ? { description: g.description } : {}),
+      references: Array.isArray(g.references) ? g.references : [],
     });
   }
 
   const manifest = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     release: pkgVersion,
     downloadBase: "/downloads/cultures/",
-    cultures: manifestCultures,
-    groupings: [],
+    entries,
   };
   writeFileSync(join(outDir, "available.json"), JSON.stringify(manifest, null, 2) + "\n");
-  console.log(
-    `  cultures: wrote available.json (${manifestCultures.length} placed of ${cultures.length})`,
-  );
+  const placed = entries.filter((e) => e.kind === "culture" && e.iso).length;
+  console.log(`  cultures: wrote available.json (${entries.length} entries, ${placed} placed)`);
 }
 
 // ── run ────────────────────────────────────────────────────────────────────
