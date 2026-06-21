@@ -143,14 +143,73 @@ function writeDownloadsHtaccess() {
 
 // Try loading @chbrain packages. If they are not installed (CI sandbox with no
 // registry token) exit 0 so astro build can continue without downloads.
-let packBundle, buildAll;
+let packBundle, zipStore, sha256, buildAll;
 try {
-  ({ packBundle } = await import("@chbrain/khai-pack"));
+  ({ packBundle, zipStore, sha256 } = await import("@chbrain/khai-pack"));
   ({ buildAll } = await import("@chbrain/khai-skills/build"));
 } catch (e) {
   console.log(`build-downloads: skipping — ${e.message}`);
   console.log("  Run npm run deps:sync on a machine with the GitHub Packages token.");
   process.exit(0);
+}
+
+// ── flat-for-host packaging ─────────────────────────────────────────────────
+//
+// Claude.ai project knowledge takes a flat set of files: no directory structure,
+// and a link into another folder goes nowhere. So a culture zip is flattened --
+// each file's folder path becomes a "_"-joined name prefix (world/persona_x.md
+// -> world_persona_x.md, engines/spine/instructions.md ->
+// engines_spine_instructions.md) -- and every relative markdown link is rewritten
+// to the matching flat name, so the cross-references still resolve in one flat
+// pile. External links (http/mailto), absolute paths, and bare #anchors are left
+// alone.
+
+function flattenName(logicalPath) {
+  return logicalPath.split("/").join("_");
+}
+
+// Resolve a relative link target against the linking file's folder, collapsing
+// "." and "..", to the bundle-logical path it points at.
+function resolveLogical(fromDir, rel) {
+  const parts = fromDir ? fromDir.split("/") : [];
+  for (const seg of rel.split("/")) {
+    if (seg === "" || seg === ".") continue;
+    else if (seg === "..") parts.pop();
+    else parts.push(seg);
+  }
+  return parts.join("/");
+}
+
+function rewriteLinksFlat(md, logicalPath) {
+  const dir = logicalPath.includes("/") ? logicalPath.slice(0, logicalPath.lastIndexOf("/")) : "";
+  // [text](target) and [text](target "title"): target is the first run with no
+  // whitespace or ")"; an optional title tail is preserved verbatim.
+  return md.replace(/\]\(([^)\s]+)([^)]*)\)/g, (whole, target, tail) => {
+    if (/^(https?:|mailto:|tel:|#|\/)/i.test(target)) return whole;
+    const hash = target.indexOf("#");
+    const pathPart = hash >= 0 ? target.slice(0, hash) : target;
+    const anchor = hash >= 0 ? target.slice(hash) : "";
+    if (pathPart === "") return whole;
+    return `](${flattenName(resolveLogical(dir, pathPart))}${anchor}${tail})`;
+  });
+}
+
+// Flatten a logical bundle (files with forward-slash paths) into a flat zip:
+// prefix-rename every file, rewrite links in markdown, store with zipStore.
+function packFlat(name, logicalFiles) {
+  const seen = new Set();
+  const entries = [];
+  for (const f of logicalFiles) {
+    const flat = flattenName(f.path);
+    if (seen.has(flat))
+      throw new Error(`packFlat(${name}): duplicate flat name "${flat}" (from ${f.path})`);
+    seen.add(flat);
+    let data = f.data;
+    if (f.path.endsWith(".md") && typeof data === "string") data = rewriteLinksFlat(data, f.path);
+    entries.push({ name: flat, data: Buffer.isBuffer(data) ? data : Buffer.from(String(data)) });
+  }
+  const zip = zipStore(entries);
+  return { zip, zipSha256: sha256(zip) };
 }
 
 // ── engines ────────────────────────────────────────────────────────────────
@@ -577,34 +636,30 @@ function buildCultureDownloads() {
       continue;
     }
 
-    // Pack the culture (the "world" that plugs into the engines' seam) under
-    // world/, the engines under engines/<id>/, the house README/licences +
-    // REFERENCES at the root. Markdown is stripped of frontmatter, other files
-    // copied as-is.
-    const contentFiles = [];
-    const overhead = [...cultureOverhead, ...engineOverhead];
+    // The culture's own files (its README, REFERENCES, personas, positions, ...)
+    // stay together under world/ so their dense sibling cross-links resolve once
+    // flattened; markdown is stripped of frontmatter, other files copied as-is.
+    const worldFiles = [];
     for (const f of readdirSync(cultureDir)) {
       const filePath = join(cultureDir, f);
       if (!statSync(filePath).isFile()) continue;
-      if (f === "REFERENCES.md") {
-        overhead.push({ path: "REFERENCES.md", data: readMarkdownStripped(filePath) });
-        continue;
-      }
-      if (f.endsWith(".md")) {
-        contentFiles.push({ path: f, data: readMarkdownStripped(filePath) });
-      } else {
-        contentFiles.push({ path: f, data: readFileSync(filePath) });
-      }
+      const data = f.endsWith(".md") ? readMarkdownStripped(filePath) : readFileSync(filePath);
+      worldFiles.push({ path: f, data });
     }
 
-    memberFilesById.set(id, contentFiles);
+    // Stored bundle-relative (under world/) so a set zip can re-home each member
+    // under world/<member>/ (see the groups loop below).
+    memberFilesById.set(id, worldFiles);
 
-    const packed = packBundle({
-      name: id,
-      overhead,
-      content: { dir: "world", files: contentFiles },
-      stamp: { kind: "culture", culture: id },
-    });
+    // The bundle: house README/licences at the root, the engines under
+    // engines/<id>/, the culture under world/ -- then flattened to one flat pile
+    // with links rewritten, the shape Claude.ai project knowledge takes.
+    const logicalFiles = [
+      ...cultureOverhead,
+      ...engineOverhead,
+      ...worldFiles.map((f) => ({ path: `world/${f.path}`, data: f.data })),
+    ];
+    const packed = packFlat(id, logicalFiles);
 
     const size = fmtBytes(packed.zip.length);
     writeFileSync(join(outDir, `${id}.zip`), packed.zip);
@@ -654,25 +709,21 @@ function buildCultureDownloads() {
       references,
     };
 
-    // Gather every member culture that was actually packed, each under
-    // world/<member>/, then pack the lot into one set zip. The engines ride once
-    // at engines/<id>/ (shared by every member), with the house README/licences.
-    const setFiles = [];
+    // Gather every member culture, re-homed under world/<member>/, then pack the
+    // lot into one flat set zip: house README/licences at the root, the engines
+    // once under engines/<id>/, the members under world/<member>/.
+    const worldFiles = [];
     const present = [];
     for (const memberId of references) {
       const files = memberFilesById.get(memberId);
       if (!files) continue;
       present.push(memberId);
-      for (const f of files) setFiles.push({ path: `${memberId}/${f.path}`, data: f.data });
+      for (const f of files) worldFiles.push({ path: `world/${memberId}/${f.path}`, data: f.data });
     }
 
-    if (setFiles.length > 0) {
-      const packed = packBundle({
-        name: g.id,
-        overhead: [...cultureOverhead, ...engineOverhead],
-        content: { dir: "world", files: setFiles },
-        stamp: { kind: "group", group: g.id, members: present },
-      });
+    if (worldFiles.length > 0) {
+      const logicalFiles = [...cultureOverhead, ...engineOverhead, ...worldFiles];
+      const packed = packFlat(g.id, logicalFiles);
       const size = fmtBytes(packed.zip.length);
       writeFileSync(join(outDir, `${g.id}.zip`), packed.zip);
       writeFileSync(
