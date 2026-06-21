@@ -96,7 +96,7 @@ const example = [
   title="Cultures · KAI HACKS AI"
   description="AI infrastructure for cross-cultural trainers. 198 cultural positions; each one running, each one holding what it holds."
 >
-  <div class="arch-page cultures">
+  <div class="arch-page cultures cultures-home">
     <SiteHeader domain="kaihacks" tld=".ai" location="cultures" />
 
     <header class="cu-mast">
@@ -205,11 +205,57 @@ const example = [
     <SiteFooter />
   </div>
 
+  <style is:global>
+    /* Scroll-snap on the document, matching the site standard (main, CVI,
+     * architecture): the masthead and each section snap to the top, with
+     * scroll-padding leaving room for the sticky header + footer so a
+     * snapped panel lands below the chrome rather than under it. Scoped to
+     * .cultures-home (the cultures surface). Disabled on phones, where snap
+     * is friction and the page reads better as one continuous scroll. */
+    html:has(.cultures-home) {
+      scroll-snap-type: y mandatory;
+      scroll-padding-top: 4rem;
+      scroll-padding-bottom: 4rem;
+      scroll-behavior: smooth;
+    }
+    @media (max-width: 640px) {
+      html:has(.cultures-home) {
+        scroll-snap-type: none;
+      }
+    }
+  </style>
+
   <style>
     /* Cultures landing: brand-book aligned. Lifts the editorial
      * pattern from CVI/main/privacy: paper ground, ink voice, brick
      * dot accents, mono labels in caps. Three sections (services,
      * example, library) under one masthead. */
+
+    /* ── snap panels (site standard: main · CVI · architecture) ──────────── */
+    .cultures-home > .cu-mast,
+    .cultures-home > .cu-section {
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+    }
+    @media (min-width: 641px) {
+      /* Each panel vertical-centers its content at eye level, the way the
+       * other snap surfaces do. min-height (not height) lets a tall panel
+       * grow past the viewport rather than clip its content. */
+      .cultures-home > .cu-mast,
+      .cultures-home > .cu-section {
+        min-height: calc(100vh - 8rem);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+    }
+    @media (max-width: 640px) {
+      .cultures-home > .cu-mast,
+      .cultures-home > .cu-section {
+        scroll-snap-align: none;
+        scroll-snap-stop: normal;
+      }
+    }
 
     /* ── masthead ───────────────────────────────────────────────────────── */
     .cu-mast {
