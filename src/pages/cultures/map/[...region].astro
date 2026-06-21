@@ -14,6 +14,7 @@ import {
   type CultureNode,
 } from "../../../lib/culture-tree";
 import { countryName, regionKeyOf } from "../../../lib/world-map";
+import { subMapFor } from "../../../lib/de-map";
 import { URLS } from "../../../lib/urls";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
@@ -160,18 +161,21 @@ export async function getStaticPaths() {
       sub: "Each highlighted country has a culture package ready to download. A country with subdivisions opens its own map. More arrive with each release.",
       markers: roots.map((n) => markerFor(n, [])),
       lenses,
+      geometry: null,
+      showMap: true,
       downloads: downloadsFor(null, roots, []),
       collections,
       crumbs: [] as Crumb[],
     },
   });
 
-  // One page per branch country (its sub-map is list-only until that country's
-  // subdivision geometry ships; it still drills, lists, and links correctly).
+  // One page per branch country. When its subdivision geometry is bundled the
+  // page renders a real sub-map (Germany -> its Bundesländer); otherwise it is
+  // list-only. Either way it drills, lists, and links correctly.
   for (const path of branchPaths(roots)) {
     const node = nodeByPath(roots, path);
     if (!node) continue;
-    const parentPath = path.slice(0, -1);
+    const geometry = subMapFor(node.iso);
     paths.push({
       params: { region: path.join("/").toLowerCase() },
       props: {
@@ -180,8 +184,10 @@ export async function getStaticPaths() {
         heading: node.name,
         lede: `Inside ${node.name}.`,
         sub: `Every ${node.name} package, plus its subdivisions.`,
-        markers: [] as CultureMarker[],
+        markers: geometry ? node.children.map((c) => markerFor(c, path)) : ([] as CultureMarker[]),
         lenses: [] as CultureLens[],
+        geometry,
+        showMap: !!geometry,
         downloads: downloadsFor(node, node.children, path),
         collections: [] as Collection[],
         crumbs: [{ label: "World", href: MAP_ROOT }] as Crumb[],
@@ -192,13 +198,25 @@ export async function getStaticPaths() {
   return paths;
 }
 
-const { release, isRoot, heading, lede, sub, markers, lenses, downloads, collections, crumbs } =
-  Astro.props;
+const {
+  release,
+  isRoot,
+  heading,
+  lede,
+  sub,
+  markers,
+  lenses,
+  geometry,
+  showMap,
+  downloads,
+  collections,
+  crumbs,
+} = Astro.props;
 
 const count = markers.length;
 const countLabel =
-  count === 0 ? "no countries on this map" : `${count} ${count === 1 ? "country" : "countries"}`;
-const ariaLabel = `Map. ${countLabel} with a culture package.`;
+  count === 0 ? "nothing on this map yet" : `${count} ${count === 1 ? "place" : "places"}`;
+const ariaLabel = `${heading}. ${countLabel} with a culture package.`;
 ---
 
 <BaseLayout
@@ -228,19 +246,24 @@ const ariaLabel = `Map. ${countLabel} with a culture package.`;
     </header>
 
     {
-      isRoot && (
+      showMap && (
         <section id="map" class="cu-section">
           <div class="cu-seclabel">
             <span class="cu-n">§01</span>
             <div class="cu-seclabel-body">
-              <h2 class="cu-h2">The world</h2>
+              <h2 class="cu-h2">{isRoot ? "The world" : heading}</h2>
               <p class="cu-secnote">{countLabel} on the map</p>
             </div>
           </div>
           {count === 0 ? (
             <p class="cu-empty">No culture packages built yet.</p>
           ) : (
-            <CultureMap markers={markers} ariaLabel={ariaLabel} lenses={lenses} />
+            <CultureMap
+              markers={markers}
+              ariaLabel={ariaLabel}
+              lenses={lenses}
+              geometry={geometry}
+            />
           )}
         </section>
       )
@@ -250,7 +273,7 @@ const ariaLabel = `Map. ${countLabel} with a culture package.`;
       downloads.length > 0 && (
         <section id="downloads" class="cu-section">
           <div class="cu-seclabel">
-            <span class="cu-n">{isRoot ? "§02" : "§01"}</span>
+            <span class="cu-n">{showMap ? "§02" : "§01"}</span>
             <div class="cu-seclabel-body">
               <h2 class="cu-h2">Downloads</h2>
               <p class="cu-secnote">every package, ready to take with you</p>
