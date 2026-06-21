@@ -485,6 +485,10 @@ function buildCultureDownloads() {
   const cultures = Array.isArray(registry.cultures) ? registry.cultures : [];
   const groups = Array.isArray(registry.groups) ? registry.groups : [];
 
+  // Each culture's content files, kept so a group (e.g. DACH) can be packed into
+  // a single set zip its members live under (see the groups loop below).
+  const memberFilesById = new Map();
+
   for (const entry of cultures) {
     const id = entry.id;
     const cultureDir = join(culturesDir, id);
@@ -511,6 +515,8 @@ function buildCultureDownloads() {
         contentFiles.push({ path: f, data: readFileSync(filePath) });
       }
     }
+
+    memberFilesById.set(id, contentFiles);
 
     const packed = packBundle({
       name: id,
@@ -552,16 +558,56 @@ function buildCultureDownloads() {
     entries.push(item);
   }
 
-  // Groups: referencing entries (e.g. DACH). No geo and no zip; the page renders
-  // them as a lens over their member countries plus a download collection.
+  // Groups: referencing entries (e.g. DACH). A group is a collection that
+  // downloads as ONE set: its members are packed together into a single
+  // <id>.zip (each member under its own folder), so the page can offer the
+  // whole set in one go alongside the per-member links. The group is also a
+  // lens over its member countries on the map. No geo of its own.
   for (const g of groups) {
-    entries.push({
+    const references = Array.isArray(g.references) ? g.references : [];
+    const item = {
       kind: "group",
       id: g.id,
       title: g.title || g.id,
       ...(g.description ? { description: g.description } : {}),
-      references: Array.isArray(g.references) ? g.references : [],
-    });
+      references,
+    };
+
+    // Gather every member culture that was actually packed, each under a folder
+    // named for the member, then pack the lot into one set zip with the shared
+    // house README/licences as overhead.
+    const setFiles = [];
+    const present = [];
+    for (const memberId of references) {
+      const files = memberFilesById.get(memberId);
+      if (!files) continue;
+      present.push(memberId);
+      for (const f of files) setFiles.push({ path: `${memberId}/${f.path}`, data: f.data });
+    }
+
+    if (setFiles.length > 0) {
+      const packed = packBundle({
+        name: g.id,
+        overhead: [...cultureOverhead],
+        content: { dir: "content", files: setFiles },
+        stamp: { kind: "group", group: g.id, members: present },
+      });
+      const size = fmtBytes(packed.zip.length);
+      writeFileSync(join(outDir, `${g.id}.zip`), packed.zip);
+      writeFileSync(
+        join(outDir, `${g.id}.json`),
+        JSON.stringify({ filename: `${g.id}.zip`, size, sha256: packed.zipSha256 }) + "\n",
+      );
+      item.asset = `${g.id}.zip`;
+      item.size = size;
+      console.log(
+        `  group ${g.id}: ${size} (${present.length} members) sha256=${packed.zipSha256.slice(0, 12)}...`,
+      );
+    } else {
+      console.log(`  group ${g.id}: no member packages present; set zip skipped`);
+    }
+
+    entries.push(item);
   }
 
   const manifest = {
