@@ -143,14 +143,127 @@ function writeDownloadsHtaccess() {
 
 // Try loading @chbrain packages. If they are not installed (CI sandbox with no
 // registry token) exit 0 so astro build can continue without downloads.
-let packBundle, buildAll;
+let packBundle, zipStore, sha256, buildAll;
 try {
-  ({ packBundle } = await import("@chbrain/khai-pack"));
+  ({ packBundle, zipStore, sha256 } = await import("@chbrain/khai-pack"));
   ({ buildAll } = await import("@chbrain/khai-skills/build"));
 } catch (e) {
   console.log(`build-downloads: skipping — ${e.message}`);
   console.log("  Run npm run deps:sync on a machine with the GitHub Packages token.");
   process.exit(0);
+}
+
+// ── flat-for-host packaging ─────────────────────────────────────────────────
+//
+// Claude.ai project knowledge takes a flat set of files (no folders; a link into
+// a folder goes nowhere), so the upload payload is flattened: each content file's
+// folder path becomes a "_"-joined name (world/persona_x.md -> world_persona_x.md,
+// engines/spine/instructions.md -> engines_spine_instructions.md). The human-
+// facing admin files (the culture README/REFERENCES, the licences) stay at the
+// zip root; everything that gets uploaded lives in a khai/ subfolder. Every
+// relative markdown link is rewritten to wherever its target landed -- flat among
+// the content, or khai/... from a root admin file -- so the cross-references hold.
+//
+// Each bundle file carries a logical path (its place in the source tree, used to
+// resolve links) and a final path (where it lands in the zip). Content finals are
+// "khai/<flattened-logical>"; admin finals are a bare name at the root.
+const KHAI = "khai/";
+
+function flattenName(logicalPath) {
+  return logicalPath.split("/").join("_");
+}
+
+// The final zip path for a content file: flattened, under khai/.
+function contentFinal(logicalPath) {
+  return KHAI + flattenName(logicalPath);
+}
+
+// A README/REFERENCES of ANY origin (culture, engine, set member) is admin and
+// must never land in khai/ -- only true content gets uploaded to a host. So
+// every readme/reference is hoisted to the root, renamed by its flattened path
+// to stay collision-free (engines/spine/REFERENCES.md -> engines_spine_REFERENCES.md,
+// world/germany/README.md -> world_germany_README.md). The bundle's own primary
+// readme/reference keep the bare names so the download has an obvious entry.
+const ADMIN_RE = /(^|\/)(README|REFERENCES)\.md$/i;
+const LICENSE_RE = /(^|\/)(LICENSE|LICENSE-CODE)$/;
+
+function baseName(logicalPath) {
+  return logicalPath.includes("/")
+    ? logicalPath.slice(logicalPath.lastIndexOf("/") + 1)
+    : logicalPath;
+}
+
+// Where a file lands: licences + the primary readme/reference at the root with a
+// bare name; any other readme/reference at the root with a flattened name; all
+// real content flat under khai/.
+function finalForFile(logical, primaryLogicals) {
+  if (LICENSE_RE.test(logical)) return baseName(logical);
+  if (ADMIN_RE.test(logical))
+    return primaryLogicals.has(logical) ? baseName(logical) : flattenName(logical);
+  return contentFinal(logical);
+}
+
+// Resolve a relative link target against the linking file's folder, collapsing
+// "." and "..", to the bundle-logical path it points at.
+function resolveLogical(fromDir, rel) {
+  const parts = fromDir ? fromDir.split("/") : [];
+  for (const seg of rel.split("/")) {
+    if (seg === "" || seg === ".") continue;
+    else if (seg === "..") parts.pop();
+    else parts.push(seg);
+  }
+  return parts.join("/");
+}
+
+// A link from one final location to another, given both are either at the root
+// or one level down in khai/.
+function linkBetween(srcFinal, tgtFinal) {
+  const srcIn = srcFinal.startsWith(KHAI);
+  const tgtIn = tgtFinal.startsWith(KHAI);
+  const tgtBase = tgtIn ? tgtFinal.slice(KHAI.length) : tgtFinal;
+  if (srcIn && tgtIn) return tgtBase; // sibling within khai/
+  if (!srcIn && tgtIn) return KHAI + tgtBase; // root admin -> content
+  if (!srcIn && !tgtIn) return tgtBase; // root -> root
+  return "../" + tgtBase; // content -> root admin
+}
+
+function rewriteLinks(mdText, srcLogical, srcFinal, finalByLogical) {
+  const dir = srcLogical.includes("/") ? srcLogical.slice(0, srcLogical.lastIndexOf("/")) : "";
+  // [text](target) and [text](target "title"): target is the first run with no
+  // whitespace or ")"; an optional title tail is preserved verbatim.
+  return mdText.replace(/\]\(([^)\s]+)([^)]*)\)/g, (whole, target, tail) => {
+    if (/^(https?:|mailto:|tel:|#|\/)/i.test(target)) return whole;
+    const hash = target.indexOf("#");
+    const pathPart = hash >= 0 ? target.slice(0, hash) : target;
+    const anchor = hash >= 0 ? target.slice(hash) : "";
+    if (pathPart === "") return whole;
+    const resolved = resolveLogical(dir, pathPart);
+    // Unknown targets (a link to a file the bundle doesn't carry) are assumed to
+    // be content, so they still land flat under khai/ rather than keep a folder.
+    const tgtFinal = finalByLogical.get(resolved) ?? contentFinal(resolved);
+    return `](${linkBetween(srcFinal, tgtFinal)}${anchor}${tail})`;
+  });
+}
+
+// Pack a bundle of { logical, data } files into a flat zip: classify each file's
+// final path (finalForFile), rewrite links against the logical->final map, store.
+// primaryLogicals are the bundle's own readme/reference that keep bare names.
+function packFlat(name, files, primaryLogicals = new Set()) {
+  const placed = files.map((f) => ({ ...f, final: finalForFile(f.logical, primaryLogicals) }));
+  const finalByLogical = new Map(placed.map((f) => [f.logical, f.final]));
+  const seen = new Set();
+  const entries = [];
+  for (const f of placed) {
+    if (seen.has(f.final))
+      throw new Error(`packFlat(${name}): duplicate path "${f.final}" (from ${f.logical})`);
+    seen.add(f.final);
+    let data = f.data;
+    if (f.final.endsWith(".md") && typeof data === "string")
+      data = rewriteLinks(data, f.logical, f.final, finalByLogical);
+    entries.push({ name: f.final, data: Buffer.isBuffer(data) ? data : Buffer.from(String(data)) });
+  }
+  const zip = zipStore(entries);
+  return { zip, zipSha256: sha256(zip) };
 }
 
 // ── engines ────────────────────────────────────────────────────────────────
@@ -528,21 +641,22 @@ function buildCultureDownloads() {
     }
   })();
 
-  // House-level overhead reused for every culture bundle: the package README and
-  // licences (content CC-BY-NC-SA + code MIT). Mirrors the play bundle shape.
-  const cultureOverhead = [];
-  const houseReadme = join(culturesPkgDir, "README.md");
-  if (existsSync(houseReadme)) {
-    cultureOverhead.push({ path: "README.md", data: readMarkdownStripped(houseReadme) });
-  }
+  // House-level admin files (the package licences, content CC-BY-NC-SA + code
+  // MIT) sit at the zip root. The package README is the root README only for a
+  // set (where there is no single culture's own README to use); a single culture
+  // uses its own README/REFERENCES at the root instead. Each is { logical, data };
+  // packFlat classifies where it lands.
+  const houseLicenseFiles = [];
   const houseLicense = join(culturesPkgDir, "LICENSE");
-  if (existsSync(houseLicense)) {
-    cultureOverhead.push({ path: "LICENSE", data: readFileSync(houseLicense) });
-  }
+  if (existsSync(houseLicense))
+    houseLicenseFiles.push({ logical: "LICENSE", data: readFileSync(houseLicense) });
   const houseLicenseCode = join(culturesPkgDir, "LICENSE-CODE");
-  if (existsSync(houseLicenseCode)) {
-    cultureOverhead.push({ path: "LICENSE-CODE", data: readFileSync(houseLicenseCode) });
-  }
+  if (existsSync(houseLicenseCode))
+    houseLicenseFiles.push({ logical: "LICENSE-CODE", data: readFileSync(houseLicenseCode) });
+  const houseReadmePath = join(culturesPkgDir, "README.md");
+  const houseReadmeFile = existsSync(houseReadmePath)
+    ? { logical: "README.md", data: readMarkdownStripped(houseReadmePath) }
+    : null;
 
   const entries = [];
   const cultures = Array.isArray(registry.cultures) ? registry.cultures : [];
@@ -577,34 +691,29 @@ function buildCultureDownloads() {
       continue;
     }
 
-    // Pack the culture (the "world" that plugs into the engines' seam) under
-    // world/, the engines under engines/<id>/, the house README/licences +
-    // REFERENCES at the root. Markdown is stripped of frontmatter, other files
-    // copied as-is.
-    const contentFiles = [];
-    const overhead = [...cultureOverhead, ...engineOverhead];
+    // The culture's own files, logical path world/<f> (so their dense sibling
+    // cross-links resolve). Markdown is stripped of frontmatter; packFlat then
+    // routes README/REFERENCES to the root and the rest to khai/.
+    const cultureFiles = [];
     for (const f of readdirSync(cultureDir)) {
       const filePath = join(cultureDir, f);
       if (!statSync(filePath).isFile()) continue;
-      if (f === "REFERENCES.md") {
-        overhead.push({ path: "REFERENCES.md", data: readMarkdownStripped(filePath) });
-        continue;
-      }
-      if (f.endsWith(".md")) {
-        contentFiles.push({ path: f, data: readMarkdownStripped(filePath) });
-      } else {
-        contentFiles.push({ path: f, data: readFileSync(filePath) });
-      }
+      const data = f.endsWith(".md") ? readMarkdownStripped(filePath) : readFileSync(filePath);
+      cultureFiles.push({ name: f, data });
     }
 
-    memberFilesById.set(id, contentFiles);
+    // Stored (name + data) so a group can re-home each member under world/<member>/.
+    memberFilesById.set(id, cultureFiles);
 
-    const packed = packBundle({
-      name: id,
-      overhead,
-      content: { dir: "world", files: contentFiles },
-      stamp: { kind: "culture", culture: id },
-    });
+    const files = [
+      ...cultureFiles.map((f) => ({ logical: `world/${f.name}`, data: f.data })),
+      ...engineOverhead.map((f) => ({ logical: f.path, data: f.data })),
+      ...houseLicenseFiles,
+    ];
+    // This culture's own README/REFERENCES keep bare root names; the engines'
+    // (and any other) readme/reference are flattened at the root by packFlat.
+    const primary = new Set(["world/README.md", "world/REFERENCES.md"]);
+    const packed = packFlat(id, files, primary);
 
     const size = fmtBytes(packed.zip.length);
     writeFileSync(join(outDir, `${id}.zip`), packed.zip);
@@ -654,25 +763,30 @@ function buildCultureDownloads() {
       references,
     };
 
-    // Gather every member culture that was actually packed, each under
-    // world/<member>/, then pack the lot into one set zip. The engines ride once
-    // at engines/<id>/ (shared by every member), with the house README/licences.
-    const setFiles = [];
+    // A set has no single culture's README to elevate, so the package README is
+    // the bundle's primary (bare) root admin file. Every member is logical
+    // world/<member>/<f>, namespaced so links stay collision-free; packFlat
+    // routes each member's README/REFERENCES to the root (flattened, e.g.
+    // world_germany_README.md) and the rest to khai/. Engines ride once.
+    const memberFiles = [];
     const present = [];
     for (const memberId of references) {
       const files = memberFilesById.get(memberId);
       if (!files) continue;
       present.push(memberId);
-      for (const f of files) setFiles.push({ path: `${memberId}/${f.path}`, data: f.data });
+      for (const f of files)
+        memberFiles.push({ logical: `world/${memberId}/${f.name}`, data: f.data });
     }
 
-    if (setFiles.length > 0) {
-      const packed = packBundle({
-        name: g.id,
-        overhead: [...cultureOverhead, ...engineOverhead],
-        content: { dir: "world", files: setFiles },
-        stamp: { kind: "group", group: g.id, members: present },
-      });
+    if (memberFiles.length > 0) {
+      const files = [
+        ...(houseReadmeFile ? [houseReadmeFile] : []),
+        ...houseLicenseFiles,
+        ...engineOverhead.map((f) => ({ logical: f.path, data: f.data })),
+        ...memberFiles,
+      ];
+      const primary = new Set(["README.md"]);
+      const packed = packFlat(g.id, files, primary);
       const size = fmtBytes(packed.zip.length);
       writeFileSync(join(outDir, `${g.id}.zip`), packed.zip);
       writeFileSync(
