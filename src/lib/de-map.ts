@@ -101,9 +101,12 @@ function load(file: string): SubMap {
 }
 
 // One projected sub-map per bundled country. Add a country here (plus its
-// <cc>.geo.json) when its subdivisions start carrying cultures.
+// <cc>.geo.json) when its subdivisions start carrying cultures. DE uses Natural
+// Earth admin-1 (Bundesländer); GB uses admin-0 map-subunits (the home nations,
+// coded GB-ENG/SCT/WLS/NIR to match the cultures' ISO 3166-2 anchors).
 const SUBMAPS: Record<string, SubMap> = {
   DE: load("de.geo.json"),
+  GB: load("gb.geo.json"),
 };
 
 /** Projected subdivision geometry for a country ISO, or null when none is bundled. */
