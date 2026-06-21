@@ -1,111 +1,208 @@
 ---
-// CultureMap: an in-brand world map. Draws every country outline (projected
-// at build time by src/lib/world-map.ts), highlights the countries that have
-// a culture package, and labels each with a marker. Pure SVG, styled only
-// with design tokens (no third-party CSS, no hex literals) so it satisfies
-// the brand contract on every surface.
+// CultureMap: an in-brand, clickable world map. Draws every country outline,
+// fills the ones with a culture package by UN-M49 region, marks branch countries
+// (those that drill into a sub-map) with a heavier stroke, and wraps each active
+// country in a link: a leaf downloads its package, a branch opens its sub-map.
+// Pure SVG over design tokens (no third-party CSS, no hex literals).
 //
-// The map is presentational (role="img"): a single illustration with no
-// interactive controls inside it (an interactive control nested in an
-// role="img" trips axe's nested-interactive). The download links live in the
-// page's accessible list beside the map, the keyboard/screen-reader path.
-//
-// The page supplies the markers (id, country, label, download URL); the
-// component owns the geography and the chrome.
-
-import { COUNTRIES, centroidByIso, VIEWBOX } from "../lib/world-map";
+// role="group" (not role="img"): the map is a labelled set of links, so the
+// country links are legitimate tab stops (an interactive control nested in an
+// role="img" trips axe's nested-interactive). Detail is on hover/focus via a
+// native <title> plus the page's download list. Optional group "lenses" (e.g.
+// DACH) highlight a named set of member countries through a pure-CSS toggle.
+import { COUNTRIES, VIEWBOX } from "../lib/world-map";
 
 export interface CultureMarker {
-  /** ISO 3166-1 alpha-2 of the country to place (e.g. "DE"). */
+  /** ISO 3166-1 alpha-2 of the country to colour + link. */
   iso: string;
-  /** Front-of-house name shown by the marker. */
+  /** front-of-house name. */
   name: string;
-  /** Download URL (a full URLS.* URL, not an absolute path). */
+  /** zip URL (leaf) or sub-map page URL (branch). */
   href: string;
-  /** Optional packed size, shown in the marker tooltip. */
+  /** download = take the package; map = drill into the sub-map. */
+  kind: "download" | "map";
+  /** UN-M49 region key ("europe", ...) selecting the fill colour. */
+  region: string;
+  /** packed size, for a leaf's tooltip. */
   size?: string;
+  /** number of packages under a branch, for its tooltip. */
+  childCount?: number;
+}
+
+export interface CultureLens {
+  id: string;
+  title: string;
+  isos: string[];
 }
 
 interface Props {
   markers: CultureMarker[];
+  ariaLabel: string;
+  lenses?: CultureLens[];
 }
 
-const { markers } = Astro.props;
-const active = new Set(markers.map((m) => m.iso.toUpperCase()));
+const { markers, ariaLabel, lenses = [] } = Astro.props;
+const byIso = new Map(markers.map((m) => [m.iso.toUpperCase(), m]));
 
-const placed = markers
-  .map((m) => {
-    const c = centroidByIso(m.iso);
-    return c ? { ...m, x: c[0], y: c[1] } : null;
+function ariaFor(m: CultureMarker): string {
+  if (m.kind === "map") {
+    const n = m.childCount ?? 0;
+    return `Open the ${m.name} map, ${n} ${n === 1 ? "package" : "packages"}`;
+  }
+  return m.size ? `Download the ${m.name} package, ${m.size}` : `Download the ${m.name} package`;
+}
+
+function tipFor(m: CultureMarker): string {
+  if (m.kind === "map") return `${m.name} (drill in)`;
+  return m.size ? `${m.name} · ${m.size}` : m.name;
+}
+
+// Pure-CSS lens highlight: when a group's checkbox is checked, fill its member
+// countries with the accent. Global so the dynamic selectors are not scoped.
+const lensCss = lenses
+  .filter((l) => l.isos.length > 0)
+  .map((l) => {
+    // Each member needs the full :has() prefix; a bare ", .cmap-iso-XX" in a
+    // selector list would match unconditionally.
+    const selector = l.isos
+      .map((iso) => `.cmap:has(#lens-${l.id}:checked) .cmap-iso-${iso.toUpperCase()}`)
+      .join(", ");
+    return `${selector} { fill: var(--color-brick); }`;
   })
-  .filter((m): m is CultureMarker & { x: number; y: number } => m !== null);
-
-const count = markers.length;
-const aria = `World map. ${count} ${count === 1 ? "country has" : "countries have"} a culture package to download.`;
+  .join("\n");
 ---
 
 <figure class="cmap-figure">
-  <svg class="cmap" viewBox={VIEWBOX} role="img" aria-label={aria}>
-    <g class="cmap-land">
+  <div class="cmap">
+    {
+      lenses.length > 0 && (
+        <fieldset class="cmap-lenses">
+          <legend class="cmap-lenses-legend">Groups</legend>
+          {lenses.map((l) => (
+            <span class="cmap-lens">
+              <input type="checkbox" id={`lens-${l.id}`} class="cmap-lens-cb" />
+              <label for={`lens-${l.id}`} class="cmap-lens-label">
+                {l.title}
+              </label>
+            </span>
+          ))}
+        </fieldset>
+      )
+    }
+    <svg class="cmap-svg" viewBox={VIEWBOX} role="group" aria-label={ariaLabel}>
       {
-        COUNTRIES.map((c) => (
-          <path
-            d={c.d}
-            class={active.has(c.iso2) ? "cmap-country cmap-country-active" : "cmap-country"}
-          >
-            <title>{c.name}</title>
-          </path>
-        ))
+        COUNTRIES.map((c) => {
+          const m = byIso.get(c.iso2);
+          const isoClass = `cmap-iso-${c.iso2}`;
+          if (!m) return <path d={c.d} class={`cmap-country ${isoClass}`} />;
+          const cls = [
+            "cmap-country",
+            "cmap-active",
+            `cmap-region-${m.region}`,
+            m.kind === "map" ? "cmap-branch" : "cmap-leaf",
+            isoClass,
+          ].join(" ");
+          return (
+            <a href={m.href} class="cmap-link" aria-label={ariaFor(m)}>
+              <path d={c.d} class={cls}>
+                <title>{tipFor(m)}</title>
+              </path>
+            </a>
+          );
+        })
       }
-    </g>
-    <g class="cmap-markers">
-      {
-        placed.map((m) => (
-          <g class="cmap-marker">
-            <title>{m.size ? `${m.name} · ${m.size}` : m.name}</title>
-            <circle cx={m.x} cy={m.y} r="6" class="cmap-dot" />
-            <text x={m.x} y={m.y - 12} text-anchor="middle" class="cmap-label">
-              {m.name}
-            </text>
-          </g>
-        ))
-      }
-    </g>
-  </svg>
+    </svg>
+  </div>
 </figure>
 
 <style>
   .cmap-figure {
     margin: 0;
   }
-  .cmap {
+  .cmap-lenses {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin: 0 0 16px;
+    padding: 10px 14px;
+    border: 1px solid var(--color-rule);
+    background: var(--color-paper-warm);
+  }
+  .cmap-lenses-legend {
+    padding: 0 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-brick);
+  }
+  .cmap-lens {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .cmap-lens-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+    cursor: pointer;
+  }
+  .cmap-lens-cb {
+    accent-color: var(--color-brick);
+    cursor: pointer;
+  }
+  .cmap-svg {
     display: block;
     width: 100%;
     height: auto;
     background: var(--color-ice);
     border: 1px solid var(--color-rule);
   }
+
+  /* Base country: muted, no package. */
   .cmap-country {
     fill: var(--color-rule-soft);
     stroke: var(--color-paper);
     stroke-width: 0.5;
+    transition: fill 0.15s ease;
   }
-  .cmap-country-active {
+
+  /* Region fills: the CVI map of UN-M49 region to brand token. */
+  .cmap-region-europe {
+    fill: var(--color-fjord);
+  }
+  .cmap-region-asia {
     fill: var(--color-amber);
   }
-  .cmap-dot {
-    fill: var(--color-brick);
-    stroke: var(--color-paper-warm);
-    stroke-width: 2;
-    transition: r 0.15s ease;
+  .cmap-region-africa {
+    fill: var(--color-marsh);
   }
-  .cmap-label {
-    font-family: var(--font-mono);
-    font-size: 13px;
-    letter-spacing: 0.04em;
-    fill: var(--color-ink);
-    paint-order: stroke;
-    stroke: var(--color-paper);
-    stroke-width: 3;
+  .cmap-region-americas {
+    fill: var(--color-sea);
+  }
+  .cmap-region-oceania {
+    fill: var(--color-tide);
+  }
+
+  /* Branch country (drills into a sub-map): a heavier ink outline. */
+  .cmap-branch {
+    stroke: var(--color-ink);
+    stroke-width: 1.4;
+  }
+
+  /* The link wrapper carries the affordance; the shape is the target. */
+  .cmap-link {
+    cursor: pointer;
+  }
+  .cmap-link:hover .cmap-active {
+    fill: var(--color-brick);
+  }
+  .cmap-link:focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
   }
 </style>
+<style is:global set:html={lensCss}></style>
