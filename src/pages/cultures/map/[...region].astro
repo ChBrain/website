@@ -43,6 +43,10 @@ interface DownloadItem {
 }
 interface Collection {
   title: string;
+  /** the whole-set zip (all members in one), when the producer built it. */
+  setHref?: string;
+  setSize?: string;
+  count: number;
   items: { name: string; href: string }[];
 }
 interface Crumb {
@@ -140,13 +144,21 @@ export async function getStaticPaths() {
     title: g.title ?? g.id,
     isos: (g.references ?? []).map((id) => idToIso.get(id)).filter((x): x is string => !!x),
   }));
-  const collections: Collection[] = groups.map((g) => ({
-    title: g.title ?? g.id,
-    items: (g.references ?? [])
+  const collections: Collection[] = groups.map((g) => {
+    const items = (g.references ?? [])
       .map((id) => entries.find((e) => e.id === id))
       .filter((e): e is ManifestEntry => !!e && !!e.asset)
-      .map((e) => ({ name: e.title ?? e.id, href: hrefForAsset(e.asset as string) })),
-  }));
+      .map((e) => ({ name: e.title ?? e.id, href: hrefForAsset(e.asset as string) }));
+    return {
+      title: g.title ?? g.id,
+      // The set zip is built by the downloads producer; absent on CI (no
+      // registry token), so the set button is conditional on the page.
+      setHref: g.asset ? hrefForAsset(g.asset) : undefined,
+      setSize: g.size,
+      count: items.length,
+      items,
+    };
+  });
 
   const paths: any[] = [];
 
@@ -306,7 +318,18 @@ const ariaLabel = `${heading}. ${countLabel} with a culture package.`;
           </div>
           {collections.map((col: Collection) => (
             <div class="cu-coll">
-              <h3 class="cu-coll-title">{col.title}</h3>
+              <div class="cu-coll-head">
+                <h3 class="cu-coll-title">{col.title}</h3>
+                {col.setHref && (
+                  <a href={col.setHref} class="cu-coll-set">
+                    Download the set
+                    <span class="cu-coll-set-meta">
+                      {col.count} {col.count === 1 ? "culture" : "cultures"}
+                      {col.setSize ? ` · ${col.setSize}` : ""}
+                    </span>
+                  </a>
+                )}
+              </div>
               <ul class="cu-coll-list">
                 {col.items.map((it) => (
                   <li>
@@ -342,6 +365,12 @@ const ariaLabel = `${heading}. ${countLabel} with a culture package.`;
       html:has(.cultures-home) {
         scroll-snap-type: none;
       }
+    }
+    /* The full-width map figure bleeds to 100vw; clip horizontal overflow so the
+     * scrollbar gutter can't produce a stray sideways scroll. html stays the
+     * vertical scroll/snap container. */
+    body:has(.cultures-home) {
+      overflow-x: clip;
     }
   </style>
 
@@ -463,6 +492,17 @@ const ariaLabel = `${heading}. ${countLabel} with a culture package.`;
     .cu-section:last-of-type {
       border-bottom: none;
     }
+    /* The map fills the screen. On desktop the figure bleeds past the text
+     * column to the full viewport width, and --cmap-vspace tells the component
+     * how much vertical chrome (header, the section label, footer) to leave so
+     * it sizes the map to the snap panel. The section label stays in-column. */
+    @media (min-width: 641px) {
+      #map :global(.cmap-figure) {
+        width: 100vw;
+        margin-inline: calc(50% - 50vw);
+        --cmap-vspace: 15rem;
+      }
+    }
     .cu-seclabel {
       display: flex;
       align-items: baseline;
@@ -569,15 +609,60 @@ const ariaLabel = `${heading}. ${countLabel} with a culture package.`;
       padding-bottom: 2px;
     }
     .cu-coll {
-      margin-bottom: 24px;
+      margin-bottom: 28px;
+    }
+    /* Collection header: the name plus the one-set download. The set is the
+     * point of a collection — take the whole thing in a single zip; the member
+     * list below stays for grabbing one. */
+    .cu-coll-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin: 0 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--color-rule-soft);
     }
     .cu-coll-title {
-      margin: 0 0 10px;
+      margin: 0;
       font-family: var(--font-mono);
       font-size: 12px;
       letter-spacing: 0.18em;
       text-transform: uppercase;
       color: var(--color-brick);
+    }
+    .cu-coll-set {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 10px;
+      text-decoration: none;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-paper);
+      background: var(--color-ink);
+      border: 1px solid var(--color-ink);
+      padding: 8px 14px;
+      transition:
+        transform 0.16s,
+        box-shadow 0.16s;
+    }
+    .cu-coll-set::after {
+      content: "↓";
+      font-size: 13px;
+    }
+    .cu-coll-set:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px -16px var(--color-ink);
+      background: var(--color-brick);
+      border-color: var(--color-brick);
+    }
+    .cu-coll-set-meta {
+      font-size: 9.5px;
+      letter-spacing: 0.16em;
+      color: color-mix(in srgb, var(--color-paper) 75%, transparent);
     }
     .cu-coll-list {
       list-style: none;
