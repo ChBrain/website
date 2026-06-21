@@ -48,6 +48,13 @@ const outlines = geometry?.outlines ?? COUNTRIES;
 const viewBox = geometry?.viewbox ?? VIEWBOX;
 const byIso = new Map(markers.map((m) => [m.iso.toUpperCase(), m]));
 
+// Aspect ratio (width / height) read off the viewBox so the SVG can size to
+// fill the panel by height, with width following the map's shape: the world is
+// wide (~2:1), a country sub-map is often tall (Germany, the UK). Falls back to
+// the world's ratio if the viewBox is ever unparseable.
+const vb = viewBox.split(/\s+/).map(Number);
+const aspect = vb.length === 4 && vb[3] > 0 ? vb[2] / vb[3] : 2;
+
 function ariaFor(m: CultureMarker): string {
   if (m.kind === "map") {
     const n = m.childCount ?? 0;
@@ -93,7 +100,13 @@ const lensCss = lenses
         </fieldset>
       )
     }
-    <svg class="cmap-svg" viewBox={viewBox} role="group" aria-label={ariaLabel}>
+    <svg
+      class="cmap-svg"
+      viewBox={viewBox}
+      role="group"
+      aria-label={ariaLabel}
+      style={`--cmap-aspect:${aspect}`}
+    >
       {
         outlines.map((c) => {
           const m = byIso.get(c.iso2);
@@ -123,15 +136,26 @@ const lensCss = lenses
   .cmap-figure {
     margin: 0;
   }
+  /* The map is the positioning context for the groups overlay. */
+  .cmap {
+    position: relative;
+  }
+  /* Groups lens: floats over the map (top-left, ocean corner) as a translucent
+   * paper chip rather than a box stacked above it, so the map owns the panel. */
   .cmap-lenses {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 2;
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 14px;
-    margin: 0 0 16px;
-    padding: 10px 14px;
+    gap: 12px;
+    margin: 0;
+    padding: 8px 12px;
     border: 1px solid var(--color-rule);
-    background: var(--color-paper-warm);
+    background: color-mix(in srgb, var(--color-paper-warm) 86%, transparent);
+    backdrop-filter: blur(3px);
   }
   .cmap-lenses-legend {
     padding: 0 6px;
@@ -160,10 +184,22 @@ const lensCss = lenses
   }
   .cmap-svg {
     display: block;
-    width: 100%;
+    /* Fill the snap panel: bound the map by the available height and let its
+     * width follow the shape (--cmap-aspect = viewBox w/h). A wide map hits
+     * 100% width first; a tall country sub-map is bounded by height and the
+     * narrower map centers. --cmap-vspace is the chrome budget (header, the
+     * section label, footer) the page leaves around the panel. */
+    width: min(100%, calc((100vh - var(--cmap-vspace, 13rem)) * var(--cmap-aspect, 2)));
     height: auto;
+    margin-inline: auto;
     background: var(--color-ice);
     border: 1px solid var(--color-rule);
+  }
+  @media (max-width: 640px) {
+    /* Phones don't snap; let the map simply use the column width. */
+    .cmap-svg {
+      width: 100%;
+    }
   }
 
   /* Base country: muted, no package. */
