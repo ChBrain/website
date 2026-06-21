@@ -35,6 +35,13 @@ export function loadEngines(root: string = process.cwd()): EngineCard[] {
     if (!existsSync(pkgPath)) continue;
     const manifest = JSON.parse(readFileSync(pkgPath, "utf8")).khai;
     if (!manifest) continue;
+    // Meta engines (class "meta" -- e.g. the canon spine that cultures pulls in)
+    // are structural: they carry the setup plan / instructions / architecture
+    // contract as prose, not a WIRES card. They are not downloadable engines and
+    // do not belong on the shelf or in the playbook's "enriched by" group, so we
+    // skip them here. A non-meta engine missing its card still throws below --
+    // the fail-loud guard is intact for a genuinely broken card-engine.
+    if (manifest.class === "meta") continue;
     // engineCard throws on an invalid card -- a bad engine should fail the
     // build loudly rather than render a half card.
     cards.push(engineCard(manifest) as EngineCard);
