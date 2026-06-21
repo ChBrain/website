@@ -1,0 +1,540 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import SiteHeader from "../../../components/SiteHeader.astro";
+import SiteFooter from "../../../components/SiteFooter.astro";
+import CultureMap, {
+  type CultureMarker,
+  type CultureLens,
+} from "../../../components/CultureMap.astro";
+import {
+  buildCultureTree,
+  nodeByPath,
+  branchPaths,
+  type CultureEntry,
+  type CultureNode,
+} from "../../../lib/culture-tree";
+import { countryName, regionKeyOf } from "../../../lib/world-map";
+import { URLS } from "../../../lib/urls";
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
+
+// The map reads the build-time manifest the downloads producer writes
+// (scripts/build-downloads.mjs -> public/downloads/cultures/available.json): a
+// kind-discriminated entries[] union of cultures (ISO-anchored, with a zip) and
+// groups (references to member cultures). The tree, names, and region colours
+// are all derived here from the ISO codes; the producer emits facts only.
+interface ManifestEntry extends CultureEntry {
+  description?: string;
+  references?: string[];
+}
+interface Manifest {
+  schemaVersion: number;
+  release: string;
+  downloadBase: string;
+  entries: ManifestEntry[];
+}
+
+interface DownloadItem {
+  name: string;
+  meta: string;
+  href: string;
+  cta: string;
+}
+interface Collection {
+  title: string;
+  items: { name: string; href: string }[];
+}
+interface Crumb {
+  label: string;
+  href: string;
+}
+
+// All view logic lives inside getStaticPaths: Astro evaluates it in isolation,
+// so it cannot reference frontmatter consts/functions defined outside it (only
+// module imports).
+export async function getStaticPaths() {
+  const downloadsDir = join(process.cwd(), "public", "downloads", "cultures");
+  const manifestPath = join(downloadsDir, "available.json");
+  const manifest: Manifest | null = existsSync(manifestPath)
+    ? (JSON.parse(readFileSync(manifestPath, "utf8")) as Manifest)
+    : null;
+
+  const hrefForAsset = (asset: string) => `${URLS.cultures}downloads/cultures/${asset}`;
+  const drillHref = (path: string[]) => `${URLS.cultures}map/${path.join("/").toLowerCase()}/`;
+  const MAP_ROOT = `${URLS.cultures}map/`;
+  const treeOptions = {
+    hrefFor: (e: CultureEntry) => hrefForAsset(e.asset ?? `${e.id}.zip`),
+    sizeFor: (e: CultureEntry) => e.size,
+    nameFor: (iso: string) => countryName(iso),
+    regionFor: (iso: string) => regionKeyOf(iso),
+  };
+  const countPackages = (node: CultureNode): number => {
+    let n = node.asset ? 1 : 0;
+    for (const c of node.children) n += countPackages(c);
+    return n;
+  };
+  const markerFor = (node: CultureNode, path: string[]): CultureMarker => {
+    const isBranch = node.children.length > 0;
+    return {
+      iso: node.iso,
+      name: node.name,
+      region: node.region || "europe",
+      kind: isBranch ? "map" : "download",
+      href: isBranch ? drillHref([...path, node.iso]) : (node.asset?.href ?? "#"),
+      size: node.asset?.size,
+      childCount: isBranch ? countPackages(node) : undefined,
+    };
+  };
+  const downloadsFor = (
+    node: CultureNode | null,
+    children: CultureNode[],
+    path: string[],
+  ): DownloadItem[] => {
+    const items: DownloadItem[] = [];
+    if (node?.asset) {
+      items.push({
+        name: node.name,
+        meta: node.asset.size
+          ? `the ${node.name} package · ${node.asset.size}`
+          : `the ${node.name} package`,
+        href: node.asset.href,
+        cta: "Download →",
+      });
+    }
+    for (const child of children) {
+      if (child.children.length > 0) {
+        const n = countPackages(child);
+        items.push({
+          name: child.name,
+          meta: `${n} ${n === 1 ? "package" : "packages"}`,
+          href: drillHref([...path, child.iso]),
+          cta: "Open map →",
+        });
+      } else if (child.asset) {
+        items.push({
+          name: child.name,
+          meta: child.asset.size
+            ? `${child.region || ""} · ${child.asset.size}`
+            : child.region || "",
+          href: child.asset.href,
+          cta: "Download →",
+        });
+      }
+    }
+    return items;
+  };
+
+  const entries = manifest?.entries ?? [];
+  const release = manifest?.release;
+  const roots = buildCultureTree(entries, treeOptions);
+
+  const idToIso = new Map(
+    entries
+      .filter((e) => e.kind !== "group" && e.iso)
+      .map((e) => [e.id, (e.iso as string).toUpperCase()]),
+  );
+  const groups = entries.filter((e) => e.kind === "group");
+  const lenses: CultureLens[] = groups.map((g) => ({
+    id: g.id,
+    title: g.title ?? g.id,
+    isos: (g.references ?? []).map((id) => idToIso.get(id)).filter((x): x is string => !!x),
+  }));
+  const collections: Collection[] = groups.map((g) => ({
+    title: g.title ?? g.id,
+    items: (g.references ?? [])
+      .map((id) => entries.find((e) => e.id === id))
+      .filter((e): e is ManifestEntry => !!e && !!e.asset)
+      .map((e) => ({ name: e.title ?? e.id, href: hrefForAsset(e.asset as string) })),
+  }));
+
+  const paths: any[] = [];
+
+  // Root (the world): the map over the top-level countries + the collections.
+  paths.push({
+    params: { region: undefined },
+    props: {
+      release,
+      isRoot: true,
+      heading: "World Map",
+      lede: "Pick a country. Take its culture.",
+      sub: "Each highlighted country has a culture package ready to download. A country with subdivisions opens its own map. More arrive with each release.",
+      markers: roots.map((n) => markerFor(n, [])),
+      lenses,
+      downloads: downloadsFor(null, roots, []),
+      collections,
+      crumbs: [] as Crumb[],
+    },
+  });
+
+  // One page per branch country (its sub-map is list-only until that country's
+  // subdivision geometry ships; it still drills, lists, and links correctly).
+  for (const path of branchPaths(roots)) {
+    const node = nodeByPath(roots, path);
+    if (!node) continue;
+    const parentPath = path.slice(0, -1);
+    paths.push({
+      params: { region: path.join("/").toLowerCase() },
+      props: {
+        release,
+        isRoot: false,
+        heading: node.name,
+        lede: `Inside ${node.name}.`,
+        sub: `Every ${node.name} package, plus its subdivisions.`,
+        markers: [] as CultureMarker[],
+        lenses: [] as CultureLens[],
+        downloads: downloadsFor(node, node.children, path),
+        collections: [] as Collection[],
+        crumbs: [{ label: "World", href: MAP_ROOT }] as Crumb[],
+      },
+    });
+  }
+
+  return paths;
+}
+
+const { release, isRoot, heading, lede, sub, markers, lenses, downloads, collections, crumbs } =
+  Astro.props;
+
+const count = markers.length;
+const countLabel =
+  count === 0 ? "no countries on this map" : `${count} ${count === 1 ? "country" : "countries"}`;
+const ariaLabel = `Map. ${countLabel} with a culture package.`;
+---
+
+<BaseLayout
+  title={`${heading} · cultures · kaihacks`}
+  description="A world map of the culture library. Pick a country to download its culture package."
+>
+  <div class="arch-page cultures">
+    <SiteHeader domain="kaihacks" tld=".ai" location="cultures · map" version={release} />
+
+    <header class="cu-mast">
+      <div class="cu-overline">the culture library · by country</div>
+      {
+        crumbs.length > 0 && (
+          <nav class="cu-crumbs" aria-label="Breadcrumb">
+            {crumbs.map((c: Crumb) => (
+              <a href={c.href} class="cu-crumb">
+                {c.label}
+              </a>
+            ))}
+            <span class="cu-crumb-here">{heading}</span>
+          </nav>
+        )
+      }
+      <h1 class="cu-h1">{heading}<em>.</em></h1>
+      <p class="cu-lede">{lede}</p>
+      <p class="cu-sub">{sub}</p>
+    </header>
+
+    {
+      isRoot && (
+        <section id="map" class="cu-section">
+          <div class="cu-seclabel">
+            <span class="cu-n">§01</span>
+            <div class="cu-seclabel-body">
+              <h2 class="cu-h2">The world</h2>
+              <p class="cu-secnote">{countLabel} on the map</p>
+            </div>
+          </div>
+          {count === 0 ? (
+            <p class="cu-empty">No culture packages built yet.</p>
+          ) : (
+            <CultureMap markers={markers} ariaLabel={ariaLabel} lenses={lenses} />
+          )}
+        </section>
+      )
+    }
+
+    {
+      downloads.length > 0 && (
+        <section id="downloads" class="cu-section">
+          <div class="cu-seclabel">
+            <span class="cu-n">{isRoot ? "§02" : "§01"}</span>
+            <div class="cu-seclabel-body">
+              <h2 class="cu-h2">Downloads</h2>
+              <p class="cu-secnote">every package, ready to take with you</p>
+            </div>
+          </div>
+          <ul class="cu-dl">
+            {downloads.map((d: DownloadItem) => (
+              <li>
+                <a href={d.href} class="cu-dl-link">
+                  <span class="cu-dl-name">{d.name}</span>
+                  <span class="cu-dl-meta">{d.meta}</span>
+                  <span class="cu-dl-cta">{d.cta}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    {
+      collections.length > 0 && (
+        <section id="collections" class="cu-section">
+          <div class="cu-seclabel">
+            <span class="cu-n">§03</span>
+            <div class="cu-seclabel-body">
+              <h2 class="cu-h2">Collections</h2>
+              <p class="cu-secnote">cultures grouped by a common thread</p>
+            </div>
+          </div>
+          {collections.map((col: Collection) => (
+            <div class="cu-coll">
+              <h3 class="cu-coll-title">{col.title}</h3>
+              <ul class="cu-coll-list">
+                {col.items.map((it) => (
+                  <li>
+                    <a href={it.href} class="cu-coll-link">
+                      {it.name} <span class="cu-coll-cta">Download →</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </section>
+      )
+    }
+
+    <SiteFooter />
+  </div>
+
+  <style>
+    .cu-mast {
+      padding: 56px 0 38px;
+      border-bottom: 1px solid var(--color-rule);
+    }
+    @media (min-width: 641px) {
+      .cu-mast {
+        padding: 80px 0 48px;
+      }
+    }
+    .cu-overline {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.26em;
+      color: var(--color-ink-soft);
+      text-transform: uppercase;
+    }
+    .cu-crumbs {
+      margin: 14px 0 0;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .cu-crumb {
+      color: var(--color-brick);
+      text-decoration: none;
+    }
+    .cu-crumb::after {
+      content: " / ";
+      color: var(--color-ink-mute);
+    }
+    .cu-crumb-here {
+      color: var(--color-ink-soft);
+    }
+    .cu-h1 {
+      margin: 16px 0 0;
+      font-family: var(--font-display);
+      font-weight: 380;
+      font-size: 64px;
+      line-height: 0.96;
+      letter-spacing: -0.025em;
+      color: var(--color-ink);
+    }
+    @media (min-width: 641px) {
+      .cu-h1 {
+        font-size: 104px;
+      }
+    }
+    .cu-h1 em {
+      color: var(--color-brick);
+      font-style: normal;
+    }
+    .cu-lede {
+      margin: 26px 0 0;
+      max-width: 760px;
+      font-family: var(--font-display);
+      font-weight: 350;
+      font-size: 26px;
+      line-height: 1.18;
+      letter-spacing: -0.01em;
+      color: var(--color-ink);
+      text-wrap: pretty;
+    }
+    @media (min-width: 641px) {
+      .cu-lede {
+        font-size: 34px;
+      }
+    }
+    .cu-sub {
+      margin: 14px 0 0;
+      max-width: 720px;
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 17px;
+      line-height: 1.45;
+      color: var(--color-ink-soft);
+      text-wrap: pretty;
+    }
+    @media (min-width: 641px) {
+      .cu-sub {
+        font-size: 19px;
+      }
+    }
+    .cu-section {
+      padding: 56px 0;
+      border-bottom: 1px solid var(--color-rule-soft);
+    }
+    .cu-section:last-of-type {
+      border-bottom: none;
+    }
+    .cu-seclabel {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+    .cu-n {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--color-brick);
+      text-transform: uppercase;
+      flex: 0 0 auto;
+    }
+    .cu-seclabel-body {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      min-width: 280px;
+    }
+    .cu-h2 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-weight: 420;
+      font-size: 27px;
+      letter-spacing: -0.01em;
+      color: var(--color-ink);
+    }
+    @media (min-width: 641px) {
+      .cu-h2 {
+        font-size: 31px;
+      }
+    }
+    .cu-secnote {
+      margin: 0;
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 15px;
+      color: var(--color-ink-soft);
+    }
+    .cu-empty {
+      margin: 0;
+      font-family: var(--font-prose);
+      font-style: italic;
+      font-size: 16px;
+      color: var(--color-ink-soft);
+    }
+    .cu-dl {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 641px) {
+      .cu-dl {
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+    }
+    .cu-dl-link {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+      text-decoration: none;
+      background: var(--color-paper-warm);
+      border: 1px solid var(--color-rule);
+      border-left: 4px solid var(--color-brick);
+      padding: 16px 18px;
+      transition:
+        transform 0.16s,
+        box-shadow 0.16s;
+    }
+    .cu-dl-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px -16px var(--color-ink);
+    }
+    .cu-dl-name {
+      font-family: var(--font-display);
+      font-size: 22px;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      color: var(--color-ink);
+    }
+    .cu-dl-meta {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      color: var(--color-ink-mute);
+      text-transform: uppercase;
+    }
+    .cu-dl-cta {
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--color-ink);
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--color-brick);
+      padding-bottom: 2px;
+    }
+    .cu-coll {
+      margin-bottom: 24px;
+    }
+    .cu-coll-title {
+      margin: 0 0 10px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-brick);
+    }
+    .cu-coll-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .cu-coll-link {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 8px;
+      text-decoration: none;
+      font-family: var(--font-display);
+      font-size: 17px;
+      color: var(--color-ink);
+      border: 1px solid var(--color-rule);
+      padding: 8px 12px;
+      background: var(--color-paper-warm);
+    }
+    .cu-coll-cta {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-ink-mute);
+    }
+  </style>
+</BaseLayout>
