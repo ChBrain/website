@@ -87,17 +87,19 @@ const lensCss = lenses
   <div class="cmap">
     {
       lenses.length > 0 && (
-        <fieldset class="cmap-lenses">
-          <legend class="cmap-lenses-legend">Groups</legend>
-          {lenses.map((l) => (
-            <span class="cmap-lens">
-              <input type="checkbox" id={`lens-${l.id}`} class="cmap-lens-cb" />
-              <label for={`lens-${l.id}`} class="cmap-lens-label">
-                {l.title}
-              </label>
-            </span>
-          ))}
-        </fieldset>
+        <details class="cmap-lenses">
+          <summary class="cmap-lenses-summary">Groups</summary>
+          <div class="cmap-lens-grid">
+            {lenses.map((l) => (
+              <span class="cmap-lens">
+                <input type="checkbox" id={`lens-${l.id}`} class="cmap-lens-cb" />
+                <label for={`lens-${l.id}`} class="cmap-lens-label">
+                  {l.title}
+                </label>
+              </span>
+            ))}
+          </div>
+        </details>
       )
     }
     <svg
@@ -140,30 +142,52 @@ const lensCss = lenses
   .cmap {
     position: relative;
   }
-  /* Groups lens: floats over the map (top-left, ocean corner) as a translucent
-   * paper chip rather than a box stacked above it, so the map owns the panel. */
+  /* Groups lens: a collapsed "Groups" chip floating over the map (top-left,
+   * ocean corner). With many groups a permanent panel swallows the map, so it
+   * is a native <details> disclosure -- closed by default, opening its checkbox
+   * panel only on click. Pure CSS: the checkboxes stay in the DOM when closed,
+   * so the :has(#lens:checked) highlight persists after the panel is dismissed. */
   .cmap-lenses {
     position: absolute;
     top: 12px;
     left: 12px;
     z-index: 2;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
     margin: 0;
-    padding: 8px 12px;
+    max-width: min(340px, calc(100% - 24px));
     border: 1px solid var(--color-rule);
-    background: color-mix(in srgb, var(--color-paper-warm) 86%, transparent);
+    background: color-mix(in srgb, var(--color-paper-warm) 92%, transparent);
     backdrop-filter: blur(3px);
   }
-  .cmap-lenses-legend {
-    padding: 0 6px;
+  .cmap-lenses-summary {
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    padding: 7px 12px;
     font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--color-brick);
+  }
+  .cmap-lenses-summary::-webkit-details-marker {
+    display: none;
+  }
+  .cmap-lenses-summary::after {
+    content: " ▸";
+  }
+  .cmap-lenses[open] .cmap-lenses-summary::after {
+    content: " ▾";
+  }
+  .cmap-lenses[open] .cmap-lenses-summary {
+    border-bottom: 1px solid var(--color-rule-soft);
+  }
+  .cmap-lens-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+    padding: 10px 12px;
+    max-height: 42vh;
+    overflow: auto;
   }
   .cmap-lens {
     display: inline-flex;
