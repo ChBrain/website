@@ -63,7 +63,7 @@ async function main() {
       if (!(await exists(src))) continue;
 
       if (dir === "downloads") {
-        if (surface === "architecture" || surface === "plays") {
+        if (surface === "architecture" || surface === "plays" || surface === "cultures") {
           const destDir = join(surfaceDir, "downloads");
           const htaccessSrc = join(src, ".htaccess");
           if (await exists(htaccessSrc)) {
@@ -84,6 +84,13 @@ async function main() {
             const playsSrc = join(src, "plays");
             if (await exists(playsSrc)) {
               await cp(playsSrc, join(destDir, "plays"), { recursive: true });
+            }
+            copied++;
+          } else if (surface === "cultures") {
+            // The culture + set zips the map links to live under downloads/cultures/.
+            const culturesSrc = join(src, "cultures");
+            if (await exists(culturesSrc)) {
+              await cp(culturesSrc, join(destDir, "cultures"), { recursive: true });
             }
             copied++;
           }
