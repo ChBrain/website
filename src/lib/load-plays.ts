@@ -84,12 +84,16 @@ function getPackageDir(pkgName: string): string | null {
 }
 
 function rewriteLinks(html: string): string {
+  // Element names can carry non-ASCII (e.g. Danish plot_drømmen.md), which
+  // markdown-it percent-encodes in the href (plot_dr%C3%B8mmen.md). Match any
+  // non-quote run for the name and decodeURIComponent it so the anchor matches
+  // the element id, which is minted from the literal filename (id="el-drømmen").
   return html
     .replace(/href="(?:\.\.\/)*README\.md"/g, 'href="../../"')
-    .replace(/href="play_[a-zA-Z0-9_-]+\.md"/g, 'href="./"')
+    .replace(/href="play_[^"]+\.md"/g, 'href="./"')
     .replace(
-      /href="(?:persona|position|piece|place|process|plot|plan|pitch)_([a-zA-Z0-9_-]+)\.md"/g,
-      'href="#el-$1"',
+      /href="(?:persona|position|piece|place|process|plot|plan|pitch)_([^"]+)\.md"/g,
+      (_m, rest) => `href="#el-${decodeURIComponent(rest)}"`,
     );
 }
 
