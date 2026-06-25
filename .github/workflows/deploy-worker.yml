@@ -25,7 +25,7 @@ jobs:
     # No-op (skipped cleanly) until the Cloudflare token exists.
     if: ${{ github.event_name == 'workflow_dispatch' || vars.WORKER_DEPLOY_ENABLED == 'true' }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
