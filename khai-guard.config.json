@@ -43,7 +43,8 @@
           "CLAUDE.md",
           "README.md",
           "docs/**",
-          "management/**"
+          "management/**",
+          "vitest.config.ts"
         ]
       },
       {
