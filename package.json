@@ -34,7 +34,7 @@
     "@chbrain/khai-methods": "^0.0.5",
     "@chbrain/khai-plays": "^0.0.12",
     "@chbrain/khai-plays-buechner": "^0.20.6",
-    "@chbrain/khai-plays-grimm": "^0.255.5",
+    "@chbrain/khai-plays-grimm": "^0.291.0",
     "@chbrain/khai-plays-hcandersen": "^0.107.0",
     "@chbrain/khai-plays-kleist": "^0.22.7",
     "@chbrain/khai-writing": "^0.1.1",
