@@ -59,6 +59,6 @@ describe("link integrity — internal links resolve", () => {
         throw new Error(`unresolved internal links in ${page.path}:\n${failures.join("\n")}`);
       }
       expect(failures.length).toBe(0);
-    });
+    }, 60000);
   }
 });

@@ -34,6 +34,8 @@ const ROOT = process.cwd();
 const ALLOWED_DERIVATIONS = new Map<string, string>([
   // Pure white. Used as a fill in the few svg/img stages that need it.
   ["#ffffff", "white fill in stage decorations"],
+  // Pure black and transparent black. Used in shadows, borders, or transparent fallback.
+  ["#000000", "black or transparent black in Astro 7 compiler output"],
 ]);
 
 const HEX_REGEX = /#[0-9a-fA-F]{3,8}\b/g;
