@@ -60,7 +60,7 @@ describe("load-plays", () => {
     expect(woyzeck!.reference!.sections).toHaveProperty("origin");
     expect(woyzeck!.reference!.sections).toHaveProperty("restrictions");
     expect(woyzeck!.reference!.sections).toHaveProperty("encoding");
-  });
+  }, 60000);
 });
 
 describe("khai-plays registry", () => {

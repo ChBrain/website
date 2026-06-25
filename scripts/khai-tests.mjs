@@ -32,8 +32,10 @@ const UNIT_NODE_OPTIONS = "--max-old-space-size=8192";
 const UNIT_MAX_WORKERS = "4";
 
 function vitest(files, env = {}) {
-  execFileSync("npx", ["vitest", "run", ...files], {
+  const cmd = process.platform === "win32" ? "npx.cmd" : "npx";
+  execFileSync(cmd, ["vitest", "run", ...files], {
     stdio: "inherit",
+    shell: process.platform === "win32",
     env: { ...process.env, ...env },
   });
 }
@@ -98,7 +100,8 @@ if (mode === "--group") {
   console.log(`=== ${label(group)} ===`);
   try {
     runGroup(group);
-  } catch {
+  } catch (err) {
+    console.error("Group run failed with error:", err);
     process.exit(1);
   }
   process.exit(0);
@@ -113,7 +116,8 @@ for (const group of groups) {
   console.log(`\n=== ${label(group)} ===`);
   try {
     runGroup(group);
-  } catch {
+  } catch (err) {
+    console.error(`Group ${label(group)} run failed with error:`, err);
     failed.push(label(group));
   }
 }
