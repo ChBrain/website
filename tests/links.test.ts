@@ -19,6 +19,16 @@ function isMailto(href: string): boolean {
   return href.startsWith("mailto:");
 }
 
+function stripHtmlComments(input: string): string {
+  let current = input;
+  let previous: string;
+  do {
+    previous = current;
+    current = current.replace(/<!--[\s\S]*?-->/g, "");
+  } while (current !== previous);
+  return current;
+}
+
 function resolveInternal(pagePath: string, href: string): string {
   const [pathPart] = href.split("#");
   if (!pathPart) return pagePath;
@@ -41,7 +51,7 @@ describe("link integrity", () => {
 
     for (const page of pages) {
       // Strip HTML comments to avoid checking commented-out links
-      const cleanHtml = page.html.replace(/<!--[\s\S]*?-->/g, "");
+      const cleanHtml = stripHtmlComments(page.html);
       const aTagRegex = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>/gi;
       let match;
       const pageFailures: string[] = [];
