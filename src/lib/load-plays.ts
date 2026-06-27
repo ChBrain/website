@@ -92,8 +92,11 @@ function rewriteLinks(html: string): string {
     .replace(/href="(?:\.\.\/)*README\.md"/g, 'href="../../"')
     .replace(/href="play_[^"]+\.md"/g, 'href="./"')
     .replace(
-      /href="(?:persona|position|piece|place|process|plot|plan|pitch)_([^"]+)\.md"/g,
-      (_m, rest) => `href="#el-${decodeURIComponent(rest)}"`,
+      /href="(?:persona|position|piece|place|process|plot|plan|pitch)_([^"]+)"/g,
+      (_m, rest) => {
+        const name = rest.endsWith(".md") ? rest.slice(0, -3) : rest;
+        return `href="#el-${decodeURIComponent(name)}"`;
+      },
     );
 }
 
