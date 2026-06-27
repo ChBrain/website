@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { existsSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { JSDOM } from "jsdom";
 import { loadBuiltPages } from "./helpers/load-built-html.ts";
 
 const repoRoot = process.cwd();
@@ -36,29 +35,34 @@ function targetExists(absolutePath: string): boolean {
   return false;
 }
 
-describe("link integrity — internal links resolve", () => {
-  for (const page of pages) {
-    it(`${page.path} has all internal links resolving`, () => {
-      const dom = new JSDOM(page.html);
-      const anchors = Array.from(
-        dom.window.document.querySelectorAll("a[href]"),
-      ) as HTMLAnchorElement[];
-      const failures: string[] = [];
+describe("link integrity", () => {
+  it("resolves all internal links across all pages", () => {
+    const allFailures: string[] = [];
 
-      for (const a of anchors) {
-        const href = a.getAttribute("href")!;
+    for (const page of pages) {
+      // Strip HTML comments to avoid checking commented-out links
+      const cleanHtml = page.html.replace(/<!--[\s\S]*?-->/g, "");
+      const aTagRegex = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>/gi;
+      let match;
+      const pageFailures: string[] = [];
+
+      while ((match = aTagRegex.exec(cleanHtml)) !== null) {
+        const href = match[1];
         if (isExternal(href) || isFragment(href) || isMailto(href)) continue;
         const target = resolveInternal(page.path, href);
         if (!targetExists(target)) {
-          failures.push(`${href} → ${target}`);
+          pageFailures.push(`  ${href} → ${target}`);
         }
       }
 
-      dom.window.close();
-      if (failures.length > 0) {
-        throw new Error(`unresolved internal links in ${page.path}:\n${failures.join("\n")}`);
+      if (pageFailures.length > 0) {
+        allFailures.push(`unresolved internal links in ${page.path}:\n${pageFailures.join("\n")}`);
       }
-      expect(failures.length).toBe(0);
-    }, 60000);
-  }
+    }
+
+    if (allFailures.length > 0) {
+      throw new Error(allFailures.join("\n\n"));
+    }
+    expect(allFailures.length).toBe(0);
+  });
 });
