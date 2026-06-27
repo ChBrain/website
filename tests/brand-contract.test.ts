@@ -4,30 +4,6 @@ import { join } from "node:path";
 import { loadBuiltPages } from "./helpers/load-built-html";
 import { BRAND } from "../src/lib/brand";
 
-/**
- * Brand-contract gate — applies to ALL built pages.
- *
- * Scans every dist/**\/*.html for hex literals that paint colour (i.e.
- * literals inside `style="..."` attributes and inside `<style>` blocks)
- * and fails if any hex falls outside the canonical palette.
- *
- * Canonical palette =
- *   - every value in src/lib/brand.ts
- *   - every value in src/styles/tokens.css (derived shades:
- *     accent-hover, class-*-bg)
- *   - the explicit ALLOWED_DERIVATIONS list (one place to add named
- *     exceptions — keep tight; every entry is a real exception we
- *     consciously accept)
- *
- * 8-char hex (with alpha, e.g. `#16130f80`) is normalised to its 6-char
- * base before lookup — alpha variations of a canonical colour are fine.
- *
- * This is the "works as requirements for the rest of the websites"
- * tier: brand drift on ANY page on ANY surface fails CI. Adding a new
- * canonical shade means promoting it to BRAND or tokens.css first;
- * adding an ad-hoc shade means justifying it in ALLOWED_DERIVATIONS.
- */
-
 const ROOT = process.cwd();
 
 /** Hex literals we explicitly accept outside BRAND + tokens.css. */
@@ -55,20 +31,12 @@ function loadCanonicalPalette(): Set<string> {
   return palette;
 }
 
-/**
- * Normalise a hex literal to its 6-char base.
- * #abc      -> #aabbcc
- * #aabbcc   -> #aabbcc
- * #aabbccdd -> #aabbcc   (drop alpha)
- * #abcd     -> #aabbcc   (drop alpha)
- */
 function normalize(hex: string): string {
   const h = hex.toLowerCase();
   if (h.length === 4) {
     return "#" + h[1] + h[1] + h[2] + h[2] + h[3] + h[3];
   }
   if (h.length === 5) {
-    // 3-char rgb + 1-char alpha -> drop alpha and expand
     return "#" + h[1] + h[1] + h[2] + h[2] + h[3] + h[3];
   }
   if (h.length === 7) {
@@ -80,13 +48,6 @@ function normalize(hex: string): string {
   return h;
 }
 
-/**
- * Find every hex literal inside a paint context: style="..." attributes
- * and <style>...</style> blocks. Hex appearing as visible text content
- * (e.g. CVI swatch labels like "#8d3a2c" rendered in a .cvi-swatch-hex
- * div) is intentionally ignored — that's the CVI doing its job of
- * documenting the palette.
- */
 function findPaintedHex(html: string): { hex: string; ctx: string }[] {
   const found: { hex: string; ctx: string }[] = [];
 
@@ -112,18 +73,16 @@ const palette = loadCanonicalPalette();
 
 describe("brand contract - rendered colour fidelity across all surfaces", () => {
   it("the canonical palette loads from BRAND + tokens.css", () => {
-    // Sanity: every BRAND value present after load.
     for (const hex of Object.values(BRAND)) {
       expect(palette.has(hex.toLowerCase())).toBe(true);
     }
   });
 
-  it("at least one page was loaded (build tripwire)", () => {
+  it("every painted hex is in the canonical palette", () => {
     expect(pages.length).toBeGreaterThan(0);
-  });
+    const allFailures: string[] = [];
 
-  for (const page of pages) {
-    it(`${page.path}: every painted hex is in the canonical palette`, () => {
+    for (const page of pages) {
       const found = findPaintedHex(page.html);
       const offenders: string[] = [];
 
@@ -135,15 +94,21 @@ describe("brand contract - rendered colour fidelity across all surfaces", () => 
       }
 
       if (offenders.length > 0) {
-        throw new Error(
+        allFailures.push(
           `${page.path}: ${offenders.length} hex(es) outside the canonical palette:\n` +
-            offenders.map((o) => `  - ${o}`).join("\n") +
-            `\n\nFix: promote the shade to BRAND or tokens.css, or add it to ` +
-            `ALLOWED_DERIVATIONS in brand-contract.test.ts with a one-line ` +
-            `justification.`,
+            offenders.map((o) => `  - ${o}`).join("\n"),
         );
       }
-      expect(offenders.length).toBe(0);
-    });
-  }
+    }
+
+    if (allFailures.length > 0) {
+      throw new Error(
+        allFailures.join("\n\n") +
+          `\n\nFix: promote the shade to BRAND or tokens.css, or add it to ` +
+          `ALLOWED_DERIVATIONS in brand-contract.test.ts with a one-line ` +
+          `justification.`,
+      );
+    }
+    expect(allFailures.length).toBe(0);
+  });
 });

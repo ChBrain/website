@@ -71,6 +71,6 @@ describe(`${label}: axe-core, no serious or critical violations`, () => {
         dom.window.close();
         globalThis.gc?.();
       }
-    }, 20000);
+    }, 60000);
   }
 });

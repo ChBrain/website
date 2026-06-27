@@ -4,16 +4,22 @@ import { loadBuiltPages } from "./helpers/load-built-html.ts";
 const pages = loadBuiltPages(process.cwd());
 
 describe("em-dash regression — no U+2014 in built HTML", () => {
-  for (const page of pages) {
-    it(`${page.path} contains no em-dash`, () => {
+  it("contains no em-dashes across all pages", () => {
+    const allFailures: string[] = [];
+
+    for (const page of pages) {
       const index = page.html.indexOf("—");
       if (index !== -1) {
         const start = Math.max(0, index - 40);
         const end = Math.min(page.html.length, index + 40);
         const context = page.html.slice(start, end);
-        throw new Error(`em-dash found at offset ${index}: …${context}…`);
+        allFailures.push(`${page.path}: em-dash found at offset ${index}: …${context}…`);
       }
-      expect(index).toBe(-1);
-    });
-  }
+    }
+
+    if (allFailures.length > 0) {
+      throw new Error(allFailures.join("\n"));
+    }
+    expect(allFailures.length).toBe(0);
+  });
 });
