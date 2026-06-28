@@ -37,17 +37,11 @@ describe(`${label}: axe-core, no serious or critical violations`, () => {
 
       const dom = new JSDOM(page.html, {
         url: "https://architecture.kaihacks.ai/",
-        runScripts: "dangerously",
         virtualConsole,
       });
 
       try {
-        const script = dom.window.document.createElement("script");
-        script.textContent = axe.source;
-        dom.window.document.head.appendChild(script);
-
-        const windowAxe = (dom.window as unknown as { axe: typeof axe }).axe;
-        const results = (await windowAxe.run(dom.window.document, {
+        const results = (await axe.run(dom.window.document.documentElement, {
           runOnly: { type: "tag", values: ["wcag2a", "wcag2aa"] },
           resultTypes: ["violations"],
         })) as unknown as AxeResults;
