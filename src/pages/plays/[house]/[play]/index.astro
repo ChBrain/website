@@ -5,6 +5,7 @@ import type { BookSpread, BookFacet } from "../../../../lib/book";
 import { loadRegistry } from "@chbrain/khai-plays";
 import { loadAllPlays } from "../../../../lib/load-plays";
 import { URLS } from "../../../../lib/urls";
+import { types as _canonTypes } from "@chbrain/khai-arch";
 // MOCK -- REMOVE WHEN THE FIRST HOUSE REGISTERS (see ../../_mock). A real
 // playbook's spreads come from the house's programme package; these placeholders
 // render the shared Book chassis while the khai-plays registry is empty.
@@ -102,7 +103,10 @@ if (isReal) {
   const nextN = () => String(counter++).padStart(2, "0");
 
   // 2. Company spreads grouped by type
-  const TYPE_SPECS = [
+  // Known types with their exact display titles and slugs. New types from the
+  // canon are appended automatically via the fallback below — no manual update
+  // needed when the canon gains a type.
+  const KNOWN_TYPE_SPECS = [
     { type: "plot", slug: "plots", title: "Plots" },
     { type: "pitch", slug: "pitches", title: "Pitch" },
     { type: "persona", slug: "personas", title: "Personas" },
@@ -111,6 +115,18 @@ if (isReal) {
     { type: "position", slug: "positions", title: "Positions" },
     { type: "process", slug: "processes", title: "Processes" },
     { type: "plan", slug: "plans", title: "Plans" },
+  ];
+  const _canonTypeIds = new Set(Object.keys(_canonTypes));
+  const _knownTypeIds = new Set(KNOWN_TYPE_SPECS.map((s) => s.type));
+  const _pluralise = (s: string) => (/(?:ch|s|x|z)$/.test(s) ? `${s}es` : `${s}s`);
+  const TYPE_SPECS = [
+    ...KNOWN_TYPE_SPECS.filter((s) => _canonTypeIds.has(s.type)),
+    ...Object.keys(_canonTypes)
+      .filter((t) => !_knownTypeIds.has(t))
+      .map((type) => {
+        const plural = _pluralise(type);
+        return { type, slug: plural, title: plural.charAt(0).toUpperCase() + plural.slice(1) };
+      }),
   ];
 
   const COMPANY_MAP: Record<string, string> = {
