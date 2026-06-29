@@ -18,20 +18,29 @@ const TYPE_IDS = Object.keys(types);
  * both staging.kaihacks.ai/architecture/<slug>/ and architecture.kaihacks.ai/<slug>/.
  */
 export function autoLink(bodyHtml: string, ownTypeId: string, ownChapterNames: string[]): string {
-  let result = bodyHtml;
   const exclude = new Set<string>(ownChapterNames);
   const ownTypeNameUpper = ownTypeId.charAt(0).toUpperCase() + ownTypeId.slice(1);
   exclude.add(ownTypeNameUpper);
 
-  for (const typeId of TYPE_IDS) {
-    const typeNameUpper = typeId.charAt(0).toUpperCase() + typeId.slice(1);
-    if (exclude.has(typeNameUpper)) continue;
+  // Split on existing <a>...</a> spans so we never re-link already-linked text.
+  // A regex lookahead on [^<]* fails for nested tags (e.g. <a><strong>Word</strong></a>)
+  // because the nested < halts the lookahead before it can reach </a>.
+  // Splitting on the spans and processing only even-indexed (non-link) segments is correct.
+  const parts = bodyHtml.split(/(<a\b[\s\S]*?<\/a>)/);
 
-    const pattern = new RegExp(`\\b(${typeNameUpper})(s?)\\b(?![^<]*</a>)`, "g");
-    result = result.replace(pattern, `<a href="../${typeId}/">$1$2</a>`);
-  }
-
-  return result;
+  return parts
+    .map((part, i) => {
+      if (i % 2 === 1) return part; // inside an existing <a>, leave untouched
+      let result = part;
+      for (const typeId of TYPE_IDS) {
+        const typeNameUpper = typeId.charAt(0).toUpperCase() + typeId.slice(1);
+        if (exclude.has(typeNameUpper)) continue;
+        const pattern = new RegExp(`\\b(${typeNameUpper})(s?)\\b`, "g");
+        result = result.replace(pattern, `<a href="../${typeId}/">$1$2</a>`);
+      }
+      return result;
+    })
+    .join("");
 }
 
 /**
