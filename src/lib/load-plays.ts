@@ -165,11 +165,12 @@ export function loadAllPlays(): Play[] {
       if (!ent.isDirectory()) continue;
       const dirName = ent.name;
       const playPath = join(playsDir, dirName);
-      const playFiles = readdirSync(playPath).filter(
-        (f) => f.startsWith("play_") && f.endsWith(".md"),
-      );
+      const playFiles = readdirSync(playPath)
+        .filter((f) => f.startsWith("play_") && f.endsWith(".md"))
+        .sort();
       if (playFiles.length === 0) continue;
-      const mainPlayFile = join(playPath, playFiles[0]);
+      const mainPlayFileName = playFiles[0];
+      const mainPlayFile = join(playPath, mainPlayFileName);
 
       // Read main play markdown
       const mainPlaySrc = readFileSync(mainPlayFile, "utf8");
@@ -230,7 +231,7 @@ export function loadAllPlays(): Play[] {
         if (!fileName.endsWith(".md")) continue;
         const filePath = join(playPath, fileName);
 
-        if (fileName === `play_${dirName}.md`) continue;
+        if (fileName === mainPlayFileName) continue;
 
         if (fileName === "REFERENCES.md") {
           const refSrc = readFileSync(filePath, "utf8");
