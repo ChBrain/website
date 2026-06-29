@@ -4,6 +4,7 @@ import { createRequire } from "node:module";
 import { frontmatter as parseFrontmatter } from "./frontmatter";
 import MarkdownIt from "markdown-it";
 import { loadRegistry } from "@chbrain/khai-plays";
+import { types as _archTypes } from "@chbrain/khai-arch";
 
 const _require = createRequire(import.meta.url);
 const md = new MarkdownIt({ html: true, breaks: false, linkify: false });
@@ -92,7 +93,7 @@ function rewriteLinks(html: string): string {
     .replace(/href="(?:\.\.\/)*README\.md"/g, 'href="../../"')
     .replace(/href="play_[^"]+\.md"/g, 'href="./"')
     .replace(
-      /href="(?:persona|position|piece|place|process|plot|plan|pitch)_([^"]+)"/g,
+      new RegExp(`href="(?:${Object.keys(_archTypes).join("|")})_([^"]+)"`, "g"),
       (_m, rest) => {
         const name = rest.endsWith(".md") ? rest.slice(0, -3) : rest;
         return `href="#el-${decodeURIComponent(name)}"`;
@@ -165,11 +166,12 @@ export function loadAllPlays(): Play[] {
       if (!ent.isDirectory()) continue;
       const dirName = ent.name;
       const playPath = join(playsDir, dirName);
-      const playFiles = readdirSync(playPath).filter(
-        (f) => f.startsWith("play_") && f.endsWith(".md"),
-      );
+      const playFiles = readdirSync(playPath)
+        .filter((f) => f.startsWith("play_") && f.endsWith(".md"))
+        .sort();
       if (playFiles.length === 0) continue;
-      const mainPlayFile = join(playPath, playFiles[0]);
+      const mainPlayFileName = playFiles[0];
+      const mainPlayFile = join(playPath, mainPlayFileName);
 
       // Read main play markdown
       const mainPlaySrc = readFileSync(mainPlayFile, "utf8");
@@ -230,7 +232,7 @@ export function loadAllPlays(): Play[] {
         if (!fileName.endsWith(".md")) continue;
         const filePath = join(playPath, fileName);
 
-        if (fileName === `play_${dirName}.md`) continue;
+        if (fileName === mainPlayFileName) continue;
 
         if (fileName === "REFERENCES.md") {
           const refSrc = readFileSync(filePath, "utf8");
@@ -278,12 +280,13 @@ export function loadAllPlays(): Play[] {
         });
       }
 
+      const playLanguage = mainFm.language || houseLanguage || "en";
       // Stable, deterministic order within each chapter: sort elements by their
       // declared (book) name. readdirSync order is filesystem-dependent, so
       // without this the book's element order varies across environments. The
       // page groups by type, so a single sort here orders each type's chapter
-      // alphabetically by declared name (German collation).
-      elements.sort((a, b) => a.declared.localeCompare(b.declared, "de"));
+      // alphabetically by declared name using the play's own locale.
+      elements.sort((a, b) => a.declared.localeCompare(b.declared, playLanguage));
 
       plays.push({
         id: dirName,
@@ -291,7 +294,7 @@ export function loadAllPlays(): Play[] {
         houseTitle: house.title,
         title,
         declared,
-        language: mainFm.language || houseLanguage || "en",
+        language: playLanguage,
         description: description || "",
         voice: playVoice,
         voiceRegister,
