@@ -18,10 +18,14 @@ export async function getStaticPaths() {
   const rawSpecs = loadAllSpecs();
   return rawSpecs
     .filter((raw) => !NO_SPEC_PAGE.has(raw.id))
-    .map((raw) => ({
-      params: { slug: raw.id },
-      props: { spec: parseSpec(raw.text) },
-    }));
+    .flatMap((raw) => {
+      try {
+        return [{ params: { slug: raw.id }, props: { spec: parseSpec(raw.text) } }];
+      } catch (e: any) {
+        console.error(`[spec:${raw.id}] parse failed, page skipped: ${e.message}`);
+        return [];
+      }
+    });
 }
 
 const { spec } = Astro.props as Props;

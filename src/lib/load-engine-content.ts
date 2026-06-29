@@ -130,7 +130,10 @@ export function loadEngineBook(id: string): EngineBook {
   let references: Reference | null = null;
   try {
     references = referenceCard(read("REFERENCES.md")) as Reference;
-  } catch {
+  } catch (e: any) {
+    if (e?.code !== "ENOENT") {
+      console.warn(`[load-engine-content] ${id}: REFERENCES.md parse failed: ${e?.message}`);
+    }
     references = null;
   }
 
