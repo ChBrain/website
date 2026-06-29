@@ -33,7 +33,14 @@ export function loadEngines(root: string = process.cwd()): EngineCard[] {
     if (!name.startsWith("khai-engine-")) continue;
     const pkgPath = join(scope, name, "package.json");
     if (!existsSync(pkgPath)) continue;
-    const manifest = JSON.parse(readFileSync(pkgPath, "utf8")).khai;
+    let pkg: any;
+    try {
+      pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
+    } catch (e: any) {
+      console.warn(`[load-engines] skipping ${name}: malformed package.json (${e.message})`);
+      continue;
+    }
+    const manifest = pkg.khai;
     if (!manifest) continue;
     // Meta engines (class "meta" -- e.g. the canon spine that cultures pulls in)
     // are structural: they carry the setup plan / instructions / architecture

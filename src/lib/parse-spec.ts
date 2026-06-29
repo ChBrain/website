@@ -56,7 +56,7 @@ export function parseSpec(text: string): ParsedSpec {
 
   const bulletLines = bulletBlock.split(/\n(?=[-*] )/);
   const chapters: Chapter[] = bulletLines.map((line, i) => {
-    const m = line.match(/^[-*] \*\*([A-Z])\*\*([\w\s]*?): (.*)/s);
+    const m = line.match(/^[-*] \*\*([A-Z])\*\*([^:]*?): (.*)/s);
     if (!m) {
       throw new Error(`Bullet ${i + 1} does not match expected pattern: ${line.slice(0, 80)}`);
     }
