@@ -113,6 +113,11 @@
         "allow": ["src/pages/main/contact/**"]
       },
       {
+        "pattern": "surface/misfits/*",
+        "layer": "solution",
+        "allow": ["src/pages/main/misfits/**"]
+      },
+      {
         "pattern": "deps/*",
         "layer": "deps",
         "allow": ["**/package.json", "**/package-lock.json"]
