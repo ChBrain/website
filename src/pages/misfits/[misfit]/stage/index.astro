@@ -1,0 +1,36 @@
+---
+// The Stage for one misfit: /misfits/<misfit>/stage/. A misfit IS a play, so it
+// stages on the same full-bleed theatrical chassis the plays surface uses — its
+// cast/set/props and Scene Plots are the misfit's real elements; the scene's
+// dialogue is a mocked placeholder (see ../../../plays/_stage/scene.ts).
+import BaseLayout from "../../../../layouts/BaseLayout.astro";
+import Stage from "../../../plays/_stage/Stage.astro";
+import { stagecraft, defaultSelection } from "../../../plays/_stage/scene.ts";
+import { loadAllMisfits } from "../../../../lib/load-misfits";
+
+export function getStaticPaths() {
+  return loadAllMisfits().map((misfit) => ({
+    params: { misfit: misfit.id },
+    props: { misfit },
+  }));
+}
+
+const { misfit } = Astro.props;
+const craft = stagecraft(misfit);
+const selection = defaultSelection(craft);
+---
+
+<BaseLayout
+  title={`${misfit.title} · The Stage · kaihacks`}
+  description={`${misfit.title}, staged.`}
+>
+  <Stage
+    title={misfit.title}
+    declared={misfit.declared}
+    houseTitle={misfit.houseTitle}
+    voiceRegister={misfit.voiceRegister}
+    backHref="../"
+    craft={craft}
+    selection={selection}
+  />
+</BaseLayout>
