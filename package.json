@@ -32,6 +32,7 @@
     "@chbrain/khai-engine-gender": "^0.1.7",
     "@chbrain/khai-engine-language": "^0.1.4",
     "@chbrain/khai-methods": "^0.0.6",
+    "@chbrain/khai-misfits": "^0.3.0",
     "@chbrain/khai-plays": "^0.0.12",
     "@chbrain/khai-plays-buechner": "^0.20.6",
     "@chbrain/khai-plays-grimm": "^0.616.0",
