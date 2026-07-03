@@ -29,6 +29,7 @@ jobs:
           - main
           - cultures
           - plays
+          - misfits
           - writing
     uses: ./.github/workflows/deploy-surface.yml
     with:
