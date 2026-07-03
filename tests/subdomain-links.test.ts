@@ -21,7 +21,7 @@ const distDir = join(repoRoot, "dist");
 
 // Only the deployed surfaces (each rsynced to its own docroot). The bare apex
 // placeholder (dist/index.html) and dist/_assets/ are not surface roots.
-const SURFACES = new Set(["main", "architecture", "cultures", "plays", "writing"]);
+const SURFACES = new Set(["main", "architecture", "cultures", "plays", "misfits", "writing"]);
 const pages = loadBuiltPages(repoRoot).filter((p) => SURFACES.has(p.path.split("/")[0]));
 
 // Anchor hrefs, read straight from the HTML (regex, not JSDOM: this runs over

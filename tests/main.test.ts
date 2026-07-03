@@ -114,6 +114,7 @@ const MOVEMENTS = [
 
 const APPS: { title: string; state: string; url: string[]; planned: boolean }[] = [
   { title: "Cultures", state: "live", url: ["cultures.kaihacks.ai"], planned: false },
+  { title: "Misfits", state: "live", url: ["misfits.kaihacks.ai"], planned: false },
   // url accepts the legacy en-dash "–" placeholder OR the hyphen "-" form
   // (per the CVI's no-en-dash sweep — the rendered placeholder uses a
   // plain hyphen-minus instead of U+2013).
@@ -436,8 +437,8 @@ describe("main (company front door) — design contract", () => {
     });
   });
 
-  describe("§04 Applications — Cultures live + placeholder", () => {
-    it("renders exactly 2 app cards in canonical order", () => {
+  describe("§04 Applications — Cultures + Misfits live + placeholder", () => {
+    it("renders every app card in canonical order", () => {
       const dom = new JSDOM(main!.html);
       const section = dom.window.document.querySelector("section#apps");
       const cards = [...section!.querySelectorAll("a.app")];
@@ -464,7 +465,8 @@ describe("main (company front door) — design contract", () => {
       const dom = new JSDOM(main!.html);
       const section = dom.window.document.querySelector("section#apps");
       const cards = [...section!.querySelectorAll("a.app")];
-      expect(cards[1].classList.contains("app--planned")).toBe(true);
+      // The placeholder is always the last card (live apps precede it).
+      expect(cards[cards.length - 1].classList.contains("app--planned")).toBe(true);
     });
   });
 });

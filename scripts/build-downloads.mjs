@@ -888,12 +888,103 @@ function buildCultureDownloads() {
   console.log(`  cultures: wrote available.json (${entries.length} entries, ${placed} placed)`);
 }
 
+// ── misfits ──────────────────────────────────────────────────────────────────
+//
+// The misfits house is a single package (@chbrain/khai-misfits) — its own bill,
+// not a card in the khai-plays registry — so unlike buildPlayDownloads there is
+// no house loop: each production under `misfits/` is packed into a per-misfit zip
+// + sidecar at downloads/misfits/<misfit>.zip, the path the misfits surface reads.
+async function buildMisfitDownloads() {
+  let pkgDir;
+  try {
+    pkgDir = dirname(_require.resolve("@chbrain/khai-misfits/package.json"));
+  } catch (e) {
+    console.log(`  misfits: skipping misfits build — ${e.message}`);
+    return;
+  }
+
+  const misfitsDir = join(pkgDir, "misfits");
+  if (!existsSync(misfitsDir)) {
+    console.log("  misfits: no misfits/ dir in package; skipping");
+    return;
+  }
+
+  const outDir = join(process.cwd(), "public", "downloads", "misfits");
+  mkdirSync(outDir, { recursive: true });
+
+  // Overhead shared by every misfit bundle: the house README + licences.
+  const houseReadme = existsSync(join(pkgDir, "README.md"))
+    ? readMarkdownStripped(join(pkgDir, "README.md"))
+    : "";
+  const houseLicense = existsSync(join(pkgDir, "LICENSE"))
+    ? readFileSync(join(pkgDir, "LICENSE"))
+    : null;
+  const houseLicenseCode = existsSync(join(pkgDir, "LICENSE-CODE"))
+    ? readFileSync(join(pkgDir, "LICENSE-CODE"))
+    : null;
+
+  for (const misfitName of readdirSync(misfitsDir)) {
+    const misfitDir = join(misfitsDir, misfitName);
+    if (!statSync(misfitDir).isDirectory()) continue;
+
+    const files = readdirSync(misfitDir);
+    const contentFiles = [];
+    for (const f of files) {
+      if (f === "package.json") continue;
+      if (f === "REFERENCE.md" || f === "REFERENCES.md") continue;
+      const filePath = join(misfitDir, f);
+      if (f.endsWith(".md")) {
+        contentFiles.push({ path: f, data: readMarkdownStripped(filePath) });
+      } else {
+        contentFiles.push({ path: f, data: readFileSync(filePath) });
+      }
+    }
+
+    const overhead = [];
+    if (houseReadme) overhead.push({ path: "README.md", data: houseReadme });
+    if (houseLicense) overhead.push({ path: "LICENSE", data: houseLicense });
+    if (houseLicenseCode) overhead.push({ path: "LICENSE-CODE", data: houseLicenseCode });
+    // The misfit's research warrant rides at the bundle root if present.
+    for (const refName of ["REFERENCE.md", "REFERENCES.md"]) {
+      const refPath = join(misfitDir, refName);
+      if (existsSync(refPath)) {
+        overhead.push({ path: refName, data: readMarkdownStripped(refPath) });
+        break;
+      }
+    }
+
+    const packed = packBundle({
+      name: misfitName,
+      overhead,
+      content: {
+        dir: "content",
+        files: contentFiles,
+      },
+      stamp: { kind: "misfit", misfit: misfitName },
+    });
+
+    writeFileSync(join(outDir, `${misfitName}.zip`), packed.zip);
+    writeFileSync(
+      join(outDir, `${misfitName}.json`),
+      JSON.stringify({
+        filename: `${misfitName}.zip`,
+        size: fmtBytes(packed.zip.length),
+        sha256: packed.zipSha256,
+      }) + "\n",
+    );
+    console.log(
+      `  misfit ${misfitName}: ${fmtBytes(packed.zip.length)} sha256=${packed.zipSha256.slice(0, 12)}…`,
+    );
+  }
+}
+
 // ── run ────────────────────────────────────────────────────────────────────
 
-console.log("build-downloads: building engine, skill, play, and culture artifacts…");
+console.log("build-downloads: building engine, skill, play, misfit, and culture artifacts…");
 writeDownloadsHtaccess();
 buildEngineDownloads();
 buildSkillDownloads();
 await buildPlayDownloads();
+await buildMisfitDownloads();
 buildCultureDownloads();
 console.log("build-downloads: done");

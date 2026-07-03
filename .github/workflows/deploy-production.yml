@@ -7,6 +7,7 @@ name: deploy-production
 #   privacy-v*       -> kaihacks.ai/privacy/        (apex subpath)
 #   cultures-v*      -> cultures.kaihacks.ai/       (subdomain root)
 #   plays-v*         -> plays.kaihacks.ai/          (subdomain root)
+#   misfits-v*       -> misfits.kaihacks.ai/        (subdomain root)
 #   writing-v*       -> writing.kaihacks.ai/        (subdomain root)
 #   contact-v*       -> kaihacks.ai/contact/        (apex subpath)
 #
@@ -23,6 +24,7 @@ on:
       - "main-v*"
       - "cultures-v*"
       - "plays-v*"
+      - "misfits-v*"
       - "writing-v*"
 
 permissions:
@@ -40,7 +42,7 @@ jobs:
           tag="${GITHUB_REF_NAME}"
           surface="${tag%%-v*}"
           case "$surface" in
-            architecture|main|cultures|plays|writing) ;;
+            architecture|main|cultures|plays|misfits|writing) ;;
             *) echo "::error::tag '$tag' does not map to a known surface"; exit 1 ;;
           esac
           echo "surface=$surface" >> "$GITHUB_OUTPUT"

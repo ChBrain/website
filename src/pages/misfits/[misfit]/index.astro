@@ -1,0 +1,312 @@
+---
+// One misfit as a book: misfits.kaihacks.ai/<misfit>/. A misfit IS a khai play,
+// so this renders on the same Book chassis as a playbook — synopsis, company
+// grouped by type, reference warrant, download cover. The spread-building logic
+// mirrors plays/[house]/[play]/index.astro (there is no mock branch here: the
+// misfits package is always installed for a real build).
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import Book from "../../../components/Book.astro";
+import type { BookSpread, BookFacet } from "../../../lib/book";
+import { loadAllMisfits, misfitsHouse } from "../../../lib/load-misfits";
+import { URLS } from "../../../lib/urls";
+import { types as _canonTypes } from "@chbrain/khai-arch";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+
+function extractCompanyCategory(companyHtml: string, categoryName: string): string {
+  if (!companyHtml) return "";
+  const regex = new RegExp(
+    `<p>(?:<strong>)?\\s*${categoryName}\\s*:?\\s*(?:</strong>)?</p>\\s*<ul>([\\s\\S]*?)</ul>`,
+    "i",
+  );
+  const match = companyHtml.match(regex);
+  if (match) {
+    return `<ul>${match[1]}</ul>`;
+  }
+  return "";
+}
+
+export function getStaticPaths() {
+  return loadAllMisfits().map((misfit) => ({
+    params: { misfit: misfit.id },
+    props: { misfit },
+  }));
+}
+
+const { misfit } = Astro.props;
+const house = misfitsHouse();
+const realPlay = misfit as any;
+
+let spreads: BookSpread[] = [];
+const voiceRegister = realPlay.voiceRegister;
+const overline = "khai misfits · a staging";
+// The book reads the production's declared (original) name; the shelf carries
+// the English title.
+const title = realPlay.declared;
+const subtitle = "";
+const ctaHref = "#synopsis";
+const ctaLabel = "Open the misfit →";
+
+// 1. Consolidated Synopsis spread (Name, Arc, Stakes, Estate).
+let synopsisHtml = "";
+if (realPlay.sections.name) synopsisHtml += `<h3>Name</h3>${realPlay.sections.name}`;
+if (realPlay.sections.arc) synopsisHtml += `<h3>Arc</h3>${realPlay.sections.arc}`;
+if (realPlay.sections.stakes) synopsisHtml += `<h3>Stakes</h3>${realPlay.sections.stakes}`;
+if (realPlay.sections.estate) synopsisHtml += `<h3>Estate</h3>${realPlay.sections.estate}`;
+if (!synopsisHtml) synopsisHtml = `<p>No synopsis provided.</p>`;
+
+spreads.push({
+  slug: "synopsis",
+  n: "00",
+  groupLabel: "the misfit",
+  status: "synopsis",
+  title: "Synopsis",
+  facets: [],
+  bodyHtml: synopsisHtml,
+  coda: null,
+});
+
+let counter = 1;
+const nextN = () => String(counter++).padStart(2, "0");
+
+// 2. Company spreads grouped by type. Known types carry an explicit title/slug;
+// any new canon type is appended automatically via the fallback.
+const KNOWN_TYPE_SPECS = [
+  { type: "plot", slug: "plots", title: "Plots" },
+  { type: "pitch", slug: "pitches", title: "Pitch" },
+  { type: "persona", slug: "personas", title: "Personas" },
+  { type: "place", slug: "places", title: "Places" },
+  { type: "piece", slug: "pieces", title: "Pieces" },
+  { type: "position", slug: "positions", title: "Positions" },
+  { type: "process", slug: "processes", title: "Processes" },
+  { type: "plan", slug: "plans", title: "Plans" },
+];
+const _canonTypeIds = new Set(Object.keys(_canonTypes));
+const _knownTypeIds = new Set(KNOWN_TYPE_SPECS.map((s) => s.type));
+const _pluralise = (s: string) => (/(?:ch|s|x|z)$/.test(s) ? `${s}es` : `${s}s`);
+const TYPE_SPECS = [
+  ...KNOWN_TYPE_SPECS.filter((s) => _canonTypeIds.has(s.type)),
+  ...Object.keys(_canonTypes)
+    .filter((t) => !_knownTypeIds.has(t))
+    .map((type) => {
+      const plural = _pluralise(type);
+      return { type, slug: plural, title: plural.charAt(0).toUpperCase() + plural.slice(1) };
+    }),
+];
+
+const COMPANY_MAP: Record<string, string> = {
+  persona: "Personen",
+  place: "Orte",
+  piece: "Dinge",
+  position: "Positionen",
+  process: "Prozesse",
+  plan: "Pläne",
+};
+
+if (realPlay.elements && realPlay.elements.length > 0) {
+  for (const spec of TYPE_SPECS) {
+    const groupElements = realPlay.elements.filter((el: any) => el.type === spec.type);
+    if (groupElements.length === 0) continue;
+
+    // Chapter Intro Spread
+    let introBodyHtml = "";
+    if (spec.type === "plot") {
+      introBodyHtml = realPlay.sections.triggers || "";
+    } else {
+      introBodyHtml = extractCompanyCategory(
+        realPlay.sections.company || "",
+        COMPANY_MAP[spec.type],
+      );
+    }
+
+    spreads.push({
+      slug: spec.slug,
+      n: nextN(),
+      groupLabel: spec.title.toLowerCase(),
+      groupHref: `${URLS.architecture}${spec.type}/`,
+      status: realPlay.voiceRegister,
+      title: spec.title,
+      facets: [],
+      bodyHtml: introBodyHtml,
+      classModifier: `voice-${realPlay.voiceRegister}`,
+    });
+
+    // Individual Element Spreads (2x2 facet grids)
+    for (const el of groupElements) {
+      const facets: BookFacet[] = Object.entries(el.sections)
+        .filter(([heading]) => heading !== "taxonomy" && heading !== "owner")
+        .map(([heading, html]) => {
+          const titleCap = heading.charAt(0).toUpperCase() + heading.slice(1);
+          return {
+            letter: titleCap.charAt(0),
+            name: titleCap,
+            body: "",
+            bodyHtml: html as string,
+          };
+        });
+
+      spreads.push({
+        slug: `el-${el.id}`,
+        n: nextN(),
+        groupLabel: el.type,
+        groupHref: `${URLS.architecture}${el.type}/`,
+        status: el.voiceRegister,
+        title: el.declared,
+        subtitle: el.voice ? `voice: "${el.voice}"` : null,
+        facets,
+        classModifier: `voice-${el.voiceRegister}`,
+      });
+    }
+  }
+}
+
+// 3. Reference Warrant spreads (snap split by chapter (##))
+if (realPlay.reference) {
+  const keys = Object.keys(realPlay.reference.sections);
+  keys.forEach((heading, i) => {
+    const html = realPlay.reference.sections[heading];
+    const titleCap = heading
+      .split(" ")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+    const isLast = i === keys.length - 1;
+
+    spreads.push({
+      slug: `ref-${heading
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "")}`,
+      n: nextN(),
+      groupLabel: "reference",
+      status: "warrant",
+      title: titleCap,
+      facets: [],
+      bodyHtml: html,
+      coda: isLast ? `updated: ${realPlay.reference.updated}` : null,
+    });
+  });
+}
+
+// 4. Download cover spread
+const jsonPath = join(process.cwd(), "public", "downloads", "misfits", `${realPlay.id}.json`);
+if (existsSync(jsonPath)) {
+  try {
+    const sidecar = JSON.parse(readFileSync(jsonPath, "utf-8"));
+    spreads.push({
+      slug: "download",
+      n: nextN(),
+      groupLabel: "download",
+      status: "artifact",
+      title: "Download Misfit",
+      facets: [],
+      download: {
+        href: `${URLS.misfits}downloads/misfits/${realPlay.id}.zip`,
+        filename: `${realPlay.id}.zip`,
+        size: sidecar.size,
+        sha256: sidecar.sha256,
+        note: `Includes the misfit configuration and all staged elements.`,
+      },
+    });
+  } catch (e) {
+    console.error("Failed to load misfit sidecar JSON:", e);
+  }
+}
+---
+
+<BaseLayout title={`${title} · KHAI Misfits · kaihacks`} description={subtitle}>
+  <div class={`voice-${voiceRegister}`}>
+    <Book
+      header={{ domain: "misfits", tld: ".kaihacks.ai", location: misfit.id }}
+      cover={{
+        overline,
+        title,
+        subtitle,
+        edition: house.title,
+        ctaHref,
+        ctaLabel,
+        backHref: "../",
+        backLabel: `← ${house.title}`,
+      }}
+      spreads={spreads}
+      tocEyebrow={`misfit · ${misfit.id}`}
+    />
+  </div>
+  {/* The book and the stage are two doors into the same misfit. */}
+  <a class="enter-stage" href="./stage/" aria-label="Enter the Stage">
+    <span class="es-bulbs" aria-hidden="true">
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+      <span></span>
+    </span>
+    <span class="es-body">
+      <span class="es-label">Enter the Stage</span>
+      <span class="es-arrow" aria-hidden="true">▲▲</span>
+    </span>
+  </a>
+</BaseLayout>
+
+<style>
+  /* A lit marquee, not a corner pill: the door from the book to the stage. */
+  .enter-stage {
+    position: fixed;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    text-decoration: none;
+    padding: 0.6rem 1.4rem 0.7rem;
+    color: var(--color-paper-warm);
+    background: linear-gradient(
+      to bottom,
+      var(--color-brick),
+      color-mix(in srgb, var(--color-brick) 52%, black)
+    );
+    border: 1px solid color-mix(in srgb, var(--color-ink) 35%, transparent);
+    box-shadow: 0 14px 36px -16px color-mix(in srgb, var(--color-ink) 80%, transparent);
+    transition:
+      transform 0.16s,
+      filter 0.16s;
+  }
+  .enter-stage:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.1);
+  }
+  .es-bulbs {
+    display: flex;
+    gap: 0.7rem;
+  }
+  .es-bulbs span {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-amber) 72%, white);
+    box-shadow: 0 0 8px 2px color-mix(in srgb, var(--color-amber) 55%, transparent);
+  }
+  .es-body {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+  .es-label {
+    font-family: var(--font-display);
+    font-size: 17px;
+    letter-spacing: 0.01em;
+  }
+  .es-arrow {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    opacity: 0.85;
+  }
+  @media (max-width: 640px) {
+    .es-label {
+      font-size: 15px;
+    }
+  }
+</style>
