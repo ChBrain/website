@@ -79,10 +79,16 @@ function culturesEngineClosure(rootPkgDir) {
 // gather its files recursively, strip frontmatter from markdown, and drop the
 // npm/build scaffolding (package.json, changelog) and any engine code.
 const ENGINE_SKIP_ROOT = new Set(["package.json", "CHANGELOG.md"]);
+const ENGINE_SKIP_FILES = new Set([
+  "playwright_instructions.md",
+  "house-rules.md",
+  "architecture.md",
+]);
 function collectEngineFiles(dir, base = "") {
   const files = [];
   for (const f of readdirSync(dir)) {
     if (base === "" && ENGINE_SKIP_ROOT.has(f)) continue;
+    if (ENGINE_SKIP_FILES.has(f)) continue;
     if (/\.(mjs|cjs|js|ts|map)$/.test(f)) continue; // engine code, not world content
     const filePath = join(dir, f);
     const rel = base ? `${base}/${f}` : f;
@@ -90,8 +96,6 @@ function collectEngineFiles(dir, base = "") {
       files.push(...collectEngineFiles(filePath, rel));
     } else if (f.endsWith(".md")) {
       files.push({ path: rel, data: readMarkdownStripped(filePath) });
-    } else {
-      files.push({ path: rel, data: readFileSync(filePath) });
     }
   }
   return files;
@@ -200,6 +204,13 @@ function finalForFile(logical, primaryLogicals) {
   if (LICENSE_RE.test(logical)) return baseName(logical);
   if (ADMIN_RE.test(logical))
     return primaryLogicals.has(logical) ? baseName(logical) : flattenName(logical);
+  if (
+    logical === "engines/spine/instructions.md" ||
+    logical === "engines/spine/perplexity_instructions.md" ||
+    logical === "engines/spine/claude_instructions.md"
+  ) {
+    return "khai/" + baseName(logical);
+  }
   return contentFinal(logical);
 }
 
@@ -670,11 +681,69 @@ function buildCultureDownloads() {
   // set zip under engines/<id>/, so a downloaded world is runnable on its own.
   // npm-derived (culturesEngineClosure) -- not hand-listed -- so the set tracks
   // whatever khai-cultures declares.
+  function isKhaiTypeFile(filename) {
+    const prefixes = [
+      "process_",
+      "persona_",
+      "place_",
+      "plan_",
+      "play_",
+      "plot_",
+      "position_",
+      "piece_",
+      "pitch_",
+    ];
+    const base = filename.includes("/") ? filename.slice(filename.lastIndexOf("/") + 1) : filename;
+    return prefixes.some((p) => base.startsWith(p));
+  }
+
   const engineClosure = culturesEngineClosure(culturesPkgDir);
   const engineOverhead = [];
   for (const [engineId, engineDir] of engineClosure) {
-    for (const file of collectEngineFiles(engineDir)) {
-      engineOverhead.push({ path: `engines/${engineId}/${file.path}`, data: file.data });
+    if (engineId === "spine") {
+      // 1: spine --> only instructions.md, perplexity_instructions.md, and claude_instructions.md
+      // (land under khai/ as bare files) and README/REFERENCES (land at root, flattened).
+      const filesToFind = [
+        "instructions.md",
+        "perplexity_instructions.md",
+        "claude_instructions.md",
+      ];
+      for (const filename of filesToFind) {
+        const filePath = join(engineDir, filename);
+        if (existsSync(filePath)) {
+          engineOverhead.push({
+            path: `engines/spine/${filename}`,
+            data: readMarkdownStripped(filePath),
+          });
+        }
+      }
+      const refPath = join(engineDir, "REFERENCES.md");
+      if (existsSync(refPath)) {
+        engineOverhead.push({
+          path: `engines/spine/REFERENCES.md`,
+          data: readMarkdownStripped(refPath),
+        });
+      }
+      const readmePath = join(engineDir, "README.md");
+      if (existsSync(readmePath)) {
+        engineOverhead.push({
+          path: `engines/spine/README.md`,
+          data: readMarkdownStripped(readmePath),
+        });
+      }
+    } else {
+      // 2: every other engine --> collect overhead files and khai-type content files recursively.
+      const allFiles = collectEngineFiles(engineDir);
+      for (const file of allFiles) {
+        const isOverhead = file.path === "README.md" || file.path === "REFERENCES.md";
+        const isContent = isKhaiTypeFile(file.path);
+        if (isOverhead || isContent) {
+          engineOverhead.push({
+            path: `engines/${engineId}/${file.path}`,
+            data: file.data,
+          });
+        }
+      }
     }
   }
   if (engineClosure.size > 0) {
@@ -690,38 +759,6 @@ function buildCultureDownloads() {
       console.log(`  culture ${id}: no cultures/${id}/ directory; skipping`);
       continue;
     }
-
-    // The culture's own files, logical path world/<f> (so their dense sibling
-    // cross-links resolve). Markdown is stripped of frontmatter; packFlat then
-    // routes README/REFERENCES to the root and the rest to khai/.
-    const cultureFiles = [];
-    for (const f of readdirSync(cultureDir)) {
-      const filePath = join(cultureDir, f);
-      if (!statSync(filePath).isFile()) continue;
-      const data = f.endsWith(".md") ? readMarkdownStripped(filePath) : readFileSync(filePath);
-      cultureFiles.push({ name: f, data });
-    }
-
-    // Stored (name + data) so a group can re-home each member under world/<member>/.
-    memberFilesById.set(id, cultureFiles);
-
-    const files = [
-      ...cultureFiles.map((f) => ({ logical: `world/${f.name}`, data: f.data })),
-      ...engineOverhead.map((f) => ({ logical: f.path, data: f.data })),
-      ...houseLicenseFiles,
-    ];
-    // This culture's own README/REFERENCES keep bare root names; the engines'
-    // (and any other) readme/reference are flattened at the root by packFlat.
-    const primary = new Set(["world/README.md", "world/REFERENCES.md"]);
-    const packed = packFlat(id, files, primary);
-
-    const size = fmtBytes(packed.zip.length);
-    writeFileSync(join(outDir, `${id}.zip`), packed.zip);
-    writeFileSync(
-      join(outDir, `${id}.json`),
-      JSON.stringify({ filename: `${id}.zip`, size, sha256: packed.zipSha256 }) + "\n",
-    );
-    console.log(`  culture ${id}: ${size} sha256=${packed.zipSha256.slice(0, 12)}...`);
 
     // ISO anchor: the registry carries it. geo.json is an optional override and
     // the only place an explicit deep-nesting `parent` is declared; the page
@@ -739,6 +776,41 @@ function buildCultureDownloads() {
         console.log(`  culture ${id}: geo.json unreadable (${e.message})`);
       }
     }
+
+    // The culture's own files, logical path <prefix>/<f> (so their dense sibling
+    // cross-links resolve). Markdown is stripped of frontmatter; packFlat then
+    // routes README/REFERENCES to the root and the rest to khai/.
+    // Exclude geo.json from the zip as it is metadata only.
+    const cultureFiles = [];
+    for (const f of readdirSync(cultureDir)) {
+      if (f === "geo.json") continue;
+      const filePath = join(cultureDir, f);
+      if (!statSync(filePath).isFile()) continue;
+      const data = f.endsWith(".md") ? readMarkdownStripped(filePath) : readFileSync(filePath);
+      cultureFiles.push({ name: f, data });
+    }
+
+    // Stored (name + data) so a group can re-home each member under world/<member>/.
+    memberFilesById.set(id, cultureFiles);
+
+    const prefix = iso ? iso.toLowerCase() : "world";
+    const files = [
+      ...cultureFiles.map((f) => ({ logical: `${prefix}/${f.name}`, data: f.data })),
+      ...engineOverhead.map((f) => ({ logical: f.path, data: f.data })),
+      ...houseLicenseFiles,
+    ];
+    // This culture's own README/REFERENCES keep bare root names; the engines'
+    // (and any other) readme/reference are flattened at the root by packFlat.
+    const primary = new Set([`${prefix}/README.md`, `${prefix}/REFERENCES.md`]);
+    const packed = packFlat(id, files, primary);
+
+    const size = fmtBytes(packed.zip.length);
+    writeFileSync(join(outDir, `${id}.zip`), packed.zip);
+    writeFileSync(
+      join(outDir, `${id}.json`),
+      JSON.stringify({ filename: `${id}.zip`, size, sha256: packed.zipSha256 }) + "\n",
+    );
+    console.log(`  culture ${id}: ${size} sha256=${packed.zipSha256.slice(0, 12)}...`);
 
     const item = { kind: "culture", id, title: entry.title || id, asset: `${id}.zip`, size };
     if (entry.description) item.description = entry.description;
