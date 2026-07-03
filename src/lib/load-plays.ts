@@ -75,7 +75,7 @@ export function getVoiceRegister(voice: string = ""): VoiceRegister {
   return "editorial";
 }
 
-function getPackageDir(pkgName: string): string | null {
+export function getPackageDir(pkgName: string): string | null {
   try {
     const pkgJsonPath = _require.resolve(`${pkgName}/package.json`);
     return dirname(pkgJsonPath);
@@ -123,27 +123,42 @@ function parseSections(content: string): Record<string, string> {
   return sections;
 }
 
-export function loadAllPlays(): Play[] {
-  let houses;
-  try {
-    houses = loadRegistry();
-  } catch (e: any) {
-    console.error("Failed to load plays registry:", e.message);
-    return [];
-  }
+/** Where a collection lives inside its package, and how its registry + reference
+ *  files are named. khai-plays houses ship `plays/` + a `plays[]` registry +
+ *  `REFERENCES.md`; the misfits house ships `misfits/` + a `misfits[]` registry +
+ *  `REFERENCE.md`. Same on-disk grammar otherwise, so one parser reads both. */
+export interface CollectionOptions {
+  /** The subdirectory holding the productions (e.g. "plays", "misfits"). */
+  dir: string;
+  /** The registry.json array key carrying the shelf cards (e.g. "plays"). */
+  registryKey: string;
+  /** Reference filenames to accept, in priority order. Plays use the plural,
+   *  misfits the singular; accepting both keeps the parser house-agnostic. */
+  referenceNames: string[];
+}
 
+/** Metadata that names the collection this package publishes: its id (the URL
+ *  slug / houseId) and its human title. For a khai-plays house these come from
+ *  the bill card; for the single-package misfits house they are synthesised. */
+export interface CollectionMeta {
+  id: string;
+  title: string;
+}
+
+/** Parse one installed package's collection directory into Play[]. Shared by
+ *  loadAllPlays (one call per registered house) and loadAllMisfits (one call for
+ *  the single misfits package). `pkgDir` is the resolved package root. */
+export function loadCollection(
+  pkgDir: string,
+  house: CollectionMeta,
+  opts: CollectionOptions,
+): Play[] {
   const plays: Play[] = [];
 
-  for (const house of houses) {
-    const pkgDir = getPackageDir(house.package);
-    if (!pkgDir) {
-      console.log(`House package ${house.package} is not installed; skipping.`);
-      continue;
-    }
-
+  {
     let registry: any = null;
     try {
-      registry = _require(`${house.package}/registry.json`);
+      registry = _require(join(pkgDir, "registry.json"));
     } catch {
       // Fallback if registry.json is not present or exported
     }
@@ -159,8 +174,8 @@ export function loadAllPlays(): Play[] {
       houseVoice = readmeFm.voice || "";
     }
 
-    const playsDir = join(pkgDir, "plays");
-    if (!existsSync(playsDir)) continue;
+    const playsDir = join(pkgDir, opts.dir);
+    if (!existsSync(playsDir)) return plays;
 
     for (const ent of readdirSync(playsDir, { withFileTypes: true })) {
       if (!ent.isDirectory()) continue;
@@ -184,8 +199,8 @@ export function loadAllPlays(): Play[] {
       let description = "";
       let foundInRegistry = false;
 
-      if (registry && Array.isArray(registry.plays)) {
-        const regPlay = registry.plays.find((p: any) => p && p.id === dirName);
+      if (registry && Array.isArray(registry[opts.registryKey])) {
+        const regPlay = registry[opts.registryKey].find((p: any) => p && p.id === dirName);
         if (regPlay) {
           title = cleanText(regPlay.title);
           description = cleanHtml(regPlay.description);
@@ -195,7 +210,7 @@ export function loadAllPlays(): Play[] {
 
       if (!foundInRegistry) {
         console.warn(
-          `[Migration Warning] Play "${dirName}" in house "${house.package}" not found in registry.json. Falling back to parsing ## Arc section.`,
+          `[Migration Warning] "${dirName}" in "${house.id}" not found in registry.json. Falling back to parsing ## Arc section.`,
         );
         const arcMatch = mainContent.match(/^##\s+Arc\s*$/im);
         if (arcMatch) {
@@ -234,7 +249,7 @@ export function loadAllPlays(): Play[] {
 
         if (fileName === mainPlayFileName) continue;
 
-        if (fileName === "REFERENCES.md") {
+        if (opts.referenceNames.includes(fileName)) {
           const refSrc = readFileSync(filePath, "utf8");
           const { data: refFm, content: refContent } = parseFrontmatter(refSrc);
           const h1Match = refContent.match(/^#\s+(.+)$/m);
@@ -307,5 +322,34 @@ export function loadAllPlays(): Play[] {
     }
   }
 
+  return plays;
+}
+
+/** How a khai-plays house is laid out on disk. Exported so sibling collections
+ *  (misfits) can reuse the parser with their own dir/key/reference names. */
+export const PLAYS_COLLECTION: CollectionOptions = {
+  dir: "plays",
+  registryKey: "plays",
+  referenceNames: ["REFERENCES.md"],
+};
+
+export function loadAllPlays(): Play[] {
+  let houses;
+  try {
+    houses = loadRegistry();
+  } catch (e: any) {
+    console.error("Failed to load plays registry:", e.message);
+    return [];
+  }
+
+  const plays: Play[] = [];
+  for (const house of houses) {
+    const pkgDir = getPackageDir(house.package);
+    if (!pkgDir) {
+      console.log(`House package ${house.package} is not installed; skipping.`);
+      continue;
+    }
+    plays.push(...loadCollection(pkgDir, { id: house.id, title: house.title }, PLAYS_COLLECTION));
+  }
   return plays;
 }
