@@ -1,0 +1,76 @@
+---
+// The misfits shelf: misfits.kaihacks.ai/ — the house that IS its own bill.
+// Unlike the plays bill (a list of houses), the misfits surface is a single
+// collection, so its root is the shelf of productions itself. Each misfit is a
+// khai play staged as a misfit, read from the installed @chbrain/khai-misfits
+// package and rendered on the shared Book + Stage chassis the plays surface uses
+// — the only difference is the door: misfits is its own surface, reached on its
+// own subdomain, not a card in the plays bill.
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Shelf, { type ShelfCard } from "../../components/Shelf.astro";
+import PlaySearch from "../plays/_PlaySearch.astro";
+import { loadAllMisfits, misfitsHouse } from "../../lib/load-misfits";
+import { URLS } from "../../lib/urls";
+
+const house = misfitsHouse();
+const misfits = loadAllMisfits();
+const repoLabel = house.repo.replace(/^https?:\/\//, "");
+
+const stripHtml = (html: string) => html.replace(/<[^>]+>/g, "").trim();
+
+const cards: ShelfCard[] = misfits.map((p) => {
+  let note = stripHtml(p.description || p.sections.arc || p.sections.name || "");
+  if (note.length > 160) note = note.slice(0, 160) + "...";
+  return {
+    // Relative, not `/misfits/<misfit>/`: production serves this surface at the
+    // subdomain root (misfits.kaihacks.ai/), while dev and staging keep it under
+    // /misfits/. A relative href resolves correctly in all three.
+    href: `${p.id}/`,
+    eyebrow: "@chbrain/khai-misfits",
+    state: "misfit",
+    title: p.title,
+    note,
+    cta: "Open the misfit →",
+    downloadHref: `${URLS.misfits}downloads/misfits/${p.id}.zip`,
+    downloadCta: "Download misfit →",
+  };
+});
+---
+
+<BaseLayout
+  title="Misfits · kaihacks"
+  description="The Misfits production house: khai plays staged as misfits, each a failure mode of an organisation made watchable."
+>
+  {
+    /* Search the whole house — every misfit and everything inside it. The
+      sibling search-index.json this surface's endpoint emits. */
+  }
+  {
+    misfits.length > 0 && (
+      <PlaySearch
+        placeholder="Search misfits · personas, places, plots…"
+        label="Search the Misfits house"
+        hint="Type to search every misfit and everything inside it."
+      />
+    )
+  }
+
+  <Shelf
+    domain="misfits"
+    location="the house"
+    sectionLabel="§ · the productions"
+    title="KHAI Misfits"
+    accent="Misfits"
+    sectionNo="§1"
+    sectionTitle="The misfits"
+    sectionNote="@chbrain/khai-misfits"
+    cards={cards}
+    empty="No misfits published yet."
+  >
+    <Fragment slot="subline">
+      The failure is already in the room. Each misfit is a <code>khai</code> play staged as a failure
+      mode of an organisation made watchable. The house lives at
+      <a href={house.repo} rel="external">{repoLabel}</a>.
+    </Fragment>
+  </Shelf>
+</BaseLayout>
