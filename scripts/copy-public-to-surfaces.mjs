@@ -8,7 +8,7 @@ import { cp, stat } from "node:fs/promises";
 import { join } from "node:path";
 
 const DIST = "dist";
-const SURFACES = ["main", "architecture", "cultures", "plays"];
+const SURFACES = ["main", "architecture", "cultures", "plays", "misfits"];
 // Only copy real shared assets — not the per-surface HTML/JS that Astro
 // already routed correctly.
 const SHARED = [
@@ -63,7 +63,12 @@ async function main() {
       if (!(await exists(src))) continue;
 
       if (dir === "downloads") {
-        if (surface === "architecture" || surface === "plays" || surface === "cultures") {
+        if (
+          surface === "architecture" ||
+          surface === "plays" ||
+          surface === "cultures" ||
+          surface === "misfits"
+        ) {
           const destDir = join(surfaceDir, "downloads");
           const htaccessSrc = join(src, ".htaccess");
           if (await exists(htaccessSrc)) {
@@ -84,6 +89,12 @@ async function main() {
             const playsSrc = join(src, "plays");
             if (await exists(playsSrc)) {
               await cp(playsSrc, join(destDir, "plays"), { recursive: true });
+            }
+            copied++;
+          } else if (surface === "misfits") {
+            const misfitsSrc = join(src, "misfits");
+            if (await exists(misfitsSrc)) {
+              await cp(misfitsSrc, join(destDir, "misfits"), { recursive: true });
             }
             copied++;
           } else if (surface === "cultures") {
