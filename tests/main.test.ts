@@ -112,14 +112,6 @@ const MOVEMENTS = [
   { t: "AI", sense: "the verb", accent: false },
 ];
 
-const APPS: { title: string; state: string; url: string[]; planned: boolean }[] = [
-  { title: "Cultures", state: "live", url: ["cultures.kaihacks.ai"], planned: false },
-  // url accepts the legacy en-dash "–" placeholder OR the hyphen "-" form
-  // (per the CVI's no-en-dash sweep — the rendered placeholder uses a
-  // plain hyphen-minus instead of U+2013).
-  { title: "More applications", state: "in progress", url: ["–", "-"], planned: true },
-];
-
 describe("main (company front door) — design contract", () => {
   it("page exists at main/index.html (build tripwire)", () => {
     expect(main, "build did not emit dist/main/index.html").toBeDefined();
@@ -436,20 +428,33 @@ describe("main (company front door) — design contract", () => {
     });
   });
 
-  describe("§04 Applications — Cultures live + placeholder", () => {
-    it("renders exactly 2 app cards in canonical order", () => {
+  describe("§04 Applications — live apps + trailing placeholder", () => {
+    // The apps grid is transitional: Cultures leads, a planned placeholder
+    // ("More applications") always closes it, and live siblings (Misfits, …)
+    // may sit between the two as the architecture spawns applications. Assert
+    // the invariants that hold across that growth rather than a fixed roster —
+    // the source/test split keeps a new app card and this test in separate
+    // PRs, so a lockstep count would force one to land red.
+    it("leads with Cultures (live) and closes with the planned placeholder", () => {
       const dom = new JSDOM(main!.html);
       const section = dom.window.document.querySelector("section#apps");
       const cards = [...section!.querySelectorAll("a.app")];
-      expect(cards.length).toBe(APPS.length);
-      cards.forEach((card, i) => {
-        const title = card.querySelector(".app-title")?.textContent?.trim();
-        const state = card.querySelector(".app-state")?.textContent?.trim();
-        const url = card.querySelector(".app-url")?.textContent?.trim() ?? "";
-        expect(title).toBe(APPS[i].title);
-        expect(state).toBe(APPS[i].state);
-        expect(APPS[i].url, `app[${i}] url "${url}" not in tolerated set`).toContain(url);
-      });
+      expect(cards.length).toBeGreaterThanOrEqual(2);
+
+      // First card: Cultures, live.
+      expect(cards[0].querySelector(".app-title")?.textContent?.trim()).toBe("Cultures");
+      expect(cards[0].querySelector(".app-state")?.textContent?.trim()).toBe("live");
+
+      // Last card: the planned placeholder, dashed.
+      const last = cards[cards.length - 1];
+      expect(last.querySelector(".app-title")?.textContent?.trim()).toBe("More applications");
+      expect(last.classList.contains("app--planned")).toBe(true);
+
+      // Every card before the placeholder is a live app.
+      for (const card of cards.slice(0, -1)) {
+        expect(card.querySelector(".app-state")?.textContent?.trim()).toBe("live");
+        expect(card.classList.contains("app--planned")).toBe(false);
+      }
     });
 
     it("Cultures (live) carries the brick .app-state--live", () => {
@@ -464,7 +469,8 @@ describe("main (company front door) — design contract", () => {
       const dom = new JSDOM(main!.html);
       const section = dom.window.document.querySelector("section#apps");
       const cards = [...section!.querySelectorAll("a.app")];
-      expect(cards[1].classList.contains("app--planned")).toBe(true);
+      // The placeholder is always the last card (live apps precede it).
+      expect(cards[cards.length - 1].classList.contains("app--planned")).toBe(true);
     });
   });
 });

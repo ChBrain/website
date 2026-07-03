@@ -115,7 +115,7 @@
       {
         "pattern": "surface/misfits/*",
         "layer": "solution",
-        "allow": ["src/pages/main/misfits/**"]
+        "allow": ["src/pages/misfits/**", "src/pages/main/misfits/**"]
       },
       {
         "pattern": "deps/*",
