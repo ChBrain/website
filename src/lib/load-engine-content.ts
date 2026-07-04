@@ -73,12 +73,18 @@ function engineDir(id: string): string {
   return dirname(_require.resolve(`@chbrain/khai-engine-${id}/package.json`));
 }
 
+// An engine's package is immutable within a single build; memoize per id so
+// the enginebooks + playbook + engines pages don't each re-read and re-render it.
+const engineBookCache = new Map<string, EngineBook>();
+
 /**
  * Load one engine's Enginebook content. The manifest (package.json `khai`) is
  * the single source of truth for the anchor, the expressions, and their order;
  * this loader never re-declares that shape.
  */
 export function loadEngineBook(id: string): EngineBook {
+  const cached = engineBookCache.get(id);
+  if (cached) return cached;
   const dir = engineDir(id);
   const manifest = JSON.parse(readFileSync(join(dir, "package.json"), "utf8")).khai;
   if (!manifest) {
@@ -137,7 +143,7 @@ export function loadEngineBook(id: string): EngineBook {
     references = null;
   }
 
-  return {
+  const book: EngineBook = {
     id,
     tagline: manifest.tagline ?? null,
     type: manifest.type ?? null,
@@ -146,4 +152,6 @@ export function loadEngineBook(id: string): EngineBook {
     expressions,
     references,
   };
+  engineBookCache.set(id, book);
+  return book;
 }
