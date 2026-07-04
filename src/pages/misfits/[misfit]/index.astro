@@ -43,7 +43,15 @@ const overline = "khai misfits · a staging";
 // The book reads the production's declared (original) name; the shelf carries
 // the English title.
 const title = realPlay.declared;
-const subtitle = "";
+// The book's subtitle (and the page's meta description) is the misfit's real
+// blurb — the registry description, or the Arc section when there is none —
+// stripped of HTML and clipped like a shelf note (see plays/[house]/index.astro).
+const stripHtml = (html: string) => html.replace(/<[^>]+>/g, "").trim();
+const rawSubtitle = realPlay.description || realPlay.sections.arc || "";
+let subtitle = stripHtml(rawSubtitle);
+if (subtitle.length > 160) {
+  subtitle = subtitle.slice(0, 160) + "...";
+}
 const ctaHref = "#synopsis";
 const ctaLabel = "Open the misfit →";
 
@@ -214,7 +222,7 @@ if (existsSync(jsonPath)) {
 }
 ---
 
-<BaseLayout title={`${title} · KHAI Misfits · kaihacks`} description={subtitle}>
+<BaseLayout title={`${title} · KHAI Misfits · kaihacks`} description={subtitle || undefined}>
   <div class={`voice-${voiceRegister}`}>
     <Book
       header={{ domain: "misfits", tld: ".kaihacks.ai", location: misfit.id }}
