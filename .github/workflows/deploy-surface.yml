@@ -1,12 +1,21 @@
 name: deploy-surface
 
-# Reusable single-surface deploy. Builds the site and rsyncs ONE
-# surface's dist/ subfolder to its document root for the chosen env.
+# Reusable surface deploy: build ONCE, rsync each requested surface's
+# dist/ subfolder to its document root for the chosen env.
 #
-# This is the shared engine behind both the auto-staging deploy (called
-# once per surface in a matrix) and the per-surface production tag
-# deploys, and it can be run by hand from the Actions tab via
-# workflow_dispatch ("deploy my sites independently").
+# This is the shared engine behind both the auto-staging deploy (one
+# call with surface=all) and the per-surface production tag deploys
+# (one call with that surface), and it can be run by hand from the
+# Actions tab via workflow_dispatch ("deploy my sites independently",
+# or surface=all for a whole release in one click).
+#
+# Astro has no partial build - every build emits every surface - so the
+# expensive part (install, prebuild downloads, build, and on production
+# the full baseline gates) runs in ONE job and the per-surface legs are
+# artifact-download + rsync only. Beyond the compute saved, this means
+# every surface in a deploy ships from literally the same build instead
+# of N builds that could drift (e.g. a registry package publishing
+# mid-release).
 #
 # The surface -> document-root mapping below is the single source of
 # truth; it mirrors the host layout documented in docs/deploy-targets.md.
@@ -15,10 +24,12 @@ on:
   workflow_dispatch:
     inputs:
       surface:
-        description: Which surface to deploy
+        description: Which surface to deploy (all = every surface, one build)
         type: choice
         required: true
+        default: all
         options:
+          - all
           - architecture
           - main
           - plays
@@ -36,6 +47,7 @@ on:
   workflow_call:
     inputs:
       surface:
+        description: A surface name, or "all" for every surface
         required: true
         type: string
       env:
@@ -52,7 +64,24 @@ permissions:
   packages: read
 
 jobs:
-  deploy:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      surfaces: ${{ steps.s.outputs.surfaces }}
+    steps:
+      - id: s
+        run: |
+          surface="${{ inputs.surface }}"
+          case "$surface" in
+            all)
+              echo 'surfaces=["architecture","main","cultures","plays","misfits","writing"]' >> "$GITHUB_OUTPUT" ;;
+            architecture|main|cultures|plays|misfits|writing)
+              echo "surfaces=[\"$surface\"]" >> "$GITHUB_OUTPUT" ;;
+            *)
+              echo "::error::unknown surface '$surface' (expected a surface name or 'all')"; exit 1 ;;
+          esac
+
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -75,10 +104,39 @@ jobs:
             # to staging.kaihacks.ai when DEPLOY_ENV=staging.
             DEPLOY_ENV=staging npm run build
           fi
+      - name: upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ inputs.env }}
+          path: dist
+          # dist carries dot-paths the sites need (.well-known/security.txt,
+          # the apex .htaccess rewrites). upload-artifact excludes hidden
+          # files by default since v4.4; without this flag they would vanish
+          # from the artifact and the rsync --delete below would then REMOVE
+          # them from the live document roots.
+          include-hidden-files: true
+          retention-days: 1
+
+  deploy:
+    needs: [resolve, build]
+    runs-on: ubuntu-latest
+    strategy:
+      # Surfaces deploy independently: one failing leg does not block the
+      # others, and a single leg can be re-run on its own ("re-run failed
+      # jobs") without rebuilding - the artifact is the build.
+      fail-fast: false
+      matrix:
+        surface: ${{ fromJSON(needs.resolve.outputs.surfaces) }}
+    steps:
+      - name: download dist
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-${{ inputs.env }}
+          path: dist
       - name: resolve rsync target
         id: target
         run: |
-          surface="${{ inputs.surface }}"
+          surface="${{ matrix.surface }}"
           env="${{ inputs.env }}"
           base="/home/c216mkgp1lzk/public_html"
           if [ "$env" = "production" ]; then
@@ -144,7 +202,7 @@ jobs:
         run: |
           rsync -avz --delete --exclude '/_assets/' \
             -e "ssh -i ~/.ssh/kaihacksai" \
-            "./dist/${{ inputs.surface }}/" \
+            "./dist/${{ matrix.surface }}/" \
             "c216mkgp1lzk@92.205.150.56:${{ steps.target.outputs.target }}"
       - name: Deploy shared assets via rsync (NO --delete)
         # Ship the hashed /_assets/ bundle the HTML references. No --delete:
