@@ -1,7 +1,6 @@
 ---
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import Shelf, { type ShelfCard } from "../../../components/Shelf.astro";
-import { loadRegistry } from "@chbrain/khai-plays";
 import { loadAllPlays } from "../../../lib/load-plays";
 import { URLS } from "../../../lib/urls";
 import { readFileSync, existsSync } from "node:fs";
@@ -10,7 +9,6 @@ import { MOCK_HOUSES } from "../_mock";
 
 // Loads all plays from registered houses
 const plays = loadAllPlays();
-const houses = loadRegistry();
 
 interface PlayDownload {
   filename: string;
@@ -23,6 +21,8 @@ function downloadFor(houseId: string, playId: string): PlayDownload | null {
   const path = join(downloadsDir, houseId, `${playId}.json`);
   return existsSync(path) ? (JSON.parse(readFileSync(path, "utf8")) as PlayDownload) : null;
 }
+
+const stripHtml = (html: string) => html.replace(/<[^>]+>/g, "").trim();
 
 // Fallback to mock plays only if no real plays are found
 const isInstalled = plays.length > 0;
@@ -42,10 +42,15 @@ const cards: ShelfCard[] = playsToRender
     // If it's real, load play download sidecar
     const dl = isInstalled ? downloadFor(p.houseId, p.id) : null;
 
-    // Find mock blurb for English text
-    const mockHouse = MOCK_HOUSES.find((mh) => mh.id === p.houseId);
-    const mockPlay = mockHouse?.plays.find((mp) => mp.id === p.id);
-    const note = mockPlay ? mockPlay.blurb : (p as any).blurb || "";
+    let note = "";
+    if (isInstalled) {
+      note = stripHtml((p as any).description || "");
+      if (note.length > 160) {
+        note = note.slice(0, 160) + "...";
+      }
+    } else {
+      note = (p as any).blurb || "";
+    }
 
     // Skip if real but no built download bundle exists
     if (isInstalled && !dl) return null;
