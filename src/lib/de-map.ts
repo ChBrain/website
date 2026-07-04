@@ -94,6 +94,10 @@ function project(raw: { features: RawFeature[] }): SubMap {
 }
 
 function load(file: string): SubMap {
+  // Deliberately read from process.cwd(): Astro prerender bundles this module
+  // into dist/.prerender/chunks/, so import.meta.url-relative paths resolve to
+  // a location the geojson is never copied to. Builds always run from the
+  // repo root, so the cwd-anchored path is the one that works.
   const raw = JSON.parse(readFileSync(join(process.cwd(), "src/lib", file), "utf8")) as {
     features: RawFeature[];
   };
