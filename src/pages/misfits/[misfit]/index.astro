@@ -44,6 +44,15 @@ const overline = "khai misfits · a staging";
 // the English title.
 const title = realPlay.declared;
 const subtitle = "";
+// Meta description: the misfit's real blurb — the registry description, or
+// the Arc section when there is none — stripped of HTML and clipped like a
+// shelf note. Meta only: the visible cover stays in the declared language
+// (same rule as plays/[house]/[play]), so this never feeds `subtitle`.
+const stripHtml = (html: string) => html.replace(/<[^>]+>/g, "").trim();
+let metaDescription = stripHtml(realPlay.description || realPlay.sections.arc || "");
+if (metaDescription.length > 160) {
+  metaDescription = metaDescription.slice(0, 160) + "...";
+}
 const ctaHref = "#synopsis";
 const ctaLabel = "Open the misfit →";
 
@@ -214,7 +223,7 @@ if (existsSync(jsonPath)) {
 }
 ---
 
-<BaseLayout title={`${title} · KHAI Misfits · kaihacks`} description={subtitle}>
+<BaseLayout title={`${title} · KHAI Misfits · kaihacks`} description={metaDescription || undefined}>
   <div class={`voice-${voiceRegister}`}>
     <Book
       header={{ domain: "misfits", tld: ".kaihacks.ai", location: misfit.id }}
