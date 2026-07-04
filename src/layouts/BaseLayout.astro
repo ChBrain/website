@@ -18,19 +18,15 @@ import "../styles/tokens.css";
 // the same `.book-*` classes instead of re-inlining its own copy.
 import "../styles/book.css";
 import "../styles/voices.css";
+import { urlsFor } from "../lib/urls";
 
 interface Props {
   title: string;
   description?: string;
-  // Absolute URL of this page's canonical. Opt-in, not auto-derived from
-  // `surface` below: src/lib/urls.ts (SurfaceUrls) maps *surface* -> production
-  // base, and for architecture/cultures/plays/misfits/writing that mapping is
-  // a clean strip-the-surface-prefix-and-prepend-the-base (their production
-  // base IS a subdomain root, one-to-one with the build folder). But the bare
-  // apex page (src/pages/index.astro, dist/index.html, surface -> "root") has
-  // no entry in SurfaceUrls at all - there's no production base to derive
-  // from for it. Rather than special-case that one page, canonical stays a
-  // per-page decision: pass it explicitly where it matters.
+  // Absolute URL of this page's canonical. Usually omitted: the layout
+  // derives it from the surface's PRODUCTION base (see below). Pass it only
+  // to override the derivation, or on the one page it can't cover (the bare
+  // apex placeholder, surface "root", which has no SurfaceUrls entry).
   canonical?: string;
   // Absolute URL to a social preview image. Presence upgrades twitter:card
   // from "summary" to "summary_large_image" (the large-image card Twitter/X
@@ -65,6 +61,22 @@ const toSurfaceRoot = "../".repeat(Math.max(0, segments.length - 1)) || "./";
 // this stamp, which is how a future routing leak (a subdomain serving the
 // wrong surface) gets caught instead of silently 200ing. See issue 149.
 const surface = segments[0] ?? "root";
+
+// Canonical: an explicit prop wins; otherwise derive from the surface's
+// production base. Deliberately urlsFor() (production), NOT the DEPLOY_ENV-
+// switched URLS: a canonical is a statement of authority, not navigation.
+// The same page is served from several doc roots (production subdomain,
+// staging path prefix), and all copies must declare the production URL as
+// canonical - that is what keeps the duplicates from competing in search.
+// The mapping is sound for every surface in SurfaceUrls: each build folder
+// deploys as its base's doc root, so production URL = base + the path below
+// the surface folder (for main's nested cvi/privacy/contact pages this
+// reproduces URLS.cvi/privacy/contact exactly). The bare apex placeholder
+// (surface "root") has no entry and gets no canonical unless passed.
+const productionBase = (urlsFor() as unknown as Record<string, string>)[surface];
+const rest = segments.slice(1).join("/");
+const canonicalUrl =
+  canonical ?? (productionBase ? productionBase + (rest ? `${rest}/` : "") : undefined);
 ---
 
 <!doctype html>
@@ -75,17 +87,16 @@ const surface = segments[0] ?? "root";
     <meta name="description" content={description} />
     <meta name="x-surface" content={surface} />
     <title>{title}</title>
-    {canonical && <link rel="canonical" href={canonical} />}
+    {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
 
-    <!-- Open Graph + Twitter. og:url only appears when `canonical` was passed
-         explicitly (see the Props.canonical comment above for why there's no
-         auto-derivation). og:image / the large-image twitter:card are opt-in
-         via `ogImage`. -->
+    <!-- Open Graph + Twitter. og:url mirrors the canonical (derived or
+         explicit; absent only on the bare apex placeholder). og:image / the
+         large-image twitter:card are opt-in via `ogImage`. -->
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="kaihacks" />
-    {canonical && <meta property="og:url" content={canonical} />}
+    {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
     {ogImage && <meta property="og:image" content={ogImage} />}
     <meta name="twitter:card" content={ogImage ? "summary_large_image" : "summary"} />
     <link rel="icon" href={`${toSurfaceRoot}favicon.ico`} sizes="any" />
