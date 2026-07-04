@@ -62,6 +62,10 @@ function iso2Of(p: Record<string, unknown>): string {
   return typeof v === "string" ? v.toUpperCase() : "";
 }
 
+// Deliberately read from process.cwd(): Astro prerender bundles this module
+// into dist/.prerender/chunks/, so import.meta.url-relative paths resolve to a
+// location the geojson is never copied to. Builds always run from the repo
+// root, so the cwd-anchored path is the one that works.
 const raw = JSON.parse(readFileSync(join(process.cwd(), "src/lib/world.geo.json"), "utf8")) as {
   features: RawFeature[];
 };

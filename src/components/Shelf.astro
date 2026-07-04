@@ -192,7 +192,11 @@ for (let i = 0; i < cards.length; i += per) cardPanels.push(cards.slice(i, i + p
     scroll-snap-type: y mandatory;
     scroll-padding-top: 4rem;
     scroll-padding-bottom: 4rem;
-    scroll-behavior: smooth;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    html:has(.shelf) {
+      scroll-behavior: smooth;
+    }
   }
   @media (max-width: 640px) {
     html:has(.shelf) {
@@ -380,13 +384,21 @@ for (let i = 0; i < cards.length; i += per) cardPanels.push(cards.slice(i, i + p
     border: 1px solid var(--color-ink);
     background: var(--color-paper-warm);
     overflow: hidden;
-    transition:
-      transform 0.16s,
-      box-shadow 0.16s;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .shelf-card {
+      transition:
+        transform 0.16s,
+        box-shadow 0.16s;
+    }
   }
   .shelf-card:hover {
-    transform: translateY(-2px);
     box-shadow: 0 8px 24px -16px var(--color-ink);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .shelf-card:hover {
+      transform: translateY(-2px);
+    }
   }
   .shelf-card-hue {
     height: 6px;

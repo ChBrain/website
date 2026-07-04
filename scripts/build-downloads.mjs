@@ -303,7 +303,16 @@ function buildEngineDownloads() {
     // Meta engines (e.g. the spine) are structural, not standalone bundles --
     // they ship inside the culture zips that depend on them, not on the engine
     // shelf. Skip them here so there is no orphan zip the shelf never links.
-    const engineClass = JSON.parse(readFileSync(join(dir, "package.json"), "utf8")).khai?.class;
+    let enginePkg;
+    try {
+      enginePkg = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
+    } catch (e) {
+      // Mirrors src/lib/load-engines.ts's warn+skip: one malformed manifest
+      // shouldn't take down the whole prebuild.
+      console.warn(`  engines: skipping ${name}: malformed package.json (${e.message})`);
+      continue;
+    }
+    const engineClass = enginePkg.khai?.class;
     if (engineClass === "meta") continue;
 
     // Identify overhead files.
@@ -411,12 +420,22 @@ function buildSkillDownloads() {
     const { data, content } = frontmatter(readFileSync(skillMdPath, "utf8"));
     const h1 = content.match(/^# (.+)$/m);
     const title = h1 ? h1[1] : data.name;
+    if (!title) {
+      // Neither an H1 nor frontmatter `name` — JSON.stringify would silently
+      // drop the name/slug/title keys from the sidecar and the skillbook page
+      // would break with no build error, so fail loudly and name the culprit.
+      throw new Error(`  skill ${r.name}: SKILL.md has no H1 and no frontmatter name`);
+    }
     // Strip the H1: the spread chassis already renders the title; a second
     // heading in bodyHtml would duplicate it.
     const bodyWithoutH1 = content.replace(/^# .+\n+/, "");
     // Strip relative .md links — they reference bundle files that aren't pages.
     // Replace with the link text so prose reads naturally without broken hrefs.
-    const bodyMd = bodyWithoutH1.replace(/\[([^\]]+)\]\((?!https?:\/\/|#)[^)]*\.md\)/g, "$1");
+    // The link may carry an optional quoted title, e.g. [x](file.md "title").
+    const bodyMd = bodyWithoutH1.replace(
+      /\[([^\]]+)\]\((?!https?:\/\/|#)[^)]*\.md(?:\s+"[^"]*")?\)/g,
+      "$1",
+    );
     const bodyHtml = md.render(bodyMd);
 
     // Extract Problem / Solution / What you get sections from README.md
@@ -496,6 +515,19 @@ async function buildPlayDownloads() {
     const houseOutDir = join(outDir, house.id);
     mkdirSync(houseOutDir, { recursive: true });
 
+    // House README + LICENSE ride in both the house bundle and every play
+    // bundle below — read them once, guarded, so a house package published
+    // without one doesn't ENOENT the whole prebuild (mirrors the misfits
+    // house-overhead guard further down this file).
+    const houseReadmePath = join(houseDir, "README.md");
+    const houseReadme = existsSync(houseReadmePath) ? readMarkdownStripped(houseReadmePath) : null;
+    if (!houseReadme)
+      console.warn(`  plays: house ${house.id} has no README.md; skipping in bundle`);
+    const houseLicensePath = join(houseDir, "LICENSE");
+    const houseLicense = existsSync(houseLicensePath) ? readFileSync(houseLicensePath) : null;
+    if (!houseLicense)
+      console.warn(`  plays: house ${house.id} has no LICENSE; skipping in bundle`);
+
     // Pack the entire house package into a ZIP file
     const houseContentFiles = [];
     for (const playName of readdirSync(playsDir)) {
@@ -513,9 +545,9 @@ async function buildPlayDownloads() {
     }
     const houseOverhead = [
       { path: "package.json", data: readFileSync(join(houseDir, "package.json")) },
-      { path: "README.md", data: readMarkdownStripped(join(houseDir, "README.md")) },
-      { path: "LICENSE", data: readFileSync(join(houseDir, "LICENSE")) },
     ];
+    if (houseReadme) houseOverhead.push({ path: "README.md", data: houseReadme });
+    if (houseLicense) houseOverhead.push({ path: "LICENSE", data: houseLicense });
     const houseLicenseCodePath = join(houseDir, "LICENSE-CODE");
     if (existsSync(houseLicenseCodePath)) {
       houseOverhead.push({ path: "LICENSE-CODE", data: readFileSync(houseLicenseCodePath) });
@@ -561,11 +593,10 @@ async function buildPlayDownloads() {
         }
       }
 
-      // Overhead: house README and LICENSE
-      const overhead = [
-        { path: "README.md", data: readMarkdownStripped(join(houseDir, "README.md")) },
-        { path: "LICENSE", data: readFileSync(join(houseDir, "LICENSE")) },
-      ];
+      // Overhead: house README and LICENSE (guarded above; skipped if absent)
+      const overhead = [];
+      if (houseReadme) overhead.push({ path: "README.md", data: houseReadme });
+      if (houseLicense) overhead.push({ path: "LICENSE", data: houseLicense });
       const licenseCodePath = join(houseDir, "LICENSE-CODE");
       if (existsSync(licenseCodePath)) {
         overhead.push({ path: "LICENSE-CODE", data: readFileSync(licenseCodePath) });

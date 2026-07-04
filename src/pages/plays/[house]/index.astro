@@ -15,11 +15,15 @@ export function getStaticPaths() {
     props: { house },
   }));
 
-  const realHouseIds = new Set(realHouses.map((h) => h.id));
-  const mockPaths = MOCK_HOUSES.filter((mh) => !realHouseIds.has(mh.id)).map((house) => ({
-    params: { house: house.id },
-    props: { house },
-  }));
+  // Mock houses only stand in while the registry is completely empty — once
+  // any house is registered, the mocks stop generating pages of their own.
+  const mockPaths =
+    realHouses.length === 0
+      ? MOCK_HOUSES.map((house) => ({
+          params: { house: house.id },
+          props: { house },
+        }))
+      : [];
 
   return [...realPaths, ...mockPaths];
 }
@@ -40,11 +44,8 @@ const stripHtml = (html: string) => html.replace(/<[^>]+>/g, "").trim();
 
 const cards: ShelfCard[] = playsToRender.map((p) => {
   let note = "";
-  const mockPlay = mockHouse?.plays.find((mp) => mp.id === p.id);
 
-  if (mockPlay) {
-    note = mockPlay.blurb;
-  } else if (isInstalled) {
+  if (isInstalled) {
     const realPlay = p as (typeof realPlays)[number];
     const rawNote = realPlay.description || realPlay.sections.arc || realPlay.sections.name || "";
     note = stripHtml(rawNote);
@@ -52,7 +53,8 @@ const cards: ShelfCard[] = playsToRender.map((p) => {
       note = note.slice(0, 160) + "...";
     }
   } else {
-    note = (p as any).blurb || "";
+    const mockPlay = mockHouse?.plays.find((mp) => mp.id === p.id);
+    note = mockPlay?.blurb || "";
   }
 
   return {

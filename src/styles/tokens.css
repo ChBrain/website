@@ -20,9 +20,11 @@
   --color-sea: #3a4a52;
   --color-fjord: #4d6b76;
   --color-amber: #c98e36;
+  /* Derived: darkened variants for AA text-on-fill contrast (class pills) */
   --color-amber-ink: #7a5212;
   --color-tide: #8a8d86;
   --color-marsh: #6e7a4c;
+  --color-marsh-ink: #55603a;
 
   /* Semantic — neutral */
   --color-bg: var(--color-paper);
@@ -36,9 +38,9 @@
   /* Semantic — class pills (system / element / meta) */
   --color-class-system: var(--color-brick);
   --color-class-system-bg: #f4e6dc;
-  --color-class-element: var(--color-marsh);
+  --color-class-element: var(--color-marsh-ink);
   --color-class-element-bg: #eaeee0;
-  --color-class-meta: var(--color-amber);
+  --color-class-meta: var(--color-amber-ink);
   --color-class-meta-bg: #f5e8cf;
 
   /* Typography — families */

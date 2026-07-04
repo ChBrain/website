@@ -63,9 +63,7 @@ const useLocationLayout = Boolean(location);
   {
     useLocationLayout ? (
       <>
-        <span class="topbar-location" aria-label="Current section">
-          {location}
-        </span>
+        <span class="topbar-location">{location}</span>
         <div class="topbar-right">
           {version && <span class="topbar-version">khai · {version}</span>}
           {/* prettier-ignore */}

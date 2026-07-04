@@ -15,14 +15,21 @@
 //          "khai-monogram-ink", "khai-icon-reverse"
 //   width: rendered width in px (height follows the file's viewBox)
 //   class: optional extra class on the wrapper
+//   label: optional accessible name. The full-lockup SVGs carry live <text>
+//          glyphs that screen readers otherwise announce as stray letters, so
+//          by default the mark is aria-hidden (decorative). Pass `label` when
+//          a given mark IS the accessible content (e.g. a bare wordmark used
+//          as a link's only content) -- it swaps in role="img" + aria-label
+//          instead of hiding the mark.
 
 interface Props {
   name: string;
   width: number;
   class?: string;
+  label?: string;
 }
 
-const { name, width, class: className } = Astro.props;
+const { name, width, class: className, label } = Astro.props;
 
 // Build-time map of every canonical mark. eager + ?raw inlines the file
 // contents as strings; the lookup is static.
@@ -48,7 +55,14 @@ if (!raw) {
 const svg = raw.replace(/<svg\b[^>]*>/, (tag) => tag.replace(/\s(width|height)="[^"]*"/g, ""));
 ---
 
-<span class:list={["mark", className]} style={`--mark-w:${width}px`} set:html={svg} />
+<span
+  class:list={["mark", className]}
+  style={`--mark-w:${width}px`}
+  aria-hidden={label ? undefined : "true"}
+  role={label ? "img" : undefined}
+  aria-label={label ?? undefined}
+  set:html={svg}
+/>
 
 <style>
   .mark {

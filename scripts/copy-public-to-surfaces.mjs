@@ -8,7 +8,7 @@ import { cp, stat } from "node:fs/promises";
 import { join } from "node:path";
 
 const DIST = "dist";
-const SURFACES = ["main", "architecture", "cultures", "plays", "misfits"];
+const SURFACES = ["main", "architecture", "cultures", "plays", "misfits", "writing"];
 // Only copy real shared assets — not the per-surface HTML/JS that Astro
 // already routed correctly.
 const SHARED = [
@@ -50,10 +50,16 @@ async function main() {
       console.log(`[copy-public-to-surfaces] skipping ${surface} (no dist/${surface}/)`);
       continue;
     }
+    // `attempted` counts only the copies that actually apply to this surface —
+    // e.g. "downloads" is deliberately not attempted for surfaces that don't
+    // carry it (main, writing), so it shouldn't count against the total. This
+    // keeps the ratio below meaningful: anything short of N/N is a real miss.
     let copied = 0;
+    let attempted = 0;
     for (const name of SHARED) {
       const src = join(DIST, name);
       if (!(await exists(src))) continue;
+      attempted++;
       const dest = join(surfaceDir, name);
       await cp(src, dest);
       copied++;
@@ -69,6 +75,7 @@ async function main() {
           surface === "cultures" ||
           surface === "misfits"
         ) {
+          attempted++;
           const destDir = join(surfaceDir, "downloads");
           const htaccessSrc = join(src, ".htaccess");
           if (await exists(htaccessSrc)) {
@@ -106,13 +113,15 @@ async function main() {
             copied++;
           }
         }
+        // Surfaces outside that list (main, writing) don't serve downloads/,
+        // so this is intentionally skipped rather than attempted-and-missed.
       } else {
+        attempted++;
         await cp(src, join(surfaceDir, dir), { recursive: true });
         copied++;
       }
     }
-    const total = SHARED.length + SHARED_DIRS.length;
-    console.log(`[copy-public-to-surfaces] ${surface}: copied ${copied}/${total}`);
+    console.log(`[copy-public-to-surfaces] ${surface}: copied ${copied}/${attempted}`);
   }
 }
 

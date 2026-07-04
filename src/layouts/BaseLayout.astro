@@ -22,9 +22,28 @@ import "../styles/voices.css";
 interface Props {
   title: string;
   description?: string;
+  // Absolute URL of this page's canonical. Opt-in, not auto-derived from
+  // `surface` below: src/lib/urls.ts (SurfaceUrls) maps *surface* -> production
+  // base, and for architecture/cultures/plays/misfits/writing that mapping is
+  // a clean strip-the-surface-prefix-and-prepend-the-base (their production
+  // base IS a subdomain root, one-to-one with the build folder). But the bare
+  // apex page (src/pages/index.astro, dist/index.html, surface -> "root") has
+  // no entry in SurfaceUrls at all - there's no production base to derive
+  // from for it. Rather than special-case that one page, canonical stays a
+  // per-page decision: pass it explicitly where it matters.
+  canonical?: string;
+  // Absolute URL to a social preview image. Presence upgrades twitter:card
+  // from "summary" to "summary_large_image" (the large-image card Twitter/X
+  // expects once an image is supplied).
+  ogImage?: string;
 }
 
-const { title, description = "kaihacks. An experimental writing system." } = Astro.props;
+const {
+  title,
+  description = "kaihacks. An experimental writing system.",
+  canonical,
+  ogImage,
+} = Astro.props;
 
 // Depth-aware path to the surface root. Each surface (architecture, main)
 // is rsynced to its own doc root, so absolute `/foo` would resolve to the
@@ -56,15 +75,30 @@ const surface = segments[0] ?? "root";
     <meta name="description" content={description} />
     <meta name="x-surface" content={surface} />
     <title>{title}</title>
+    {canonical && <link rel="canonical" href={canonical} />}
+
+    <!-- Open Graph + Twitter. og:url only appears when `canonical` was passed
+         explicitly (see the Props.canonical comment above for why there's no
+         auto-derivation). og:image / the large-image twitter:card are opt-in
+         via `ogImage`. -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="kaihacks" />
+    {canonical && <meta property="og:url" content={canonical} />}
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta name="twitter:card" content={ogImage ? "summary_large_image" : "summary"} />
     <link rel="icon" href={`${toSurfaceRoot}favicon.ico`} sizes="any" />
     <link rel="icon" href={`${toSurfaceRoot}favicon.svg`} type="image/svg+xml" />
     <link rel="icon" type="image/png" sizes="32x32" href={`${toSurfaceRoot}favicon-32.png`} />
     <link rel="icon" type="image/png" sizes="16x16" href={`${toSurfaceRoot}favicon-16.png`} />
     <link rel="apple-touch-icon" href={`${toSurfaceRoot}apple-touch-icon.png`} />
     <link rel="manifest" href={`${toSurfaceRoot}site.webmanifest`} />
+    <slot name="head" />
   </head>
   <body>
-    <main>
+    <a href="#content" class="visually-hidden skip-link">Skip to content</a>
+    <main id="content">
       <slot />
     </main>
     <style is:global>
@@ -72,6 +106,45 @@ const surface = segments[0] ?? "root";
       *::before,
       *::after {
         box-sizing: border-box;
+      }
+      /* Visually hidden but present for assistive tech: for text that
+       * carries information for a screen reader but has no visible
+       * on-page counterpart (e.g. a label prefix, the skip link at rest). */
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      /* Skip-to-content link: the first thing a keyboard/screen-reader user
+       * meets. Starts `.visually-hidden`; on focus it becomes a normal,
+       * visible, styled link pinned to the top of the viewport. */
+      .skip-link:focus {
+        position: fixed;
+        top: var(--space-3);
+        left: var(--space-3);
+        z-index: 100;
+        width: auto;
+        height: auto;
+        margin: 0;
+        padding: var(--space-2) var(--space-4);
+        overflow: visible;
+        clip: auto;
+        white-space: normal;
+        background: var(--color-bg);
+        color: var(--color-fg);
+        font-family: var(--font-mono);
+        font-size: var(--font-size-sm);
+        text-decoration: none;
+        border: 1px solid var(--color-fg);
+        border-radius: var(--radius-sm);
+        outline: 2px solid var(--color-accent);
+        outline-offset: 2px;
       }
       html {
         font-family: var(--font-prose);
