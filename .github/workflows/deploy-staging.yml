@@ -1,12 +1,14 @@
 name: deploy-staging
 
-# After CI is green on main, deploy every surface to staging. Each
-# surface runs through the shared deploy-surface reusable workflow, so
-# staging and production share one deploy engine.
+# After CI is green on main, deploy every surface to staging through
+# the shared deploy-surface reusable workflow (surface=all), so staging
+# and production share one deploy engine and the site builds ONCE per
+# staging deploy instead of once per surface.
 #
-# Surfaces deploy independently (matrix, fail-fast disabled): one
-# surface failing does not block the others, and any single surface can
-# be re-run on its own from the Actions tab.
+# Inside deploy-surface the per-surface rsync legs still run as an
+# independent matrix (fail-fast disabled): one surface failing does not
+# block the others, and a single leg can be re-run on its own from the
+# Actions tab without rebuilding.
 
 on:
   workflow_run:
@@ -21,19 +23,9 @@ permissions:
 jobs:
   deploy:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        surface:
-          - architecture
-          - main
-          - cultures
-          - plays
-          - misfits
-          - writing
     uses: ./.github/workflows/deploy-surface.yml
     with:
-      surface: ${{ matrix.surface }}
+      surface: all
       env: staging
       # Deploy exactly the commit CI just validated, not the tip of main.
       ref: ${{ github.event.workflow_run.head_sha }}
