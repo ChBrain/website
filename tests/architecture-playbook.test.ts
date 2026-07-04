@@ -299,15 +299,17 @@ describe("architecture playbook - design contract", () => {
   });
 
   describe("snap chassis (CVI parity)", () => {
-    it("renders a main.pb-spreads wrapper around the spreads", () => {
+    // Class-based, not tag-based: BaseLayout owns the page's <main> landmark,
+    // so the spreads wrapper's tag is an implementation detail.
+    it("renders a .pb-spreads wrapper around the spreads", () => {
       const dom = new JSDOM(playbookPage!.html);
-      const wrap = dom.window.document.querySelector("main.pb-spreads");
+      const wrap = dom.window.document.querySelector(".pb-spreads");
       expect(wrap).not.toBeNull();
     });
 
     it("SiteFooter lives OUTSIDE the spreads container", () => {
       const dom = new JSDOM(playbookPage!.html);
-      const wrap = dom.window.document.querySelector("main.pb-spreads");
+      const wrap = dom.window.document.querySelector(".pb-spreads");
       const footer = dom.window.document.querySelector(".footfed");
       expect(footer).not.toBeNull();
       expect(wrap?.contains(footer)).toBe(false);

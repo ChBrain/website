@@ -9,7 +9,7 @@ const parts = mnemonic.startsWith("TO ")
   : { prefix: "", suffix: mnemonic };
 ---
 
-<div class="mnemonic-strip" aria-label={`Mnemonic: ${mnemonic}`}>
+<div class="mnemonic-strip">
   {parts.prefix && <span class="mnemonic-prefix">{parts.prefix}</span>}
   <span class="mnemonic-suffix">{parts.suffix}</span>
 </div>

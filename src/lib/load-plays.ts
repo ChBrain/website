@@ -84,6 +84,10 @@ export function getPackageDir(pkgName: string): string | null {
   }
 }
 
+// _archTypes is fixed for the process, so the href-matching RegExp is built
+// once here instead of on every rewriteLinks() call (hundreds per build).
+const elementHrefRegex = new RegExp(`href="(?:${Object.keys(_archTypes).join("|")})_([^"]+)"`, "g");
+
 function rewriteLinks(html: string): string {
   // Element names can carry non-ASCII (e.g. Danish plot_drømmen.md), which
   // markdown-it percent-encodes in the href (plot_dr%C3%B8mmen.md). Match any
@@ -92,13 +96,10 @@ function rewriteLinks(html: string): string {
   return html
     .replace(/href="(?:\.\.\/)*README\.md"/g, 'href="../../"')
     .replace(/href="play_[^"]+\.md"/g, 'href="./"')
-    .replace(
-      new RegExp(`href="(?:${Object.keys(_archTypes).join("|")})_([^"]+)"`, "g"),
-      (_m, rest) => {
-        const name = rest.endsWith(".md") ? rest.slice(0, -3) : rest;
-        return `href="#el-${decodeURIComponent(name)}"`;
-      },
-    );
+    .replace(elementHrefRegex, (_m, rest) => {
+      const name = rest.endsWith(".md") ? rest.slice(0, -3) : rest;
+      return `href="#el-${decodeURIComponent(name)}"`;
+    });
 }
 
 function parseSections(content: string): Record<string, string> {
@@ -159,8 +160,13 @@ export function loadCollection(
     let registry: any = null;
     try {
       registry = _require(join(pkgDir, "registry.json"));
-    } catch {
-      // Fallback if registry.json is not present or exported
+    } catch (e: any) {
+      // Fallback if registry.json is not present or exported; anything else
+      // (e.g. a malformed registry.json failing JSON parse) is a real problem
+      // upstream, so name the house and warn instead of swallowing it silently.
+      if (e?.code !== "MODULE_NOT_FOUND" && e?.code !== "ENOENT") {
+        console.warn(`[${house.id}] registry.json failed to load: ${e?.message}`);
+      }
     }
 
     // Read house language and voice from README.md
@@ -202,8 +208,11 @@ export function loadCollection(
       if (registry && Array.isArray(registry[opts.registryKey])) {
         const regPlay = registry[opts.registryKey].find((p: any) => p && p.id === dirName);
         if (regPlay) {
-          title = cleanText(regPlay.title);
-          description = cleanHtml(regPlay.description);
+          // Fall back to the frontmatter-derived value when the registry entry
+          // omits the field, rather than blanking it (cleanText/cleanHtml of
+          // undefined is "").
+          title = cleanText(regPlay.title || title);
+          description = cleanHtml(regPlay.description || description);
           foundInRegistry = true;
         }
       }
@@ -333,7 +342,13 @@ export const PLAYS_COLLECTION: CollectionOptions = {
   referenceNames: ["REFERENCES.md"],
 };
 
+// The whole corpus is immutable within a single build, but loadAllPlays() is
+// called once per page/endpoint; memoize so the corpus is only read once.
+let allPlaysCache: Play[] | null = null;
+
 export function loadAllPlays(): Play[] {
+  if (allPlaysCache) return allPlaysCache;
+
   let houses;
   try {
     houses = loadRegistry();
@@ -351,5 +366,6 @@ export function loadAllPlays(): Play[] {
     }
     plays.push(...loadCollection(pkgDir, { id: house.id, title: house.title }, PLAYS_COLLECTION));
   }
+  allPlaysCache = plays;
   return plays;
 }
