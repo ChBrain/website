@@ -24,7 +24,14 @@ export interface EngineCard {
  * Returned alphabetically by id, so the playbook's "enriched by" group renders
  * deterministically regardless of install order.
  */
+// node_modules is immutable within a single build, but every call rescans it;
+// memoize per root (keyed, since callers may pass a non-default root in tests).
+const enginesCache = new Map<string, EngineCard[]>();
+
 export function loadEngines(root: string = process.cwd()): EngineCard[] {
+  const cached = enginesCache.get(root);
+  if (cached) return cached;
+
   const scope = join(root, "node_modules", "@chbrain");
   if (!existsSync(scope)) return [];
 
@@ -53,5 +60,7 @@ export function loadEngines(root: string = process.cwd()): EngineCard[] {
     // build loudly rather than render a half card.
     cards.push(engineCard(manifest) as EngineCard);
   }
-  return cards.sort((a, b) => a.id.localeCompare(b.id));
+  const sorted = cards.sort((a, b) => a.id.localeCompare(b.id));
+  enginesCache.set(root, sorted);
+  return sorted;
 }

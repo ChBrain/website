@@ -53,13 +53,19 @@ export function misfitsHouse(): { id: string; title: string; blurb: string; repo
   }
 }
 
+// The misfits corpus is immutable within a single build; memoize so repeated
+// per-page/per-endpoint calls don't re-read and re-render it.
+let allMisfitsCache: Play[] | null = null;
+
 /** Every misfit in the installed package, as Play objects (a misfit IS a play).
  *  Empty when the package is not installed, so the build degrades cleanly. */
 export function loadAllMisfits(): Play[] {
+  if (allMisfitsCache) return allMisfitsCache;
   const pkgDir = getPackageDir(MISFITS_PACKAGE);
   if (!pkgDir) {
     console.log(`Misfits package ${MISFITS_PACKAGE} is not installed; skipping.`);
     return [];
   }
-  return loadCollection(pkgDir, MISFITS_HOUSE, MISFITS_COLLECTION);
+  allMisfitsCache = loadCollection(pkgDir, MISFITS_HOUSE, MISFITS_COLLECTION);
+  return allMisfitsCache;
 }
