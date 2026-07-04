@@ -75,7 +75,7 @@ const groups: BookTocGroup[] = tocGroups ?? [
       click. Esc closes. Groups by role so the hierarchy reads. */
   }
   <div class="pb-overlay" role="dialog" aria-modal="true" aria-label="Contents" hidden>
-    <div class="pb-overlay-card">
+    <div class="pb-overlay-card" tabindex="-1">
       <div class="pb-overlay-head">
         <span class="pb-overlay-eyebrow">{tocEyebrow}</span>
         <button class="pb-overlay-close" type="button" aria-label="Close contents">×</button>
@@ -130,7 +130,7 @@ const groups: BookTocGroup[] = tocGroups ?? [
   </header>
 
   {/* The spreads. One snap-stop per spread; mobile scrolls naturally. */}
-  <main class="pb-spreads">
+  <div class="pb-spreads">
     {
       spreads.map((s) => {
         // Every spread is stacked: the numbered running head, then the hero
@@ -270,7 +270,7 @@ const groups: BookTocGroup[] = tocGroups ?? [
         );
       })
     }
-  </main>
+  </div>
 
   <SiteFooter />
 </div>
@@ -288,7 +288,11 @@ const groups: BookTocGroup[] = tocGroups ?? [
     scroll-snap-type: y mandatory;
     scroll-padding-top: 4rem;
     scroll-padding-bottom: 4rem;
-    scroll-behavior: smooth;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    html:has(.playbook) {
+      scroll-behavior: smooth;
+    }
   }
   @media (max-width: 640px) {
     html:has(.playbook) {
@@ -974,6 +978,7 @@ const groups: BookTocGroup[] = tocGroups ?? [
   (function () {
     const strip = document.querySelector(".pb-strip") as HTMLButtonElement | null;
     const overlay = document.querySelector(".pb-overlay") as HTMLElement | null;
+    const overlayCard = document.querySelector(".pb-overlay-card") as HTMLElement | null;
     const closeBtn = document.querySelector(".pb-overlay-close") as HTMLButtonElement | null;
     const bars = Array.from(document.querySelectorAll(".pb-strip-bar")) as HTMLElement[];
     const tocLinks = Array.from(document.querySelectorAll(".pb-toc-link")) as HTMLAnchorElement[];
@@ -987,6 +992,24 @@ const groups: BookTocGroup[] = tocGroups ?? [
     const stops: HTMLElement[] = cover ? [cover, ...spreads] : [...spreads];
     let curIdx = 0;
 
+    // Respects the user's motion preference: smooth turns become instant
+    // jumps when they've asked the OS/browser for reduced motion.
+    function scrollBehavior(): ScrollBehavior {
+      return matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+    }
+
+    // The element that had focus before the overlay opened, so closing it
+    // (button, scrim, or Esc) can put focus back where the reader was.
+    let lastFocused: HTMLElement | null = null;
+
+    function focusableIn(container: HTMLElement): HTMLElement[] {
+      return Array.from(
+        container.querySelectorAll(
+          'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        ),
+      ) as HTMLElement[];
+    }
+
     function setCurrent(idx: number) {
       curIdx = idx;
       const barIdx = idx - 1;
@@ -997,13 +1020,21 @@ const groups: BookTocGroup[] = tocGroups ?? [
 
     function openOverlay() {
       if (!overlay || !strip) return;
+      lastFocused = document.activeElement as HTMLElement | null;
       overlay.hidden = false;
       strip.setAttribute("aria-expanded", "true");
+      // Move focus into the dialog -- the close button when there is one,
+      // else the card itself (tabindex="-1", focusable but not tab-stopped).
+      (closeBtn ?? overlayCard)?.focus();
     }
     function closeOverlay() {
       if (!overlay || !strip) return;
       overlay.hidden = true;
       strip.setAttribute("aria-expanded", "false");
+      // Restore focus to wherever it came from -- normally the strip that
+      // opened the overlay -- so the reader isn't dropped back at <body>.
+      (lastFocused ?? strip).focus();
+      lastFocused = null;
     }
 
     if (strip) strip.addEventListener("click", openOverlay);
@@ -1011,6 +1042,23 @@ const groups: BookTocGroup[] = tocGroups ?? [
     if (overlay) {
       overlay.addEventListener("click", (e) => {
         if (e.target === overlay) closeOverlay();
+      });
+      // Trap Tab/Shift+Tab inside the card while the overlay is open, so
+      // focus can't leak to the (visually covered, but still tabbable)
+      // page behind it.
+      overlay.addEventListener("keydown", (e) => {
+        if (e.key !== "Tab" || !overlayCard) return;
+        const focusable = focusableIn(overlayCard);
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
       });
     }
     tocLinks.forEach((link) => {
@@ -1021,24 +1069,33 @@ const groups: BookTocGroup[] = tocGroups ?? [
     });
 
     // Keyboard navigation: ←/→ and ↑/↓ step between stops. Skipped
-    // when the overlay is open (Esc closes that instead) and when
-    // focus is in a form field. The hash CTAs on cover + TOC handle
-    // direct jumps; this gives the book a one-keystroke turn.
+    // when the overlay is open (Esc closes that instead), when focus is
+    // in a form field or content-editable, when a modifier is held (so
+    // browser/OS shortcuts on those same keys still work), and when
+    // focus is on a <select> (arrows change its value, not the page).
     document.addEventListener("keydown", (e) => {
       if (overlay && !overlay.hidden) {
         if (e.key === "Escape") closeOverlay();
         return;
       }
       const active = document.activeElement as HTMLElement | null;
-      if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) return;
+      if (
+        active &&
+        (active.tagName === "INPUT" ||
+          active.tagName === "TEXTAREA" ||
+          active.tagName === "SELECT" ||
+          active.isContentEditable)
+      )
+        return;
+      if (e.altKey || e.metaKey || e.ctrlKey) return;
 
       if (e.key === "ArrowDown" || e.key === "ArrowRight") {
         const next = stops[Math.min(curIdx + 1, stops.length - 1)];
-        if (next) next.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (next) next.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
         e.preventDefault();
       } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
         const prev = stops[Math.max(curIdx - 1, 0)];
-        if (prev) prev.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (prev) prev.scrollIntoView({ behavior: scrollBehavior(), block: "start" });
         e.preventDefault();
       }
     });
