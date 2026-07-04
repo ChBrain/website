@@ -118,6 +118,11 @@
         "allow": ["src/pages/misfits/**", "src/pages/main/misfits/**"]
       },
       {
+        "pattern": "surface/writing/*",
+        "layer": "solution",
+        "allow": ["src/pages/writing/**"]
+      },
+      {
         "pattern": "deps/*",
         "layer": "deps",
         "allow": ["**/package.json", "**/package-lock.json"]
