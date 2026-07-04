@@ -76,7 +76,8 @@ const apps = [
     url: "-",
     title: "More applications",
     note: "the architecture is built to spawn them",
-    href: "#",
+    // no destination yet; planned cards render as a div, not a link (see below)
+    href: undefined,
     state: "in progress",
     planned: true,
   },
@@ -90,7 +91,7 @@ const apps = [
   <div class="arch-page main-home">
     <SiteHeader domain="kaihacks" tld=".ai" location="company" />
 
-    <main class="snap-scroll">
+    <div class="snap-scroll">
       <section class="snap-panel masthead">
         <div class="overline">the company</div>
         <h1 class="masthead-title" aria-label="KAI HACKS AI">
@@ -105,7 +106,7 @@ const apps = [
         <div class="section-heading">
           <div class="section-heading-lead">
             <span class="section-no">§01</span>
-            <span class="section-title">Services</span>
+            <h2 class="section-title">Services</h2>
           </div>
           <div class="section-note">have outcomes delivered for you</div>
         </div>
@@ -159,7 +160,7 @@ const apps = [
         <div class="section-heading">
           <div class="section-heading-lead">
             <span class="section-no">§02</span>
-            <span class="section-title">The Founder</span>
+            <h2 class="section-title">The Founder</h2>
           </div>
           <div class="section-note">have the founder work with you</div>
         </div>
@@ -187,7 +188,7 @@ const apps = [
         <div class="section-heading">
           <div class="section-heading-lead">
             <span class="section-no">§03</span>
-            <span class="section-title">Method &amp; Architecture</span>
+            <h2 class="section-title">Method &amp; Architecture</h2>
           </div>
           <div class="section-note">have the method built for you</div>
         </div>
@@ -235,28 +236,37 @@ const apps = [
         <div class="section-heading">
           <div class="section-heading-lead">
             <span class="section-no">§04</span>
-            <span class="section-title">Applications</span>
+            <h2 class="section-title">Applications</h2>
           </div>
           <div class="section-note">what runs on the architecture</div>
         </div>
 
         <div class="apps">
           {
-            apps.map((a) => (
-              <a class={`app app--${a.hue} ${a.planned ? "app--planned" : ""}`} href={a.href}>
-                {!a.planned && <div class={`app-hue app-hue--${a.hue}`} aria-hidden="true" />}
-                <div class="app-body">
-                  <div class="app-row">
-                    <span class="app-url">{a.url}</span>
-                    <span class={`app-state ${a.state === "live" ? "app-state--live" : ""}`}>
-                      {a.state}
-                    </span>
+            apps.map((a) => {
+              // Planned cards have nowhere to go yet; a real destination gets
+              // an <a>, a placeholder gets a non-interactive <div> so it
+              // isn't a focusable link to nowhere.
+              const AppTag = a.planned ? "div" : "a";
+              return (
+                <AppTag
+                  class={`app app--${a.hue} ${a.planned ? "app--planned" : ""}`}
+                  {...(a.planned ? {} : { href: a.href })}
+                >
+                  {!a.planned && <div class={`app-hue app-hue--${a.hue}`} aria-hidden="true" />}
+                  <div class="app-body">
+                    <div class="app-row">
+                      <span class="app-url">{a.url}</span>
+                      <span class={`app-state ${a.state === "live" ? "app-state--live" : ""}`}>
+                        {a.state}
+                      </span>
+                    </div>
+                    <div class="app-title">{a.title}</div>
+                    <div class="app-note">{a.note}</div>
                   </div>
-                  <div class="app-title">{a.title}</div>
-                  <div class="app-note">{a.note}</div>
-                </div>
-              </a>
-            ))
+                </AppTag>
+              );
+            })
           }
         </div>
       </section>
@@ -265,7 +275,7 @@ const apps = [
         <div class="section-heading">
           <div class="section-heading-lead">
             <span class="section-no">§05</span>
-            <span class="section-title">Plays</span>
+            <h2 class="section-title">Plays</h2>
           </div>
           <div class="section-note">productions the architecture generates</div>
         </div>
@@ -288,7 +298,7 @@ const apps = [
           </div>
         </a>
       </section>
-    </main>
+    </div>
 
     <SiteFooter />
   </div>
@@ -323,7 +333,10 @@ const apps = [
      * snap-type lives on `html:has(.main-home)` in the is:global block
      * above; here we set the per-panel snap-align and the viewport-height
      * sizing that makes each chapter stand on its own. SiteFooter sits
-     * outside main.snap-scroll so it scrolls past the last snap point. */
+     * outside div.snap-scroll so it scrolls past the last snap point.
+     * (snap-scroll is a div, not main — BaseLayout already renders the
+     * page's <main> landmark; a nested one is invalid + a duplicate
+     * landmark.) */
     .snap-panel {
       scroll-snap-align: start;
       scroll-snap-stop: always;
@@ -474,6 +487,10 @@ const apps = [
       text-transform: uppercase;
     }
     .section-title {
+      /* was a span; now an h2 for the heading outline. Reset the UA h2
+       * margin so the section-heading layout is unchanged — font-size
+       * and font-weight below already override the h2 defaults. */
+      margin: 0;
       font-family: var(--font-display);
       font-size: 22px;
       font-weight: 400;
