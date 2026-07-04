@@ -221,7 +221,7 @@ describe("main (company front door) — design contract", () => {
 
     it("sections appear in canonical funnel order (services → author|founder → method → apps)", () => {
       const dom = new JSDOM(main!.html);
-      const ids = [...dom.window.document.querySelectorAll("main.snap-scroll section.section")].map(
+      const ids = [...dom.window.document.querySelectorAll(".snap-scroll section.section")].map(
         (s) => s.id,
       );
       // Build the expected id list by picking, for each canonical section, the
@@ -240,16 +240,20 @@ describe("main (company front door) — design contract", () => {
   });
 
   describe("snap chassis (CVI parity)", () => {
-    it("main.snap-scroll wraps the chapters", () => {
+    it(".snap-scroll wraps the chapters", () => {
+      // Class-based, not tag-based: the landmark element carrying
+      // .snap-scroll is a chassis concern (BaseLayout owns the actual
+      // <main> landmark), so this asserts the class regardless of
+      // whether the wrapper renders as <main> or a plain <div>.
       const dom = new JSDOM(main!.html);
-      const scroll = dom.window.document.querySelector("main.snap-scroll");
-      expect(scroll, "missing main.snap-scroll container").not.toBeNull();
+      const scroll = dom.window.document.querySelector(".snap-scroll");
+      expect(scroll, "missing .snap-scroll container").not.toBeNull();
     });
 
     it("renders one snap panel per section plus the masthead", () => {
       const dom = new JSDOM(main!.html);
-      const panels = dom.window.document.querySelectorAll("main.snap-scroll .snap-panel");
-      const sections = dom.window.document.querySelectorAll("main.snap-scroll section.section");
+      const panels = dom.window.document.querySelectorAll(".snap-scroll .snap-panel");
+      const sections = dom.window.document.querySelectorAll(".snap-scroll section.section");
       // masthead + every section is its own panel (4 today, 5 once plays lands).
       expect(panels.length).toBe(1 + sections.length);
       expect(sections.length).toBeGreaterThanOrEqual(4);
@@ -257,13 +261,13 @@ describe("main (company front door) — design contract", () => {
 
     it("masthead is the first snap panel", () => {
       const dom = new JSDOM(main!.html);
-      const first = dom.window.document.querySelector("main.snap-scroll .snap-panel");
+      const first = dom.window.document.querySelector(".snap-scroll .snap-panel");
       expect(first?.classList.contains("masthead")).toBe(true);
     });
 
     it("SiteFooter lives OUTSIDE the snap container", () => {
       const dom = new JSDOM(main!.html);
-      const snap = dom.window.document.querySelector("main.snap-scroll");
+      const snap = dom.window.document.querySelector(".snap-scroll");
       const footer = dom.window.document.querySelector(".footfed");
       expect(footer).not.toBeNull();
       expect(snap?.contains(footer)).toBe(false);
@@ -435,10 +439,15 @@ describe("main (company front door) — design contract", () => {
     // the invariants that hold across that growth rather than a fixed roster —
     // the source/test split keeps a new app card and this test in separate
     // PRs, so a lockstep count would force one to land red.
+    //
+    // Cards are queried by class (.app), not tag: the live cards render as
+    // <a class="app">, but the planned placeholder is a non-interactive
+    // <div class="app app--planned"> (it has no destination yet), so an
+    // `a.app` selector would silently drop it from the NodeList.
     it("leads with Cultures (live) and closes with the planned placeholder", () => {
       const dom = new JSDOM(main!.html);
       const section = dom.window.document.querySelector("section#apps");
-      const cards = [...section!.querySelectorAll("a.app")];
+      const cards = [...section!.querySelectorAll(".app")];
       expect(cards.length).toBeGreaterThanOrEqual(2);
 
       // First card: Cultures, live.
@@ -460,7 +469,7 @@ describe("main (company front door) — design contract", () => {
     it("Cultures (live) carries the brick .app-state--live", () => {
       const dom = new JSDOM(main!.html);
       const section = dom.window.document.querySelector("section#apps");
-      const cards = [...section!.querySelectorAll("a.app")];
+      const cards = [...section!.querySelectorAll(".app")];
       const live = cards[0].querySelector(".app-state--live");
       expect(live, "live app should carry .app-state--live for brick").not.toBeNull();
     });
@@ -468,7 +477,7 @@ describe("main (company front door) — design contract", () => {
     it("'More applications' placeholder carries .app--planned (dashed border)", () => {
       const dom = new JSDOM(main!.html);
       const section = dom.window.document.querySelector("section#apps");
-      const cards = [...section!.querySelectorAll("a.app")];
+      const cards = [...section!.querySelectorAll(".app")];
       // The placeholder is always the last card (live apps precede it).
       expect(cards[cards.length - 1].classList.contains("app--planned")).toBe(true);
     });
