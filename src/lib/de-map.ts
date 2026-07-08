@@ -107,7 +107,11 @@ function load(file: string): SubMap {
 // One projected sub-map per bundled country. Add a country here (plus its
 // <cc>.geo.json) when its subdivisions start carrying cultures. DE uses Natural
 // Earth admin-1 (Bundesländer); GB uses admin-0 map-subunits (the home nations,
-// coded GB-ENG/SCT/WLS/NIR to match the cultures' ISO 3166-2 anchors). US is
+// coded GB-ENG/SCT/WLS/NIR to match the cultures' ISO 3166-2 anchors). ES is
+// the 17 autonomous communities dissolved from Natural Earth admin-1 provinces
+// and rekeyed to their ISO 3166-2 codes (ES-AN … ES-VC); the Canary Islands
+// (ES-CN) are baked into a lower-left inset so the mainland bbox fit stays
+// undistorted — its coordinates there are inset space, not real lon/lat. US is
 // the 50 states + DC from us-atlas (Census Bureau boundaries pre-projected
 // with d3.geoAlbersUsa — Alaska and Hawaii inset), rekeyed FIPS -> US-XX and
 // rescaled into a pseudo-degree frame centred on lat 0: there cos(meanLat) is
@@ -116,6 +120,7 @@ function load(file: string): SubMap {
 // real longitude/latitude.
 const SUBMAPS: Record<string, SubMap> = {
   DE: load("de.geo.json"),
+  ES: load("es.geo.json"),
   GB: load("gb.geo.json"),
   US: load("us.geo.json"),
 };
