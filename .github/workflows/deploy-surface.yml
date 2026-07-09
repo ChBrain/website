@@ -129,7 +129,7 @@ jobs:
         surface: ${{ fromJSON(needs.resolve.outputs.surfaces) }}
     steps:
       - name: download dist
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: dist-${{ inputs.env }}
           path: dist
