@@ -12,18 +12,20 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
     ignore:
-      # astro 7.0.4–7.0.6 regressed static builds for dynamic file endpoints
+      # astro 7.0.4–7.0.7 regressed static builds for dynamic file endpoints
       # under `trailingSlash: "always"` (our config): `astro build` throws
-      # `TypeError: Missing parameter: <param>` while prerendering
-      # src/pages/plays/[house]/search-index.json.ts. Bisected clean (7.0.3
+      # `TypeError: Missing parameter: <param>` while prerendering a prerendered
+      # dynamic file endpoint (e.g. src/pages/misfits/[misfit]/stage-context.json.ts
+      # and src/pages/plays/[house]/search-index.json.ts). Bisected clean (7.0.3
       # builds, 7.0.4 fails) and reproduced with public Astro only, so it is an
       # upstream regression from withastro/astro#17224 ("trailing slash handling
-      # for dynamic file endpoints"), not our code. No fixed release exists yet
-      # (npm `latest` is 7.0.6). Hold the bump; the explicit versions let a
-      # patched 7.0.7+ / 7.1.x through so Dependabot re-proposes once fixed.
-      # Drop this entry then. See PR #449.
+      # for dynamic file endpoints"), not our code. 7.0.7 was expected to carry
+      # the fix but still fails (re-bisected 2026-07-09; npm `latest` is 7.0.7),
+      # which is why Dependabot re-proposed it (PR #482). Hold the bump; the
+      # explicit versions let a patched 7.0.8+ / 7.1.x through so Dependabot
+      # re-proposes once actually fixed. Drop this entry then. See PR #449, #482.
       - dependency-name: "astro"
-        versions: ["7.0.4", "7.0.5", "7.0.6"]
+        versions: ["7.0.4", "7.0.5", "7.0.6", "7.0.7"]
       # js-yaml is transitive via gray-matter@4, which pins js-yaml ^3 and uses
       # its v3-only safeLoad/safeDump API, so it cannot be bumped to a patched
       # 4.x without breaking frontmatter parsing (and the build). It runs only
