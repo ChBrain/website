@@ -18,12 +18,14 @@ updates:
       # dynamic file endpoint (e.g. src/pages/misfits/[misfit]/stage-context.json.ts
       # and src/pages/plays/[house]/search-index.json.ts). Bisected clean (7.0.3
       # builds, 7.0.4 fails) and reproduced with public Astro only, so it is an
-      # upstream regression from withastro/astro#17224 ("trailing slash handling
-      # for dynamic file endpoints"), not our code. 7.0.7 was expected to carry
-      # the fix but still fails (re-bisected 2026-07-09; npm `latest` is 7.0.7),
-      # which is why Dependabot re-proposed it (PR #482). Hold the bump; the
-      # explicit versions let a patched 7.0.8+ / 7.1.x through so Dependabot
-      # re-proposes once actually fixed. Drop this entry then. See PR #449, #482.
+      # upstream regression (introduced by withastro/astro#17224, "trailing slash
+      # handling for dynamic file endpoints"), not our code. Tracked upstream in
+      # withastro/astro#17241 with fix PR withastro/astro#17246 — both still open,
+      # so no fixed release exists yet. 7.0.7 was expected to carry the fix but
+      # still fails (re-bisected 2026-07-09; npm `latest` is 7.0.7), which is why
+      # Dependabot re-proposed it (PR #482). Hold the bump; the explicit versions
+      # let a patched 7.0.8+ / 7.1.x through so Dependabot re-proposes once #17246
+      # ships. Drop this entry then. See PR #449, #482.
       - dependency-name: "astro"
         versions: ["7.0.4", "7.0.5", "7.0.6", "7.0.7"]
       # js-yaml is transitive via gray-matter@4, which pins js-yaml ^3 and uses
