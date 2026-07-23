@@ -42,7 +42,7 @@
     "@chbrain/khai-writing": "^0.1.1",
     "@fontsource-variable/newsreader": "^5.2.10",
     "@fontsource-variable/source-serif-4": "^5.2.9",
-    "@fontsource/ibm-plex-mono": "^5.2.7"
+    "@fontsource/ibm-plex-mono": "^5.3.0"
   },
   "devDependencies": {
     "@chbrain/khai-guard": "^0.1.15",
