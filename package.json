@@ -57,7 +57,7 @@
     "js-yaml": "^4.2.0",
     "jsdom": "^30.0.1",
     "markdown-it": "^15.0.1",
-    "prettier": "^3.9.6",
+    "prettier": "^3.9.8",
     "prettier-plugin-astro": "^0.14.1",
     "typescript": "^7.0.2",
     "vitest": "^5.0.0"
